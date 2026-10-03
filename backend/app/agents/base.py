@@ -26,10 +26,12 @@ class BaseAgent:
 
         reply = await self.llm.complete(self.build_system_prompt(user, memories), messages, image=image)
 
-        db.add_all([
-            Message(user_id=user.id, agent=self.name, role="user", content=message),
-            Message(user_id=user.id, agent=self.name, role="assistant", content=reply),
-        ])
+        db.add_all(
+            [
+                Message(user_id=user.id, agent=self.name, role="user", content=message),
+                Message(user_id=user.id, agent=self.name, role="assistant", content=reply),
+            ]
+        )
         db.commit()
         self.remember(user, message, reply)
 

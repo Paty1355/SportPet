@@ -15,9 +15,10 @@ dependencies = [
     "python-multipart>=0.0.9",
     "chromadb>=1.0",
     "openai>=1.55",
+    "pypdf>=5.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest>=8.0",
     "httpx>=0.27",
