@@ -92,6 +92,9 @@ render_pdf(result, "raport_wykresy.pdf")          # albo: for name, fig in figur
 - `GET /api/v1/health/stats?days=60&end=YYYY-MM-DD` (`router_charts.py`, JWT, dane zalogowanego użytkownika): to samo z `include_series=True`.
   `days` 7–365, domyślnie 60 (≈40 KB JSON). **Uwaga:** `app/api/v1/router.py` importuje `charts`, a plik nazywa się `router_charts.py`, więc
   dopóki to się nie zgadza, aplikacja się nie uruchomi i endpoint nie jest zarejestrowany.
+- `GET /api/v1/health/report` (`health.py`, JWT): PDF z wykresami (`render_pdf`) dla zalogowanego użytkownika, okno domyślne jak w `analyze`.
+  Bez tokena 401; gdy żadna metryka nie ma statusu `ok` (za mało danych) 422 z komunikatem.
+  `curl -H "Authorization: Bearer <token>" -o raport.pdf http://localhost:8000/api/v1/health/report`
 
 ### Okna i minima (stałe w `analyze.py`)
 - Trend i przełom: wszystkie doby okna (domyślnie 60), minimum **28 dób z danymi** (`bp_sys_sd_wk`: **8 punktów tygodniowych**, czyli 56 dób; `MIN_POINTS` w `analyze.py`). Mniej: `insufficient_data`, co jest czymś innym niż „brak trendu”.

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from io import BytesIO
+
+from fastapi import APIRouter, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.dialects import postgresql, sqlite
 from sqlalchemy.orm import Session
@@ -8,6 +10,8 @@ from app.models import BloodPressureReading, CycleDay, DailySummary, EcgRecordin
 from app.schemas.health import HealthIngest, HealthIngestResult
 from app.schemas.user import HealthProfileFields, UserOut
 from app.services import user_service
+from app.statistics import analyze
+from app.statistics.charts import render_pdf
 
 router = APIRouter(prefix="/health", tags=["health"])
 # Dla generatora danych: działa na dowolnym użytkowniku, chroniony nagłówkiem X-Service-Key
@@ -65,3 +69,13 @@ def set_profile(user_id: int, data: HealthProfileFields, db: DbSession):
 @service_router.post("/ingest/{user_id}", response_model=HealthIngestResult, status_code=status.HTTP_201_CREATED)
 def ingest_for_user(user_id: int, data: HealthIngest, db: DbSession):
     return _ingest(db, _get_user(db, user_id), data)
+
+
+@router.get("/report")
+def report(user: CurrentUser, db: DbSession):
+    result = analyze(db, user.id, include_series=True)
+    if not any(m["status"] == "ok" for m in result["metrics"].values()):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Za mało danych do wygenerowania raportu")
+    buffer = BytesIO()
+    render_pdf(result, buffer)
+    return Response(buffer.getvalue(), media_type="application/pdf", headers={"Content-Disposition": 'attachment; filename="raport.pdf"'})
