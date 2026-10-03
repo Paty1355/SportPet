@@ -8,6 +8,7 @@ import { useTheme } from '../../lib/theme'
 import { useTraining } from '../../lib/training'
 import { AddWorkoutModal } from './AddWorkoutModal'
 import { DayDetails } from './DayDetails'
+import { GreetingCard } from './GreetingCard'
 import { MonthGrid } from './MonthGrid'
 
 export function CalendarScreen() {
@@ -23,6 +24,9 @@ export function CalendarScreen() {
   const [modalVisible, setModalVisible] = useState(false)
 
   const cells = useMemo(() => buildMonthGrid(year, month), [year, month])
+  const todaysWorkouts = calendar[toISODate(today)]?.workouts ?? []
+  const todaysPlanned = todaysWorkouts.filter((w) => w.status === 'planned').length
+  const todaysDone = todaysWorkouts.filter((w) => w.status === 'done').length
 
   function shiftMonth(delta: number) {
     const next = new Date(year, month + delta, 1)
@@ -32,6 +36,7 @@ export function CalendarScreen() {
 
   return (
     <Screen>
+      <GreetingCard now={today} planned={todaysPlanned} done={todaysDone} />
       <View style={[styles.columns, wide && styles.columnsWide]}>
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, wide && styles.half]}>
           <View style={styles.monthHeader}>

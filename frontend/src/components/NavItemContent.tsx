@@ -17,8 +17,8 @@ export function NavItemContent({ item, active, wide }: NavItemContentProps) {
       <View
         style={[
           styles.fab,
-          { backgroundColor: colors.primary, shadowColor: colors.primary },
-          active && { borderWidth: 4, borderColor: colors.primarySoft },
+          { backgroundColor: item.accent, shadowColor: item.accent },
+          active && { borderWidth: 4, borderColor: `${item.accent}33` },
         ]}
       >
         <Ionicons name={item.icon} size={26} color="#ffffff" />
@@ -27,14 +27,14 @@ export function NavItemContent({ item, active, wide }: NavItemContentProps) {
   }
 
   const selectedOnWide = wide && active
-  const tint = selectedOnWide ? '#ffffff' : active ? colors.primary : colors.muted
+  const tint = selectedOnWide ? '#ffffff' : active ? item.accent : colors.muted
 
   return (
     <View
       style={[
         styles.item,
         wide && styles.itemWide,
-        selectedOnWide && { backgroundColor: colors.primary },
+        selectedOnWide && { backgroundColor: item.accent },
       ]}
     >
       <Ionicons name={item.icon} size={wide ? 18 : 22} color={tint} />
