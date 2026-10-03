@@ -4,6 +4,8 @@ import { StatusBar } from 'expo-status-bar'
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { LinearGradient } from 'expo-linear-gradient'
+import { DotPattern } from '../components/DotPattern'
 import { NavItemContent } from '../components/NavItemContent'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { AuthScreen } from '../features/auth/AuthScreen'
@@ -68,6 +70,14 @@ function AppShell() {
     <>
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <View style={[styles.root, wide && styles.rootWide, { backgroundColor: colors.bg }]}>
+        <LinearGradient
+          colors={[`${colors.primary}1F`, `${colors.primary}00`]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[StyleSheet.absoluteFill, styles.background]}
+          pointerEvents="none"
+        />
+        <DotPattern />
         {wide ? (
           <View
             style={[
@@ -123,6 +133,7 @@ function Brand() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   center: { alignItems: 'center', justifyContent: 'center' },
+  background: { zIndex: -2 },
   rootWide: { flexDirection: 'row' },
   header: {
     flexDirection: 'row',

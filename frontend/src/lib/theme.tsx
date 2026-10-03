@@ -46,6 +46,7 @@ interface ThemeContextValue {
   theme: Theme
   colors: Palette
   toggle: () => void
+  setAccent: (primary: string | null) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
@@ -53,6 +54,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null)
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemTheme: Theme = useColorScheme() === 'dark' ? 'dark' : 'light'
   const [override, setOverride] = useState<Theme | null>(null)
+  const [accent, setAccent] = useState<string | null>(null)
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
@@ -64,18 +66,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const theme = override ?? systemTheme
 
-  const value = useMemo<ThemeContextValue>(
-    () => ({
+  const value = useMemo<ThemeContextValue>(() => {
+    const base = palettes[theme]
+    const colors: Palette = accent
+      ? { ...base, primary: accent, primarySoft: `${accent}33` }
+      : base
+    return {
       theme,
-      colors: palettes[theme],
+      colors,
       toggle: () => {
         const next: Theme = theme === 'dark' ? 'light' : 'dark'
         setOverride(next)
         AsyncStorage.setItem(STORAGE_KEY, next).catch(() => {})
       },
-    }),
-    [theme],
-  )
+      setAccent: (primary) => setAccent(primary),
+    }
+  }, [theme, accent])
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
@@ -84,4 +90,11 @@ export function useTheme(): ThemeContextValue {
   const context = useContext(ThemeContext)
   if (!context) throw new Error('useTheme must be used inside ThemeProvider')
   return context
+}
+
+export function useAccentSync(primary: string | null) {
+  const { setAccent } = useTheme()
+  useEffect(() => {
+    setAccent(primary)
+  }, [primary, setAccent])
 }

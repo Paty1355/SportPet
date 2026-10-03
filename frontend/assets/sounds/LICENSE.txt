@@ -1,0 +1,8 @@
+Pet sounds (assets/sounds/pet.wav and munch.wav) are trimmed from the recordings in assets/sounds/raw:
+- rabbit_sounds.mp3 -> pet.wav
+- rabbit_eating_sth.mp3 -> munch.wav
+
+Source: Pixabay (https://pixabay.com/sound-effects/). Used under the Pixabay Content License
+(https://pixabay.com/service/license-summary/): free to use in apps, commercial use allowed, no attribution required.
+Restrictions: do not sell the sounds on their own or as a standalone product, and do not present them as your own recording.
+Page links for each recording: TO ADD.
