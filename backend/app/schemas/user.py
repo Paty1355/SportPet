@@ -1,9 +1,17 @@
-from datetime import datetime
+from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
-class UserCreate(BaseModel):
+class HealthProfileFields(BaseModel):
+    sex: Literal["F", "M"] | None = None
+    birth_date: date | None = None
+    weight_kg: float | None = Field(default=None, ge=20, le=400)
+    height_cm: float | None = Field(default=None, ge=80, le=250)
+
+
+class UserCreate(HealthProfileFields):
     email: EmailStr
     # bcrypt obsługuje max 72 bajty
     password: str = Field(min_length=8, max_length=64)
@@ -18,7 +26,7 @@ class UserCreate(BaseModel):
         return v
 
 
-class UserUpdate(BaseModel):
+class UserUpdate(HealthProfileFields):
     name: str | None = Field(default=None, max_length=100)
 
 
@@ -29,3 +37,7 @@ class UserOut(BaseModel):
     email: EmailStr
     name: str | None
     created_at: datetime
+    sex: Literal["F", "M"] | None
+    birth_date: date | None
+    weight_kg: float | None
+    height_cm: float | None

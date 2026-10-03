@@ -5,6 +5,7 @@ import openai
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 import app.models  # noqa: F401 – rejestruje modele w Base.metadata
 from app.api.v1.router import api_router
@@ -15,10 +16,22 @@ from app.db.session import engine
 logger = logging.getLogger(__name__)
 
 
+def _add_user_profile_columns() -> None:
+    # create_all nie dodaje kolumn do istniejącej tabeli users (brak Alembica) – dokładamy je idempotentnie.
+    if engine.dialect.name != "postgresql":
+        return
+    with engine.begin() as conn:
+        double = "DOUBLE PRECISION"
+        columns = {"sex": "VARCHAR(1)", "birth_date": "DATE", "weight_kg": double, "height_cm": double}
+        for col, typ in columns.items():
+            conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {typ}"))
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # Na hackathon wystarczy create_all; przy zmianach schematu warto dodać Alembic.
     Base.metadata.create_all(bind=engine)
+    _add_user_profile_columns()
     yield
 
 
