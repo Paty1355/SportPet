@@ -1,11 +1,5 @@
-import { ComingSoon } from '../components/ComingSoon'
+import { ProfileScreen } from '../features/profile/ProfileScreen'
 
-export default function ProfileScreen() {
-  return (
-    <ComingSoon
-      title="Profile and stats"
-      description="Your progress, charts and summaries in one place."
-      icon="person-outline"
-    />
-  )
+export default function Profile() {
+  return <ProfileScreen />
 }

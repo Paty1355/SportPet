@@ -1,14 +1,16 @@
 import { Ionicons } from '@expo/vector-icons'
 import { Link, Slot, usePathname } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { NavItemContent } from '../components/NavItemContent'
 import { ThemeToggle } from '../components/ThemeToggle'
-import { WIDE_BREAKPOINT } from '../lib/layout'
-import { navItems } from '../lib/navItems'
+import { AuthScreen } from '../features/auth/AuthScreen'
 import { PetProvider } from '../features/pet/PetProvider'
+import { WIDE_BREAKPOINT } from '../lib/layout'
+import { AuthProvider, useAuth } from '../lib/auth'
+import { navItems } from '../lib/navItems'
 import { ThemeProvider, useTheme } from '../lib/theme'
 import { TrainingProvider } from '../lib/training'
 
@@ -16,13 +18,34 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <ThemeProvider>
-        <TrainingProvider>
-          <PetProvider>
-            <AppShell />
-          </PetProvider>
-        </TrainingProvider>
+        <AuthProvider>
+          <Gate />
+        </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
+  )
+}
+
+function Gate() {
+  const { user, loading } = useAuth()
+  const { colors } = useTheme()
+
+  if (loading) {
+    return (
+      <View style={[styles.root, styles.center, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    )
+  }
+
+  if (!user) return <AuthScreen />
+
+  return (
+    <TrainingProvider>
+      <PetProvider>
+        <AppShell />
+      </PetProvider>
+    </TrainingProvider>
   )
 }
 
@@ -99,6 +122,7 @@ function Brand() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  center: { alignItems: 'center', justifyContent: 'center' },
   rootWide: { flexDirection: 'row' },
   header: {
     flexDirection: 'row',
