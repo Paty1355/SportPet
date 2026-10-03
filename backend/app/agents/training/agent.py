@@ -1,6 +1,7 @@
 import json
 from datetime import UTC, datetime
 from functools import lru_cache
+from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -17,6 +18,7 @@ from app.agents.training.questionnaire import (
     question_text,
     validate,
 )
+from app.core.config import settings
 from app.models import QuestionnaireState, User
 from app.schemas.agent import AgentResponse
 from app.schemas.questionnaire import QuestionnaireStatus
@@ -59,7 +61,8 @@ class TrainingAgent(BaseAgent):
             return self.respond(db, user, message, format_question(QUESTIONS[state.step], state.answers), state)
 
         state.completed_at = datetime.now(UTC)
-        result = build_result(state.answers).model_dump_json(by_alias=True)
+        result = build_result(state.answers).model_dump_json(by_alias=True, indent=2)
+        self.result_path(user.id).write_text(result, encoding="utf-8")
         self.memory.add(user.id, f"Training questionnaire: {result}", source="questionnaire")
         return self.respond(db, user, message, prompts.COMPLETED, state)
 
@@ -107,6 +110,12 @@ class TrainingAgent(BaseAgent):
         if state := self.get_state(db, user_id):
             db.delete(state)
             db.commit()
+        self.result_path(user_id).unlink(missing_ok=True)
+
+    def result_path(self, user_id: int) -> Path:
+        path = Path(settings.questionnaire_dir)
+        path.mkdir(parents=True, exist_ok=True)
+        return path / f"{user_id}.json"
 
     def build_system_prompt(self, db: Session, user: User, memories: list[str]) -> str:
         prompt = super().build_system_prompt(db, user, memories)

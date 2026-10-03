@@ -36,6 +36,7 @@ services:
       - "8000:8000"
     volumes:
       - backend_data:/app/data
+      - questionnaires:/app/data/questionnaires
     depends_on:
       db:
         condition: service_healthy
@@ -46,3 +47,4 @@ volumes:
   pgdata:
   backend_data:
   chroma_data:
+  questionnaires:
