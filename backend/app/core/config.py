@@ -13,12 +13,14 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
 
     chroma_path: str = "./data/chroma"
+    chroma_host: str | None = None  # set → Chroma server over HTTP, unset → local PersistentClient
+    chroma_port: int = 8000
     upload_dir: str = "./data/uploads"
     max_upload_mb: int = 10
 
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
-    # Azure OpenAI – bez endpointu i klucza backend działa na atrapie LLM i lokalnych embeddingach Chromy
+    # Azure OpenAI – required for embeddings; without it chat falls back to the stub LLM
     azure_openai_endpoint: str | None = None
     azure_openai_api_key: str | None = None
     azure_openai_api_version: str = "2024-10-21"

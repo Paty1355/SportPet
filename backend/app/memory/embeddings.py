@@ -36,17 +36,13 @@ class AzureEmbeddingFunction(EmbeddingFunction[Documents]):
         return AzureEmbeddingFunction(get_azure_client(), config["deployment"])
 
 
-def get_embedding_function() -> EmbeddingFunction | None:
-    """Azure, jeśli skonfigurowany; None → domyślne lokalne embeddingi Chromy (all-MiniLM)."""
-    if not settings.azure_enabled:
-        return None
-
+def get_embedding_function() -> EmbeddingFunction:
+    """Azure only; raises RuntimeError when Azure is not configured."""
     from app.core.azure import get_azure_client
 
     return AzureEmbeddingFunction(get_azure_client(), settings.azure_openai_embedding_deployment)
 
 
 def embedding_tag() -> str:
-    """Sufiks nazwy kolekcji: różne modele dają wektory o różnych wymiarach, więc nie mogą dzielić kolekcji."""
-    tag = settings.azure_openai_embedding_deployment if settings.azure_enabled else "local"
-    return re.sub(r"[^a-zA-Z0-9_-]", "-", tag)
+    """Collection name suffix: different models produce different vector sizes and can't share a collection."""
+    return re.sub(r"[^a-zA-Z0-9_-]", "-", settings.azure_openai_embedding_deployment)
