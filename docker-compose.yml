@@ -15,6 +15,13 @@ services:
       timeout: 3s
       retries: 10
 
+  chroma:
+    image: chromadb/chroma:1.5.9 # same version as the Python client in uv.lock
+    ports:
+      - "8001:8000" # 8001 on host, so it won't clash with the backend on 8000
+    volumes:
+      - chroma_data:/data
+
   backend:
     build: ./backend
     env_file:
@@ -22,7 +29,8 @@ services:
         required: false
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@db:5432/${POSTGRES_DB:-app}
-      CHROMA_PATH: /app/data/chroma
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
       UPLOAD_DIR: /app/data/uploads
     ports:
       - "8000:8000"
@@ -31,7 +39,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      chroma:
+        condition: service_started
 
 volumes:
   pgdata:
   backend_data:
+  chroma_data:

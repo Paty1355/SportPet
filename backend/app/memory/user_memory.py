@@ -1,25 +1,18 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from app.memory.chroma_client import get_chroma
-from app.memory.embeddings import embedding_tag, get_embedding_function
+from app.memory.chroma_client import get_collection
 
 
 class UserMemory:
-    """Długoterminowa pamięć semantyczna agenta.
+    """Long-term semantic memory of an agent.
 
-    Jedna kolekcja na agenta i model embeddingów (np. `training_memory_text-embedding-3-small`),
-    wpisy rozdzielone po `user_id` w metadanych – każde wyszukiwanie jest filtrowane po użytkowniku.
+    One collection per agent and embedding model (e.g. `training_memory_text-embedding-3-small`);
+    entries are scoped by `user_id` metadata and every search filters on it.
     """
 
     def __init__(self, agent_name: str):
-        embedding_function = get_embedding_function()
-        kwargs = {"embedding_function": embedding_function} if embedding_function else {}
-        self.collection = get_chroma().get_or_create_collection(
-            f"{agent_name}_memory_{embedding_tag()}",
-            configuration={"hnsw": {"space": "cosine"}},
-            **kwargs,
-        )
+        self.collection = get_collection(f"{agent_name}_memory")
 
     def add(self, user_id: int, text: str, **metadata: str | int | float | bool) -> None:
         self.collection.add(
