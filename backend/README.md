@@ -1,6 +1,6 @@
 # HackYeah Backend
 
-FastAPI backend: JWT auth, users (Postgres), photo & training agents (Azure OpenAI) with Chroma memory and a RAG knowledge base.
+FastAPI backend: JWT auth, users (Postgres), photo & training agents with Chroma memory, plus a VisionAgent for gym-machine photos backed by Azure OpenAI and a dedicated RAG collection.
 
 ## Requirements
 
@@ -43,7 +43,7 @@ docker compose up -d --build
 
 | Service   | Host port | Notes                                   |
 |-----------|-----------|-----------------------------------------|
-| `backend` | 8000      | reads `backend/.env`                    |
+| `backend` | 8002      | reads `backend/.env`                    |
 | `db`      | 5432      | Postgres 16, volume `pgdata`            |
 | `chroma`  | 8001      | Chroma server, volume `chroma_data`     |
 
@@ -89,7 +89,7 @@ Chroma data persists in the `chroma_data` volume across restarts and rebuilds.
 
 ## API
 
-All endpoints under `/api/v1`; everything except auth requires `Authorization: Bearer <token>`.
+All endpoints under `/api/v1`; auth and VisionAgent analyze are public. Other endpoints require `Authorization: Bearer <token>`.
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -103,6 +103,76 @@ All endpoints under `/api/v1`; everything except auth requires `Authorization: B
 | POST | `/agents/diet/chat` | diet agent chat (see [`app/agents/diet/README.md`](app/agents/diet/README.md)) |
 | GET | `/agents/diet/history` | diet agent history |
 | GET / DELETE | `/agents/diet/questionnaire` | diet questionnaire status / reset |
+| POST | `/agents/vision/analyze` | classify a machine photo and get usage instructions (public) |
+
+## VisionAgent: machine photos
+
+`POST /api/v1/agents/vision/analyze` accepts one gym-machine photo as multipart field `file`.
+This endpoint is public and does not require a JWT. It keeps the image in memory for the request.
+
+The pipeline is: Azure vision deployment → classification from the imported catalog →
+semantic retrieval in the separate `gym_machines_<embedding_tag>` Chroma collection →
+Azure text deployment → structured English usage instructions.
+
+Configure `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_VISION_DEPLOYMENT`,
+`AZURE_OPENAI_CHAT_DEPLOYMENT` and `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` in `.env`.
+The vision and text deployments must support Structured Outputs, and the vision deployment must accept images.
+If vision deployment is unset, the chat deployment is used for both calls.
+VisionAgent uses real Azure clients; missing credentials return HTTP 503.
+
+Machine cards live in [`docs_RAG/vision/`](docs_RAG/vision/README.md).
+Only `machines.example.json` is provided initially; its values are placeholders.
+Create `machines.json` with your reviewed cards before real use. Each card uses one English machine name in `name`.
+The example is never imported automatically.
+
+```bash
+# Validate the example without Azure credentials or a Chroma connection
+uv run python -m app.agents.vision.seed --file docs_RAG/vision/machines.example.json --dry-run
+
+# Validate your actual cards
+uv run python -m app.agents.vision.seed --dry-run
+
+# Import actual cards (Azure and Chroma required)
+uv run python -m app.agents.vision.seed
+
+# In Docker, after adding cards and rebuilding the backend image
+docker compose exec backend python -m app.agents.vision.seed
+```
+
+The default data path is resolved relative to the source module, not the current working directory.
+Re-importing updates cards by `machine_id` without duplicates; cards absent from the new file are retained.
+The training PDF/TXT importer does not load this folder.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/agents/vision/analyze -F "file=@machine.jpg"
+```
+
+The response contains `machine_id`, `machine_name`, `category`, `description`,
+`primary_muscles`, `secondary_muscles`, `setup_steps`, `exercise_steps`, `tips` and `sources`.
+Machine name, ID, category and sources come from the retrieved card. `machine_name` is the card's English `name`;
+usage instructions are generated in English for beginners, even when the source card uses another language:
+short, direct sentences, everyday muscle names,
+and one action per instruction step. The model simplifies wording while preserving the card's meaning,
+sequence, safety conditions and warnings; it does not add advice absent from the card.
+
+The usage prompt includes an explicit JSON example with exactly the six model-generated fields.
+The SDK sends a strict JSON Schema and parses the response into `MachineUsage`; Pydantic rejects
+missing or extra fields, wrong types, blank text and empty required lists. The backend then builds
+one `VisionResponse` with the machine metadata from the retrieved card. Invalid model output returns HTTP 502.
+
+After changing the usage prompt, rebuild the backend from the repository root:
+
+```bash
+docker compose up -d --build --force-recreate backend
+```
+
+With the current Compose configuration, Swagger is available at http://localhost:8002/docs.
+A prompt-only change does not require re-importing machine cards or regenerating embeddings.
+
+Errors: HTTP 422 for an empty upload or an unsupported machine; HTTP 503 for missing credentials
+or missing knowledge; HTTP 502 for provider failures or invalid structured model responses.
+The existing application startup still requires its configured Postgres database.
+
 
 ## Tests & linting
 

@@ -9,9 +9,12 @@ from app.api.v1 import (
     router_questionnaire,
     router_training,
     router_users,
+    vision,
 )
 
 api_router = APIRouter()
+
+api_router.include_router(vision.router)
 api_router.include_router(router_auth.router)
 api_router.include_router(router_users.router)
 api_router.include_router(health.router)
