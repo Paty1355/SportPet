@@ -1,9 +1,11 @@
+import secrets
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.models import User
@@ -29,3 +31,14 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: DbSessio
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def require_service_key(x_service_key: Annotated[str | None, Header()] = None) -> None:
+    """Dla zaufanych procesów (generator danych), nie dla użytkowników końcowych."""
+    if not settings.service_key:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Service endpoints disabled (SERVICE_KEY not set)")
+    if x_service_key is None or not secrets.compare_digest(x_service_key, settings.service_key):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid service key")
+
+
+ServiceAuth = Depends(require_service_key)

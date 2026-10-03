@@ -11,7 +11,8 @@ def get_by_email(db: Session, email: str) -> User | None:
 
 
 def create_user(db: Session, data: UserCreate) -> User:
-    user = User(email=data.email.lower(), hashed_password=hash_password(data.password), name=data.name)
+    profile = data.model_dump(include={"sex", "birth_date", "weight_kg", "height_cm"})
+    user = User(email=data.email.lower(), hashed_password=hash_password(data.password), name=data.name, **profile)
     db.add(user)
     db.commit()
     db.refresh(user)
