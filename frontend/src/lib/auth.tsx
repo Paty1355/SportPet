@@ -6,6 +6,7 @@ const TOKEN_KEY = 'auth-token'
 
 interface AuthContextValue {
   user: UserOut | null
+  token: string | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, name: string) => Promise<void>
@@ -16,15 +17,19 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserOut | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
     AsyncStorage.getItem(TOKEN_KEY)
-      .then(async (token) => {
-        if (!token) return
-        const me = await fetchMe(token)
-        if (!cancelled) setUser(me)
+      .then(async (stored) => {
+        if (!stored) return
+        const me = await fetchMe(stored)
+        if (!cancelled) {
+          setUser(me)
+          setToken(stored)
+        }
       })
       .catch(async (error) => {
         if (error instanceof ApiError && error.status === 401) {
@@ -42,26 +47,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      token,
       loading,
       signIn: async (email, password) => {
-        const token = await login(email, password)
-        const me = await fetchMe(token)
-        await AsyncStorage.setItem(TOKEN_KEY, token)
+        const accessToken = await login(email, password)
+        const me = await fetchMe(accessToken)
+        await AsyncStorage.setItem(TOKEN_KEY, accessToken)
+        setToken(accessToken)
         setUser(me)
       },
       signUp: async (email, password, name) => {
         await register(email, password, name)
-        const token = await login(email, password)
-        const me = await fetchMe(token)
-        await AsyncStorage.setItem(TOKEN_KEY, token)
+        const accessToken = await login(email, password)
+        const me = await fetchMe(accessToken)
+        await AsyncStorage.setItem(TOKEN_KEY, accessToken)
+        setToken(accessToken)
         setUser(me)
       },
       signOut: () => {
         AsyncStorage.removeItem(TOKEN_KEY).catch(() => {})
+        setToken(null)
         setUser(null)
       },
     }),
-    [user, loading],
+    [user, token, loading],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
