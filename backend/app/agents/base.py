@@ -24,8 +24,14 @@ class BaseAgent:
         messages = [{"role": m.role, "content": m.content} for m in history]
         messages.append({"role": "user", "content": message})
 
-        reply = await self.llm.complete(self.build_system_prompt(user, memories), messages, image=image)
+        reply = await self.llm.complete(self.build_system_prompt(db, user, memories), messages, image=image)
 
+        self.save_exchange(db, user, message, reply)
+        self.remember(user, message, reply)
+
+        return AgentResponse(reply=reply, memories_used=memories)
+
+    def save_exchange(self, db: Session, user: User, message: str, reply: str) -> None:
         db.add_all(
             [
                 Message(user_id=user.id, agent=self.name, role="user", content=message),
@@ -33,9 +39,6 @@ class BaseAgent:
             ]
         )
         db.commit()
-        self.remember(user, message, reply)
-
-        return AgentResponse(reply=reply, memories_used=memories)
 
     def get_history(self, db: Session, user_id: int, limit: int) -> list[Message]:
         stmt = (
@@ -46,7 +49,7 @@ class BaseAgent:
         )
         return list(reversed(db.scalars(stmt).all()))
 
-    def build_system_prompt(self, user: User, memories: list[str]) -> str:
+    def build_system_prompt(self, db: Session, user: User, memories: list[str]) -> str:
         known = "\n".join(f"- {m}" for m in memories) or "(brak)"
         return f"{self.system_prompt}\n\nUżytkownik: {user.name or user.email}\nCo wiesz o użytkowniku:\n{known}"
 

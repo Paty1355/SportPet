@@ -16,7 +16,11 @@ class Settings(BaseSettings):
     chroma_host: str | None = None  # set → Chroma server over HTTP, unset → local PersistentClient
     chroma_port: int = 8000
     upload_dir: str = "./data/uploads"
+    questionnaire_dir: str = "./data/questionnaires"
     max_upload_mb: int = 10
+
+    # Klucz endpointów serwisowych (generator danych). Bez niego są wyłączone (503).
+    service_key: str | None = None
 
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 

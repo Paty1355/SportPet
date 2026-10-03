@@ -7,13 +7,19 @@ from app.core.config import settings
 
 
 class LLMClient(Protocol):
-    async def complete(self, system: str, messages: list[dict], image: bytes | None = None) -> str: ...
+    async def complete(
+        self, system: str, messages: list[dict], image: bytes | None = None, json_mode: bool = False
+    ) -> str: ...
 
 
 class StubLLM:
     """Atrapa używana, gdy Azure nie jest skonfigurowany (i w testach) – zwraca echo ostatniej wiadomości."""
 
-    async def complete(self, system: str, messages: list[dict], image: bytes | None = None) -> str:
+    async def complete(
+        self, system: str, messages: list[dict], image: bytes | None = None, json_mode: bool = False
+    ) -> str:
+        if json_mode:
+            return "{}"
         suffix = " (+ zdjęcie)" if image else ""
         return f"[stub] {messages[-1]['content']}{suffix}"
 
@@ -26,7 +32,9 @@ class AzureLLM:
         self.chat_deployment = chat_deployment
         self.vision_deployment = vision_deployment or chat_deployment
 
-    async def complete(self, system: str, messages: list[dict], image: bytes | None = None) -> str:
+    async def complete(
+        self, system: str, messages: list[dict], image: bytes | None = None, json_mode: bool = False
+    ) -> str:
         payload = [{"role": "system", "content": system}, *messages]
         deployment = self.chat_deployment
 
@@ -41,7 +49,8 @@ class AzureLLM:
             }
             deployment = self.vision_deployment
 
-        response = await self.client.chat.completions.create(model=deployment, messages=payload)
+        extra = {"response_format": {"type": "json_object"}} if json_mode else {}
+        response = await self.client.chat.completions.create(model=deployment, messages=payload, **extra)
         return response.choices[0].message.content or ""
 
 
