@@ -1,5 +1,7 @@
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { WEEKDAY_LABELS, toISODate } from '../../lib/dates'
 import type { TrainingCalendar } from '../../lib/types'
+import { useTheme } from '../../lib/theme'
 
 interface MonthGridProps {
   cells: (Date | null)[]
@@ -9,53 +11,62 @@ interface MonthGridProps {
 }
 
 export function MonthGrid({ cells, calendar, selectedISO, onSelect }: MonthGridProps) {
+  const { colors } = useTheme()
   const todayISO = toISODate(new Date())
 
   return (
-    <div>
-      <div className="grid grid-cols-7 pb-2 text-center text-xs font-medium text-slate-500 dark:text-slate-400">
+    <View>
+      <View style={styles.row}>
         {WEEKDAY_LABELS.map((label) => (
-          <div key={label}>{label}</div>
+          <Text key={label} style={[styles.weekday, { color: colors.muted }]}>
+            {label}
+          </Text>
         ))}
-      </div>
+      </View>
 
-      <div className="grid grid-cols-7 gap-1">
+      <View style={styles.grid}>
         {cells.map((date, index) => {
-          if (!date) return <div key={`empty-${index}`} />
+          if (!date) return <View key={`empty-${index}`} style={styles.cell} />
 
           const iso = toISODate(date)
           const workoutCount = calendar[iso]?.workouts.length ?? 0
-          const isSelected = iso === selectedISO
+          const selected = iso === selectedISO
           const isToday = iso === todayISO
 
           return (
-            <button
-              key={iso}
-              type="button"
-              onClick={() => onSelect(iso)}
-              aria-pressed={isSelected}
-              className={[
-                'flex aspect-square flex-col items-center justify-center rounded-xl text-sm transition',
-                isSelected
-                  ? 'bg-indigo-600 font-semibold text-white shadow-md'
-                  : 'hover:bg-slate-200/70 dark:hover:bg-slate-800',
-                isToday && !isSelected ? 'ring-1 ring-indigo-500' : '',
-              ].join(' ')}
-            >
-              <span>{date.getDate()}</span>
-              {workoutCount > 0 && (
-                <span
-                  className={[
-                    'mt-0.5 h-1.5 w-1.5 rounded-full',
-                    isSelected ? 'bg-white' : 'bg-indigo-500',
-                  ].join(' ')}
-                  aria-label={`${workoutCount} workouts`}
-                />
-              )}
-            </button>
+            <View key={iso} style={styles.cell}>
+              <Pressable
+                onPress={() => onSelect(iso)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                style={[
+                  styles.day,
+                  selected && { backgroundColor: colors.primary },
+                  isToday && !selected && { borderWidth: 1, borderColor: colors.primary },
+                ]}
+              >
+                <Text style={[styles.dayText, { color: selected ? '#ffffff' : colors.text }, selected && styles.bold]}>
+                  {date.getDate()}
+                </Text>
+                {workoutCount > 0 && (
+                  <View style={[styles.dot, { backgroundColor: selected ? '#ffffff' : colors.primary }]} />
+                )}
+              </Pressable>
+            </View>
           )
         })}
-      </div>
-    </div>
+      </View>
+    </View>
   )
 }
+
+const styles = StyleSheet.create({
+  row: { flexDirection: 'row', paddingBottom: 8 },
+  weekday: { flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '600' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+  cell: { width: '14.2857%', aspectRatio: 1, padding: 3 },
+  day: { flex: 1, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  dayText: { fontSize: 14 },
+  bold: { fontWeight: '700' },
+  dot: { width: 6, height: 6, borderRadius: 3, marginTop: 3 },
+})

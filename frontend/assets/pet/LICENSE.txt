@@ -1,0 +1,2 @@
+Carrot artwork (assets/pet/carrot.png) comes from Kenney Food Kit (https://kenney.nl/assets/food-kit).
+It is released under Creative Commons CC0 1.0 (public domain).
