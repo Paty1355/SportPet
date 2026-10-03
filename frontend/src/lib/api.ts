@@ -48,6 +48,15 @@ export async function register(email: string, password: string, name: string): P
   return response.json()
 }
 
+export async function authGet<T>(path: string, token: string, params?: Record<string, string>): Promise<T> {
+  const query = params ? `?${new URLSearchParams(params).toString()}` : ''
+  const response = await fetch(`${API_URL}${path}${query}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) throw await toApiError(response)
+  return response.json()
+}
+
 export async function fetchMe(token: string): Promise<UserOut> {
   const response = await fetch(`${API_URL}/users/me`, {
     headers: { Authorization: `Bearer ${token}` },

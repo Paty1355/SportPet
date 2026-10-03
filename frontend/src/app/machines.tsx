@@ -1,11 +1,5 @@
-import { ComingSoon } from '../components/ComingSoon'
+import { MachinesScreen } from '../features/machines/MachinesScreen'
 
-export default function MachinesScreen() {
-  return (
-    <ComingSoon
-      title="Machine recognition"
-      description="Point the camera at a gym machine and we'll suggest exercises and settings."
-      icon="camera-outline"
-    />
-  )
+export default function Machines() {
+  return <MachinesScreen />
 }
