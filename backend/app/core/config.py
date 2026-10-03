@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     upload_dir: str = "./data/uploads"
     max_upload_mb: int = 10
 
+    # Klucz endpointów serwisowych (generator danych). Bez niego są wyłączone (503).
+    service_key: str | None = None
+
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
 
     # Azure OpenAI – required for embeddings; without it chat falls back to the stub LLM

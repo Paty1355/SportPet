@@ -6,6 +6,7 @@ __pycache__/
 backend/data/
 *.egg-info/
 build/
+graphify-out/
 
 # Claude
 CLAUDE.md

@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import String, func
+from sqlalchemy import Float, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -14,4 +14,9 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String(255))
     name: Mapped[str | None] = mapped_column(String(100))
     is_active: Mapped[bool] = mapped_column(default=True)
+    # Profil zdrowotny (opcjonalny). Wiek liczymy z birth_date przy odczycie.
+    sex: Mapped[str | None] = mapped_column(String(1))  # "F" | "M"
+    birth_date: Mapped[date | None]
+    weight_kg: Mapped[float | None] = mapped_column(Float)
+    height_cm: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
