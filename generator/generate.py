@@ -141,6 +141,7 @@ def main():
     ap.add_argument("--key", default=os.environ.get("SERVICE_KEY"), help="X-Service-Key (domyślnie env SERVICE_KEY)")
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--email", help="tylko ten użytkownik (domyślnie wszyscy aktywni)")
     args = ap.parse_args()
     if not args.key:
         ap.error("brak klucza: ustaw SERVICE_KEY albo --key (taki sam jak SERVICE_KEY backendu)")
@@ -151,7 +152,10 @@ def main():
     with httpx.Client(base_url=f"{args.api}/api/v1/health/service", headers={"X-Service-Key": args.key}, timeout=60) as http:
         users = http.get("/users")
         users.raise_for_status()
-        for user in users.json():
+        selected = [u for u in users.json() if args.email is None or u["email"] == args.email.lower()]
+        if not selected:
+            ap.error(f"nie ma aktywnego użytkownika {args.email}")
+        for user in selected:
             rng = random.Random(args.seed * 1_000_003 + user["id"])
             wanted = random_profile(rng, today)  # zawsze losujemy, żeby strumień rng nie zależał od tego, co user już ma
             missing = {k: v for k, v in wanted.items() if user[k] is None}
