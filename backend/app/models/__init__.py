@@ -7,6 +7,7 @@ from app.models.health import (
     VitalSample,
 )
 from app.models.message import Message
+from app.models.questionnaire import QuestionnaireState
 from app.models.user import User
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "DailySummary",
     "EcgRecording",
     "Message",
+    "QuestionnaireState",
     "User",
     "VitalSample",
 ]
