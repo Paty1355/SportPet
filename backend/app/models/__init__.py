@@ -7,13 +7,14 @@ from app.models.health import (
     VitalSample,
 )
 from app.models.message import Message
-from app.models.questionnaire import QuestionnaireState
+from app.models.questionnaire import DietQuestionnaireState, QuestionnaireState
 from app.models.user import User
 
 __all__ = [
     "BloodPressureReading",
     "CycleDay",
     "DailySummary",
+    "DietQuestionnaireState",
     "EcgRecording",
     "Message",
     "QuestionnaireState",

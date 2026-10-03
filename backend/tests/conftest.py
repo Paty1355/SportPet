@@ -8,6 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 import app.models  # noqa: F401
+from app.agents.diet.agent import DietAgent, get_diet_agent
 from app.agents.llm import StubLLM
 from app.agents.photo.agent import PhotoAgent, get_photo_agent
 from app.agents.training.agent import TrainingAgent, get_training_agent
@@ -60,6 +61,7 @@ def client(chroma, tmp_path, monkeypatch):
     app.dependency_overrides[get_db] = override_db
     app.dependency_overrides[get_photo_agent] = lambda: PhotoAgent(StubLLM())
     app.dependency_overrides[get_training_agent] = lambda: TrainingAgent(StubLLM())
+    app.dependency_overrides[get_diet_agent] = lambda: DietAgent(StubLLM())
     # No `with` – lifespan (create_all on Postgres) does not run
     yield TestClient(app)
     app.dependency_overrides.clear()

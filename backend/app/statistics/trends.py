@@ -1,4 +1,4 @@
-"""Testy statystyczne na szeregach dziennych. Czyste funkcje (numpy/scipy), bez dostępu do bazy."""
+"""Statistical tests on daily series. Pure functions (numpy/scipy), no database access."""
 
 from datetime import date, timedelta
 
@@ -9,17 +9,18 @@ from app.statistics.daily import Series
 
 
 def sen_slope(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float]:
-    """Nachylenie Sena (mediana nachyleń par punktów) i jego 95% CI, w jednostkach y na jednostkę x."""
+    """Sen slope (median of pairwise slopes) and its 95% CI, in units of y per unit of x."""
     slope, _, lo, hi = stats.theilslopes(y, x, alpha=0.95)
     return float(slope), float(lo), float(hi)
 
 
 def mann_kendall(x: np.ndarray, y: np.ndarray) -> float:
-    """P-value dwustronnego testu Manna-Kendalla na monotoniczny trend y(x), z korektą autokorelacji (Hamed-Rao).
+    """Two-sided Mann-Kendall p-value for a monotonic trend y(x), with autocorrelation correction (Hamed-Rao).
 
-    Wariancja S jest mnożona przez n/n*: liczymy go z istotnych autokorelacji rang szeregu po odjęciu trendu Sena.
-    Współczynnik nie schodzi poniżej 1, więc korekta może tylko osłabić istotność, nigdy jej nie dodać.
-    Odstępy między punktami są ignorowane (autokorelacja liczona po indeksach)."""
+    The variance of S is multiplied by n/n*: computed from the significant rank autocorrelations
+    of the series after removing the Sen trend.
+    The factor never drops below 1, so the correction can only weaken significance, never add to it.
+    Gaps between points are ignored (autocorrelation is computed over indices)."""
     n = len(y)
     s = float(np.sign(y[None, :] - y[:, None])[np.triu_indices(n, 1)].sum())
     _, ties = np.unique(y, return_counts=True)
@@ -45,7 +46,7 @@ def mann_kendall(x: np.ndarray, y: np.ndarray) -> float:
 
 
 def pettitt(y: np.ndarray) -> tuple[int, float]:
-    """Test Pettitta na jeden punkt przełomu. Zwraca (indeks pierwszego punktu nowego reżimu, przybliżone p-value)."""
+    """Pettitt test for a single change point. Returns (index of first point of the new regime, approx. p-value)."""
     n = len(y)
     t = np.arange(1, n)  # po t punktach
     u = 2 * np.cumsum(stats.rankdata(y))[:-1] - t * (n + 1)
@@ -55,21 +56,21 @@ def pettitt(y: np.ndarray) -> tuple[int, float]:
 
 
 def compare(baseline: np.ndarray, recent: np.ndarray) -> tuple[float, float]:
-    """Mann-Whitney U: (p-value, delta Cliffa). Delta w [-1, 1]; dodatnia = ostatnie dni większe niż linia bazowa."""
+    """Mann-Whitney U: (p-value, Cliff's delta). Delta is in [-1, 1]; positive = recent days higher than baseline."""
     u, p = stats.mannwhitneyu(recent, baseline, alternative="two-sided")
-    p = 1.0 if np.isnan(p) else float(p)  # nan, gdy wszystkie wartości są równe
+    p = 1.0 if np.isnan(p) else float(p)  # nan when all values are equal
     return p, float(2 * u / (len(recent) * len(baseline)) - 1)
 
 
 def robust_z(baseline: np.ndarray, values: Series) -> dict[date, float]:
-    """Odporny z-score względem mediany i MAD linii bazowej: 0.6745 (x - mediana) / MAD. Pusty wynik, gdy MAD = 0."""
+    """Robust z-score relative to the baseline median and MAD: 0.6745 (x - median) / MAD. Empty result when MAD = 0."""
     med = float(np.median(baseline))
     mad = float(np.median(np.abs(baseline - med)))
     return {d: 0.6745 * (v - med) / mad for d, v in values.items()} if mad > 0 else {}
 
 
 def lagged_spearman(a: Series, b: Series, lag: int) -> tuple[int, float, float] | None:
-    """Korelacja Spearmana a(D) z b(D + lag dób): (n par, rho, p) albo None, gdy szereg jest stały lub par <10."""
+    """Spearman correlation of a(D) with b(D + lag days): (n, rho, p), or None if constant or <10 pairs."""
     pairs = [(v, b[d + timedelta(days=lag)]) for d, v in a.items() if d + timedelta(days=lag) in b]
     if len(pairs) < 10:
         return None
@@ -83,8 +84,8 @@ def lagged_spearman(a: Series, b: Series, lag: int) -> tuple[int, float, float] 
 def kruskal_by_group(
     values: Series, groups: dict[date, str], min_per_group: int = 3
 ) -> tuple[float, dict[str, float]] | None:
-    """Kruskal-Wallis: czy wartości różnią się między grupami (np. fazami cyklu). Zwraca (p, mediany grup) albo None,
-    gdy po odrzuceniu grup mniejszych niż `min_per_group` zostaje <2 grup albo wszystkie wartości są równe."""
+    """Kruskal-Wallis: whether values differ between groups (e.g. cycle phases). Returns (p, group medians) or None
+    when, after dropping groups smaller than `min_per_group`, fewer than 2 groups remain or all values are equal."""
     by: dict[str, list[float]] = {}
     for d, v in values.items():
         if d in groups:

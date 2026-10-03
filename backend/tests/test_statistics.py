@@ -37,7 +37,7 @@ def test_step_change_date_and_recent_shift():
 def test_white_noise_rarely_significant():
     p = [analyze_series(series(np.random.default_rng(s).normal(60, 5, 56)), END)["trend"]["p"] for s in range(200)]
     hits = sum(x < 0.05 for x in p)
-    assert hits <= 20  # 5% nominalnie; margines na losowość
+    assert hits <= 20  # 5% nominal; margin for randomness
 
 
 def test_outlier_day_flagged_and_short_series_insufficient():
@@ -70,13 +70,13 @@ def test_analyze_from_db_end_to_end():
         res = analyze(db, 1, end=END, days=40)
     assert res["metrics"]["steps"]["trend"]["p_adj"] < 0.001
     assert res["metrics"]["rhr"]["trend"]["slope_per_week"] > 0.8
-    assert res["metrics"]["sleep_minutes"]["trend"]["p"] == 1.0  # stała 420
+    assert res["metrics"]["sleep_minutes"]["trend"]["p"] == 1.0  # constant 420
     assert res["metrics"]["bp_sys"]["status"] == "insufficient_data" and res["cycle"] == []
 
 
 def test_weekly_sd_blocks_do_not_overlap_and_trend_fp_is_low():
     start = END - timedelta(days=59)
-    bp = {start + timedelta(days=i): 120.0 + (i % 7) for i in range(60)}  # każdy tydzień: SD 2.16
+    bp = {start + timedelta(days=i): 120.0 + (i % 7) for i in range(60)}  # every week: SD 2.16
     w = weekly_sd(bp, start, END)
     assert len(w) == 8 and min(w) == END - timedelta(days=49) and {round(v, 2) for v in w.values()} == {2.16}
     fp = 0

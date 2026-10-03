@@ -14,18 +14,18 @@ from app.statistics import analyze
 from app.statistics.charts import render_pdf
 
 router = APIRouter(prefix="/health", tags=["health"])
-# Dla generatora danych: działa na dowolnym użytkowniku, chroniony nagłówkiem X-Service-Key
+# For the data generator: works on any user, protected by the X-Service-Key header
 service_router = APIRouter(prefix="/health/service", tags=["health-service"], dependencies=[ServiceAuth])
 
 
 def _insert_new(db: Session, model, user_id: int, items) -> int:
-    """Wstawia wiersze, pomijając te o istniejącym kluczu (ingest jest idempotentny). Zwraca liczbę nowych."""
+    """Inserts rows, skipping those with an existing key (ingest is idempotent). Returns the number of new rows."""
     rows = [{**item.model_dump(), "user_id": user_id} for item in items]
     if not rows:
         return 0
     # on_conflict_do_nothing jest per-dialekt: Postgres w produkcji, SQLite w testach
     insert = postgresql.insert if db.get_bind().dialect.name == "postgresql" else sqlite.insert
-    # rowcount bywa -1 (psycopg), więc liczymy wiersze z RETURNING – zwraca tylko faktycznie wstawione
+    # rowcount may be -1 (psycopg), so we count rows from RETURNING – it returns only the actually inserted ones
     pk = next(iter(model.__table__.primary_key.columns))
     return len(db.execute(insert(model).values(rows).on_conflict_do_nothing().returning(pk)).all())
 
@@ -75,7 +75,7 @@ def ingest_for_user(user_id: int, data: HealthIngest, db: DbSession):
 def report(user: CurrentUser, db: DbSession):
     result = analyze(db, user.id, include_series=True)
     if not any(m["status"] == "ok" for m in result["metrics"].values()):
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Za mało danych do wygenerowania raportu")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Not enough data to generate the report")
     buffer = BytesIO()
     render_pdf(result, buffer)
-    return Response(buffer.getvalue(), media_type="application/pdf", headers={"Content-Disposition": 'attachment; filename="raport.pdf"'})
+    return Response(buffer.getvalue(), media_type="application/pdf", headers={"Content-Disposition": 'attachment; filename="report.pdf"'})
