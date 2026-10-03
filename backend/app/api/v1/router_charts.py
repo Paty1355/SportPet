@@ -19,6 +19,7 @@ from app.schemas.health import (
     SeriesOut,
     SeriesPoint,
 )
+from app.statistics import analyze
 
 router = APIRouter(prefix="/health", tags=["health-charts"])
 
@@ -208,3 +209,9 @@ def overview(user: CurrentUser, db: DbSession):
         blood_pressure=newest(BloodPressureReading, BloodPressureReading.ts),
         cycle=newest(CycleDay, CycleDay.date),
     )
+
+
+@router.get("/stats")
+def stats(user: CurrentUser, db: DbSession, days: Annotated[int, Query(ge=7, le=365)] = 60, end: EndD = None):
+    """Analiza trendów zalogowanego użytkownika (`app.statistics.analyze`) z szeregami dziennymi i prostymi trendu."""
+    return analyze(db, user.id, end=end, days=days, include_series=True)
