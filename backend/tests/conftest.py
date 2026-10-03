@@ -65,6 +65,20 @@ def client(chroma, tmp_path, monkeypatch):
     app.dependency_overrides.clear()
 
 
+QUESTIONNAIRE_ANSWERS = ["3", "returning", "glutes, core", "1,2", "burpees; jumping", "back, diastasis", "mwf", "60", "active", "cautious"]
+
+
+@pytest.fixture
+def complete_questionnaire(client):
+    def complete(headers):
+        for answer in QUESTIONNAIRE_ANSWERS:
+            res = client.post("/api/v1/agents/training/chat", json={"message": answer}, headers=headers)
+            assert res.status_code == 200, res.text
+        return res
+
+    return complete
+
+
 @pytest.fixture
 def auth_headers(client):
     client.post("/api/v1/auth/register", json={"email": "test@example.com", "password": "password123"})
