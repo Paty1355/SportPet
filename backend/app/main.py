@@ -24,7 +24,7 @@ def _add_user_profile_columns() -> None:
         return
     with engine.begin() as conn:
         double = "DOUBLE PRECISION"
-        columns = {"sex": "VARCHAR(1)", "birth_date": "DATE", "weight_kg": double, "height_cm": double}
+        columns = {"sex": "VARCHAR(1)", "birth_date": "DATE", "weight_kg": double, "height_cm": double, "share_pet": "BOOLEAN NOT NULL DEFAULT TRUE"}
         for col, typ in columns.items():
             conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {typ}"))
 

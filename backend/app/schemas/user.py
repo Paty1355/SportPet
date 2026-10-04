@@ -41,3 +41,4 @@ class UserOut(BaseModel):
     birth_date: date | None
     weight_kg: float | None
     height_cm: float | None
+    share_pet: bool
