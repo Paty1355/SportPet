@@ -5,6 +5,7 @@ export interface UserOut {
   email: string
   name: string | null
   created_at: string
+  share_pet: boolean
 }
 
 export class ApiError extends Error {
@@ -55,6 +56,24 @@ export async function authGet<T>(path: string, token: string, params?: Record<st
   })
   if (!response.ok) throw await toApiError(response)
   return response.json()
+}
+
+export async function authRequest<T>(method: string, path: string, token: string, body?: unknown): Promise<T> {
+  const response = await fetch(`${API_URL}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  })
+  if (!response.ok) throw await toApiError(response)
+  const text = await response.text()
+  return (text ? JSON.parse(text) : {}) as T
+}
+
+export function authPost<T>(path: string, token: string, body: unknown): Promise<T> {
+  return authRequest<T>('POST', path, token, body)
 }
 
 export async function fetchMe(token: string): Promise<UserOut> {

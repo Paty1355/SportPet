@@ -23,6 +23,7 @@ export function BunAvatar() {
           carrotNearby={false}
           palette={palette}
           hat={pet?.equipped.hat ?? null}
+          species={pet?.species}
           onPet={() => {}}
         />
       </View>

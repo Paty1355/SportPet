@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { putMyPet } from '../friends/friendsApi'
+import { useAuth } from '../../lib/auth'
 import { useAccentSync } from '../../lib/theme'
 import { useTraining } from '../../lib/training'
 import { findCosmetic, type CosmeticItem } from './cosmetics'
@@ -11,6 +13,7 @@ import {
   doneWorkoutIds,
   equipCosmetic as equipCosmeticItem,
   feed as feedPet,
+  levelOf,
   normalizePet,
   receiveAffection,
   rewardWorkouts,
@@ -36,10 +39,36 @@ export function PetProvider({ children }: { children: ReactNode }) {
   const { calendar } = useTraining()
   const [pet, setPet] = useState<PetState | null>(null)
   useAccentSync(pet ? (findCosmetic(pet.equipped.theme)?.palette?.[0] ?? null) : null)
+  const { token, user } = useAuth()
+  const storageKey = `${STORAGE_KEY}:${user?.id ?? 'guest'}`
+
+  const syncPayload = pet
+    ? {
+        name: pet.name,
+        species: pet.species,
+        level: levelOf(pet.xp),
+        hat: pet.equipped.hat,
+        body: pet.equipped.body,
+        background: pet.equipped.background,
+        decor: pet.equipped.decor,
+        theme: pet.equipped.theme,
+      }
+    : null
+  const syncKey = syncPayload ? JSON.stringify(syncPayload) : ''
+
+  useEffect(() => {
+    if (!token || !syncPayload) return
+    const timer = setTimeout(() => {
+      putMyPet(token, syncPayload).catch(() => {})
+    }, 1500)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, syncKey])
 
   useEffect(() => {
     let cancelled = false
-    AsyncStorage.getItem(STORAGE_KEY)
+    setPet(null)
+    AsyncStorage.getItem(storageKey)
       .then((raw) => {
         const now = Date.now()
         const base = raw ? normalizePet(JSON.parse(raw), now) : createPet(now)
@@ -51,7 +80,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [storageKey])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -68,7 +97,8 @@ export function PetProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!pet) return
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(pet)).catch(() => {})
+    AsyncStorage.setItem(storageKey, JSON.stringify(pet)).catch(() => {})
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pet])
 
   const value = useMemo<PetContextValue>(

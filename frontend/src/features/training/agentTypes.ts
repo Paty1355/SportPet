@@ -7,6 +7,28 @@ export interface ProposedExercise {
   estimatedTimeMinutes: number
 }
 
-export type AgentReply =
-  | { type: 'message'; text: string }
-  | { type: 'plan'; exercises: ProposedExercise[] }
+export interface QuestionOption {
+  value: string
+  label: string
+}
+
+export interface Question {
+  key: string
+  text: string
+  options: QuestionOption[]
+  multi: boolean
+}
+
+export interface QuestionnaireStatus {
+  step: number
+  total: number
+  completed: boolean
+  question: Question | null
+}
+
+export interface ChatReply {
+  reply: string
+  memories_used: string[]
+  question: Question | null
+  plan?: ProposedExercise[]
+}

@@ -18,8 +18,8 @@ export interface Overview {
     spo2: LatestValue | null
     stress: LatestValue | null
   }
-  daily: DailySummary | null
-  blood_pressure: BloodPressure | null
+  daily: DailySummary[]
+  blood_pressure: BloodPressure[]
 }
 
 export interface SeriesPoint {
@@ -48,8 +48,9 @@ export interface BloodPressure {
   diastolic: number
 }
 
-export function fetchOverview(token: string) {
-  return authGet<Overview>('/health/overview', token)
+// One call for the profile: profile, latest vitals, daily summaries and blood pressure of the last 60 days.
+export function fetchDashboard(token: string) {
+  return authGet<Overview>('/health/dashboard', token)
 }
 
 export function fetchHeartRateDay(token: string) {
@@ -63,10 +64,3 @@ export function fetchHeartRateDay(token: string) {
   })
 }
 
-export function fetchDaily(token: string) {
-  return authGet<DailySummary[]>('/health/daily', token)
-}
-
-export function fetchBloodPressure(token: string) {
-  return authGet<BloodPressure[]>('/health/blood-pressure', token)
-}

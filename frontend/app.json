@@ -1,14 +1,23 @@
 {
   "expo": {
-    "name": "FitApp",
-    "slug": "fitapp",
-    "scheme": "fitapp",
+    "name": "SportPet",
+    "slug": "sportpet",
+    "scheme": "sportpet",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f8fafc"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIFileSharingEnabled": true,
+        "LSSupportsOpeningDocumentsInPlace": true
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +34,8 @@
     "plugins": [
       "expo-router",
       "expo-status-bar",
-      "expo-audio"
+      "expo-audio",
+      "expo-sharing"
     ]
   }
 }

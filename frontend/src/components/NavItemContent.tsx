@@ -17,8 +17,9 @@ export function NavItemContent({ item, active, wide }: NavItemContentProps) {
       <View
         style={[
           styles.fab,
-          { backgroundColor: item.accent, shadowColor: item.accent },
-          active && { borderWidth: 4, borderColor: `${item.accent}33` },
+          // The centre button follows the active theme instead of the fixed nav accent.
+          { backgroundColor: colors.primary, shadowColor: colors.primary },
+          active && { borderWidth: 4, borderColor: `${colors.primary}33` },
         ]}
       >
         <Ionicons name={item.icon} size={26} color="#ffffff" />

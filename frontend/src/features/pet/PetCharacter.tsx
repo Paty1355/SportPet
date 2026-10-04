@@ -13,11 +13,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg'
+import { findSpecies, hatTransform } from './species'
+import { snakeBodyPath } from './snakeShape'
 import type { PetMood } from './petLogic'
 
 export const PET_SIZE = 220
 export const MOUTH_Y = 152
 const MOUTH_X = 110
+const SNAKE_PATH = snakeBodyPath()
 const STROKE_STEP = 40
 const BLUSH = '#f9a8d4'
 const INK = '#3b2f2f'
@@ -37,6 +40,7 @@ interface PetCharacterProps {
   carrotNearby: boolean
   palette: string[]
   hat: string | null
+  species?: string
   onPet: () => void
 }
 
@@ -47,9 +51,14 @@ export function PetCharacter({
   carrotNearby,
   palette,
   hat,
+  species,
   onPet,
 }: PetCharacterProps) {
   const [main, shade, belly] = palette
+  const speciesDef = findSpecies(species)
+  const isBunny = speciesDef.id === 'bunny'
+  const isSnake = speciesDef.id === 'snake'
+  const hatMatrix = hatTransform(speciesDef.anchor)
   const containerRef = useRef<View>(null)
   const containerRect = useRef<LayoutRectangle | null>(null)
   const bob = useSharedValue(0)
@@ -182,7 +191,7 @@ export function PetCharacter({
   const eyeStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: gazeX.value },
-      { translateY: gazeY.value },
+      { translateY: gazeY.value + (isSnake ? -26 : 0) },
       { scaleY: blink.value * happyEyes.value },
     ],
   }))
@@ -194,6 +203,8 @@ export function PetCharacter({
       transform: [{ scaleY: 0.2 + amount * 0.8 }, { scaleX: 0.8 + amount * 0.2 }],
     }
   })
+
+  const mouthShift = { transform: [{ translateY: isSnake ? -30 : 0 }] }
 
   const closedMouthStyle = useAnimatedStyle(() => ({
     opacity: 1 - Math.max(nearOpen.value, chew.value),
@@ -226,41 +237,75 @@ export function PetCharacter({
         ))}
 
         <Animated.View style={[StyleSheet.absoluteFill, bodyStyle]}>
-          <Animated.View style={[StyleSheet.absoluteFill, leftEarStyle]} pointerEvents="none">
-            <Svg width={PET_SIZE} height={PET_SIZE} viewBox="0 0 220 220">
-              <Ellipse cx="72" cy="52" rx="22" ry="48" fill={main} />
-              <Ellipse cx="72" cy="56" rx="11" ry="32" fill={BLUSH} />
-            </Svg>
-          </Animated.View>
-          <Animated.View style={[StyleSheet.absoluteFill, rightEarStyle]} pointerEvents="none">
-            <Svg width={PET_SIZE} height={PET_SIZE} viewBox="0 0 220 220">
-              <Ellipse cx="148" cy="52" rx="22" ry="48" fill={main} />
-              <Ellipse cx="148" cy="56" rx="11" ry="32" fill={BLUSH} />
-            </Svg>
-          </Animated.View>
+          {isBunny && (
+            <>
+              <Animated.View style={[StyleSheet.absoluteFill, leftEarStyle]} pointerEvents="none">
+                <Svg width={PET_SIZE} height={PET_SIZE} viewBox="0 0 220 220">
+                  <Ellipse cx="72" cy="52" rx="22" ry="48" fill={main} />
+                  <Ellipse cx="72" cy="56" rx="11" ry="32" fill={BLUSH} />
+                </Svg>
+              </Animated.View>
+              <Animated.View style={[StyleSheet.absoluteFill, rightEarStyle]} pointerEvents="none">
+                <Svg width={PET_SIZE} height={PET_SIZE} viewBox="0 0 220 220">
+                  <Ellipse cx="148" cy="52" rx="22" ry="48" fill={main} />
+                  <Ellipse cx="148" cy="56" rx="11" ry="32" fill={BLUSH} />
+                </Svg>
+              </Animated.View>
+            </>
+          )}
 
           <View style={StyleSheet.absoluteFill}>
-          <Svg width={PET_SIZE} height={PET_SIZE} viewBox="0 0 220 220">
-            <Ellipse cx="84" cy="200" rx="16" ry="9" fill={shade} />
-            <Ellipse cx="136" cy="200" rx="16" ry="9" fill={shade} />
-            <Ellipse cx="110" cy="140" rx="74" ry="66" fill={main} />
-            <Ellipse cx="110" cy="168" rx="40" ry="30" fill={belly} />
-            <Circle cx="74" cy="146" r="11" fill={BLUSH} opacity={0.7} />
-            <Circle cx="146" cy="146" r="11" fill={BLUSH} opacity={0.7} />
-            <Ellipse cx="110" cy="128" rx="6" ry="4.5" fill={BLUSH} />
-            {hat && <HatLayer id={hat} />}
-          </Svg>
+            <Svg width={PET_SIZE} height={PET_SIZE} viewBox="0 0 220 220">
+              {isBunny ? (
+                <G>
+                  <Ellipse cx="84" cy="200" rx="16" ry="9" fill={shade} />
+                  <Ellipse cx="136" cy="200" rx="16" ry="9" fill={shade} />
+                  <Ellipse cx="110" cy="140" rx="74" ry="66" fill={main} />
+                  <Ellipse cx="110" cy="168" rx="40" ry="30" fill={belly} />
+                  <Circle cx="74" cy="146" r="11" fill={BLUSH} opacity={0.7} />
+                  <Circle cx="146" cy="146" r="11" fill={BLUSH} opacity={0.7} />
+                  <Ellipse cx="110" cy="128" rx="6" ry="4.5" fill={BLUSH} />
+                </G>
+              ) : isSnake ? (
+                <G>
+                  <Path d={SNAKE_PATH} fill={main} />
+                  <Ellipse cx="110" cy="92" rx="48" ry="42" fill={main} />
+                </G>
+              ) : (
+                <G>
+                  <Circle cx="66" cy="70" r="22" fill={main} />
+                  <Circle cx="154" cy="70" r="22" fill={main} />
+                  <Circle cx="66" cy="70" r="11" fill={shade} />
+                  <Circle cx="154" cy="70" r="11" fill={shade} />
+                  <Ellipse cx="110" cy="186" rx="58" ry="32" fill={main} />
+                  <Ellipse cx="110" cy="194" rx="34" ry="22" fill={belly} />
+                  <Ellipse cx="84" cy="214" rx="20" ry="10" fill={shade} />
+                  <Ellipse cx="136" cy="214" rx="20" ry="10" fill={shade} />
+                  <Ellipse cx="110" cy="118" rx="64" ry="56" fill={main} />
+                  <Ellipse cx="110" cy="140" rx="28" ry="22" fill={belly} />
+                  <Ellipse cx="110" cy="130" rx="8" ry="6" fill={INK} />
+                  <Circle cx="78" cy="132" r="9" fill={BLUSH} opacity={0.5} />
+                  <Circle cx="142" cy="132" r="9" fill={BLUSH} opacity={0.5} />
+                </G>
+              )}
+              {hat === 'hat-pirate' && <HatLayer id={hat} />}
+              {hat && hat !== 'hat-pirate' && (
+                <G transform={hatMatrix}>
+                  <HatLayer id={hat} />
+                </G>
+              )}
+            </Svg>
           </View>
 
-          <Animated.View style={[StyleSheet.absoluteFill, closedMouthStyle]} pointerEvents="none">
+          <Animated.View style={[StyleSheet.absoluteFill, closedMouthStyle, mouthShift]} pointerEvents="none">
             <Svg width={PET_SIZE} height={PET_SIZE} viewBox="0 0 220 220">
               <Mouth mood={mood} />
             </Svg>
           </Animated.View>
 
-          <Animated.View style={[styles.openMouth, openMouthStyle]} />
+          <Animated.View style={[styles.openMouth, openMouthStyle, mouthShift]} />
 
-          <Animated.View style={[styles.eye, styles.leftEye, eyeStyle]}>
+          <Animated.View style={[styles.eye, styles.leftEye, eyeStyle, hat === 'hat-pirate' && { opacity: 0 }]}>
             <View style={styles.shine} />
           </Animated.View>
           <Animated.View style={[styles.eye, styles.rightEye, eyeStyle]}>
@@ -368,6 +413,14 @@ export function HatLayer({ id }: { id: string }) {
         {flowers.map(([x, y, color]) => (
           <Flower key={`flower-${x}-${y}`} x={x} y={y} color={color} />
         ))}
+      </G>
+    )
+  }
+  if (id === 'hat-pirate') {
+    return (
+      <G>
+        <Path d="M 40 116 Q 88 118 172 84" stroke="#111827" strokeWidth={5} fill="none" />
+        <Ellipse cx="88" cy="117" rx="12" ry="11" fill="#111827" />
       </G>
     )
   }

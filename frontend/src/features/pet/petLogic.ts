@@ -1,5 +1,6 @@
 import type { TrainingCalendar } from '../../lib/types'
 import { DEFAULT_OWNED, type CosmeticItem } from './cosmetics'
+import { findSpecies, SPECIES } from './species'
 import type { FoodItem } from './shop'
 
 export interface Equipped {
@@ -12,6 +13,7 @@ export interface Equipped {
 
 export interface PetState {
   name: string
+  species: string
   xp: number
   fullness: number
   happiness: number
@@ -37,6 +39,7 @@ const clamp = (value: number) => Math.min(100, Math.max(0, value))
 export function createPet(now: number): PetState {
   return {
     name: 'Bun',
+    species: 'bunny',
     xp: 0,
     fullness: 80,
     happiness: 60,
@@ -139,6 +142,18 @@ export function equipCosmetic(pet: PetState, item: CosmeticItem): PetState {
   }
   if (item.kind === 'theme') {
     return { ...pet, equipped: { ...pet.equipped, theme: item.id } }
+  }
+  if (item.kind === 'species') {
+    const species = item.id.replace('species-', '')
+    const usesDefaultBody = SPECIES.some((s) => s.defaultBody === pet.equipped.body)
+    return {
+      ...pet,
+      species,
+      equipped: {
+        ...pet.equipped,
+        body: usesDefaultBody ? findSpecies(species).defaultBody : pet.equipped.body,
+      },
+    }
   }
   if (item.kind === 'decor') {
     const decor = pet.equipped.decor.includes(item.id)

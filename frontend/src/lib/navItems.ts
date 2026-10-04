@@ -4,7 +4,7 @@ import type { Ionicons } from '@expo/vector-icons'
 export type IconName = ComponentProps<typeof Ionicons>['name']
 
 export interface NavItem {
-  href: '/' | '/training' | '/machines' | '/diet' | '/pet' | '/profile'
+  href: '/agents' | '/' | '/pet' | '/friends' | '/profile'
   label: string
   icon: IconName
   accent: string
@@ -12,10 +12,9 @@ export interface NavItem {
 }
 
 export const navItems: NavItem[] = [
-  { href: '/training', label: 'Training', icon: 'barbell-outline', accent: '#6366f1' },
-  { href: '/machines', label: 'Machines', icon: 'camera-outline', accent: '#0ea5e9' },
-  { href: '/', label: 'Calendar', icon: 'calendar-outline', accent: '#8b5cf6', primary: true },
-  { href: '/diet', label: 'Diet', icon: 'nutrition-outline', accent: '#22c55e' },
-  { href: '/pet', label: 'Pet', icon: 'paw-outline', accent: '#ec4899' },
+  { href: '/agents', label: 'Agents', icon: 'sparkles-outline', accent: '#6366f1' },
+  { href: '/', label: 'Calendar', icon: 'calendar-outline', accent: '#8b5cf6' },
+  { href: '/pet', label: 'Pet', icon: 'paw-outline', accent: '#ec4899', primary: true },
+  { href: '/friends', label: 'Friends', icon: 'people-outline', accent: '#0ea5e9' },
   { href: '/profile', label: 'Profile', icon: 'person-outline', accent: '#64748b' },
 ]

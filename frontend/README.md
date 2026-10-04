@@ -1,4 +1,4 @@
-# FitApp: frontend
+# SportPet: frontend
 
 Aplikacja fitness działająca jako strona w przeglądarce i jako aplikacja na telefon (iOS i Android) z jednego kodu.
 
@@ -66,7 +66,7 @@ Obecny kod nadaje się do zbudowania aplikacji na sklepy bez przepisywania:
 
 ## Otwarte pytania
 
-- Nazwa aplikacji (obecnie roboczo "FitApp").
+- Nazwa aplikacji: SportPet.
 - Wybór ostatecznego kierunku: wersja mobilna w sklepach czy tylko PWA/web.
 - Hosting backendu i wersji webowej na demo.
 - Model rozpoznawania maszyn: gotowe API, czy model uruchamiany na backendzie.

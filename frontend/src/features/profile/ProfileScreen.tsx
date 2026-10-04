@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { Directory, File, Paths } from 'expo-file-system'
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Screen } from '../../components/Screen'
 import { API_URL, ApiError } from '../../lib/api'
@@ -6,10 +7,8 @@ import { useAuth } from '../../lib/auth'
 import { useTheme } from '../../lib/theme'
 import { BarChart, LineChart } from '../stats/charts'
 import {
-  fetchBloodPressure,
-  fetchDaily,
+  fetchDashboard,
   fetchHeartRateDay,
-  fetchOverview,
   type BloodPressure,
   type DailySummary,
   type Overview,
@@ -34,10 +33,10 @@ export function ProfileScreen() {
     if (!token) return
     let cancelled = false
     setLoading(true)
-    Promise.all([fetchOverview(token), fetchHeartRateDay(token), fetchDaily(token), fetchBloodPressure(token)])
-      .then(([overview, heartRate, daily, bloodPressure]) => {
+    Promise.all([fetchDashboard(token), fetchHeartRateDay(token)])
+      .then(([overview, heartRate]) => {
         if (!cancelled) {
-          setStats({ overview, heartRate, daily, bloodPressure })
+          setStats({ overview, heartRate, daily: overview.daily, bloodPressure: overview.blood_pressure })
           setError(null)
         }
       })
@@ -151,14 +150,12 @@ function ReportCard({ token }: { token: string }) {
   const { colors } = useTheme()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState<string | null>(null)
 
   async function download() {
-    if (Platform.OS !== 'web') {
-      setError('Pobieranie raportu na telefonie będzie dostępne w kolejnym kroku. Na razie otwórz aplikację w przeglądarce.')
-      return
-    }
     setBusy(true)
     setError(null)
+    setSaved(null)
     try {
       const response = await fetch(`${API_URL}/health/report`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -166,12 +163,29 @@ function ReportCard({ token }: { token: string }) {
       if (!response.ok) {
         throw new ApiError(response.status, `Request failed (${response.status})`)
       }
-      const url = URL.createObjectURL(await response.blob())
-      const link = document.createElement('a')
-      link.href = url
-      link.download = 'raport.pdf'
-      link.click()
-      URL.revokeObjectURL(url)
+      if (Platform.OS === 'web') {
+        const url = URL.createObjectURL(await response.blob())
+        const link = document.createElement('a')
+        link.href = url
+        link.download = 'raport.pdf'
+        link.click()
+        URL.revokeObjectURL(url)
+      } else {
+        const bytes = new Uint8Array(await response.arrayBuffer())
+        if (Platform.OS === 'android') {
+          // The user picks the folder (e.g. Downloads); the file is written there without opening any other app.
+          const folder = await Directory.pickDirectoryAsync()
+          folder.createFile('raport.pdf', 'application/pdf').write(bytes)
+          setSaved('Saved the report to the folder you picked.')
+        } else {
+          // iOS has no Downloads folder. The file goes to the app's Documents, visible in the Files app.
+          const file = new File(Paths.document, 'raport.pdf')
+          if (file.exists) file.delete()
+          file.create()
+          file.write(bytes)
+          setSaved('Saved the report. Find it in Files, under SportPet.')
+        }
+      }
     } catch (caught) {
       if (caught instanceof ApiError && caught.status === 422) {
         setError('Not enough data to generate a report yet. Keep logging workouts and measurements.')
@@ -201,6 +215,7 @@ function ReportCard({ token }: { token: string }) {
           <Text style={styles.reportButtonText}>Download report (PDF)</Text>
         )}
       </Pressable>
+      {saved && <Text style={[styles.meta, { color: colors.success }]}>{saved}</Text>}
       {error && <Text style={[styles.meta, { color: colors.warn }]}>{error}</Text>}
     </View>
   )

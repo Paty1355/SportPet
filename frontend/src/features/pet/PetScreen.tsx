@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Pressable, StyleSheet, Text, View, type LayoutRectangle } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { CoinBadge } from '../../components/CoinBadge'
 import { Screen } from '../../components/Screen'
 import type { IconName } from '../../lib/navItems'
 import { playMunchSound, playPetSound, preloadSounds, useSoundOn } from '../../lib/sound'
@@ -94,10 +95,7 @@ export function PetScreen() {
   return (
     <Screen>
       <View style={styles.topRow}>
-        <View style={[styles.coinChip, { backgroundColor: colors.warnSoft }]}>
-          <Ionicons name="barbell" size={16} color={colors.warn} />
-          <Text style={[styles.coinText, { color: colors.warn }]}>{pet.coins}</Text>
-        </View>
+        <CoinBadge coins={pet.coins} />
         <View style={styles.rightGroup}>
         <Pressable
           onPress={toggleSound}
@@ -129,7 +127,7 @@ export function PetScreen() {
             style={StyleSheet.absoluteFill}
             pointerEvents="none"
           />
-          <View style={[styles.sunGlow, { backgroundColor: backgroundPalette[1] }]} />
+          <View style={[styles.sunGlow, { backgroundColor: colors.primary }]} />
           <View style={[styles.floor, { backgroundColor: backgroundPalette[1] }]} />
           <DecorLayer ids={pet.equipped.decor} />
           <View style={styles.ground} />
@@ -140,6 +138,7 @@ export function PetScreen() {
             carrotNearby={carrotNearby}
             palette={bodyPalette}
             hat={pet.equipped.hat}
+            species={pet.species}
             onPet={handlePet}
           />
         </View>
