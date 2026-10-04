@@ -1,0 +1,112 @@
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+type MuscleRegion = Literal[
+    "chest",
+    "shoulders",
+    "rear-deltoids",
+    "biceps",
+    "triceps",
+    "forearms",
+    "abs",
+    "obliques",
+    "traps",
+    "lats",
+    "lower-back",
+    "glutes",
+    "quads",
+    "hamstrings",
+    "calves",
+    "adductors",
+]
+
+
+class MachineCatalogEntry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    machine_id: str
+    name: str
+    aliases: list[str]
+
+
+class MachineUsage(BaseModel):
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    description: str
+    setup_steps: list[str]
+    exercise_steps: list[str]
+    tips: list[str]
+
+    @field_validator("description")
+    @classmethod
+    def nonempty_description(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("description must not be blank")
+        return value.strip()
+
+    @field_validator("setup_steps", "exercise_steps", "tips")
+    @classmethod
+    def nonempty_items(cls, values: list[str]) -> list[str]:
+        if any(not value.strip() for value in values):
+            raise ValueError("list items must not be blank")
+        return [value.strip() for value in values]
+
+    @field_validator("setup_steps", "exercise_steps")
+    @classmethod
+    def required_items(cls, values: list[str]) -> list[str]:
+        if not values:
+            raise ValueError("at least one item is required")
+        return values
+
+
+class MachineMuscles(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    primary_muscles: list[MuscleRegion]
+    secondary_muscles: list[MuscleRegion]
+
+    @field_validator("primary_muscles", "secondary_muscles")
+    @classmethod
+    def unique_regions(cls, values: list[MuscleRegion]) -> list[MuscleRegion]:
+        if len(values) != len(set(values)):
+            raise ValueError("muscle regions must not repeat within a list")
+        return values
+
+
+class MachineDocument(MachineUsage, MachineMuscles):
+    machine_id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
+    name: str = Field(min_length=1)
+    aliases: list[str]
+    category: str = Field(min_length=1)
+    sources: list[str] = Field(min_length=1)
+    muscle_notes: list[str] = Field(default_factory=list)
+
+    @field_validator("name", "category")
+    @classmethod
+    def nonempty_names(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("names and category must not be blank")
+        return value.strip()
+
+    @field_validator("aliases", "sources", "muscle_notes")
+    @classmethod
+    def nonempty_metadata(cls, values: list[str]) -> list[str]:
+        return MachineUsage.nonempty_items(values)
+
+
+class MachineIdentification(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    is_gym_equipment: bool
+    confidence: Literal["high", "medium", "low"]
+    machine_id: str | None
+    machine_name: str
+
+
+class VisionResponse(MachineUsage, MachineMuscles):
+    machine_id: str
+    machine_name: str
+    category: str
+    sources: list[str]

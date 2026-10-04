@@ -1,0 +1,971 @@
+[
+  {
+    "machine_id": "leg_press_45",
+    "name": "45-Degree Leg Press Machine",
+    "aliases": ["Leg Press", "Linear Leg Press", "Incline Leg Press", "Sled Leg Press", "Angled Leg Press", "Leg Press Sled", "Plate-Loaded Leg Press"],
+    "category": "Lower Body Strength",
+    "primary_muscles": ["quads", "glutes"],
+    "secondary_muscles": ["hamstrings", "calves", "adductors"],
+    "description": "A heavy-duty machine where the user sits in a reclined position and pushes a loaded sled away from their body using their legs. It allows for heavy lower-body training without placing a direct load on the spine.",
+    "setup_steps": [
+      "Load the desired weight plates evenly on both sides of the sled.",
+      "Sit securely in the seat and press your back firmly against the backrest.",
+      "Place your feet on the platform shoulder-width apart, pointing your toes slightly outward."
+    ],
+    "exercise_steps": [
+      "Push the platform away by extending your knees and hips, then release the safety handles.",
+      "Slowly lower the platform by bending your knees until they form a 90-degree angle.",
+      "Push the platform back up to the starting position by driving through your heels.",
+      "Engage the safety catches before resting."
+    ],
+    "tips": [
+      "Do not lock out your knees at the top of the movement to prevent joint injury.",
+      "Ensure your lower back stays completely flat against the pad; do not let your pelvis tuck under.",
+      "Adjust your foot placement to target different muscles: higher up targets glutes and hamstrings, lower targets quadriceps."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "lat_pulldown",
+    "name": "Lat Pulldown Machine",
+    "aliases": ["Lat Machine", "Cable Pulldown", "High Pulley Machine", "Pulldown Station", "Wide Grip Pulldown", "Back Pulldown Machine"],
+    "category": "Upper Body Strength - Pull",
+    "primary_muscles": ["lats"],
+    "secondary_muscles": ["biceps", "rear-deltoids", "traps"],
+    "description": "A tall cable-based machine equipped with a thigh pad and a top-mounted pulley. It is designed to simulate a pull-up motion, targeting the broad muscles of the back.",
+    "setup_steps": [
+      "Select the desired weight using the pin in the weight stack.",
+      "Adjust the thigh pad so it sits snugly over your quads to anchor you down.",
+      "Stand up, grasp the bar with a wide overhand grip, and sit down smoothly."
+    ],
+    "exercise_steps": [
+      "Keep your torso upright with a slight backward lean and stick your chest out.",
+      "Pull the bar down towards your upper chest by driving your elbows down and back.",
+      "Squeeze your shoulder blades together at the bottom of the movement.",
+      "Slowly return the bar to the starting position, allowing your lats to stretch."
+    ],
+    "tips": [
+      "Avoid using momentum or swinging your torso backward to pull the weight.",
+      "Pull with your back, not your arms; imagine your hands are just hooks.",
+      "Do not pull the bar behind your neck, as this places excessive stress on the shoulder joint."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Rhomboids"]
+  },
+  {
+    "machine_id": "smith_machine",
+    "name": "Smith Machine",
+    "aliases": ["Guided Barbell Machine", "Smith Squat Rack", "Counterbalanced Smith Machine", "Multipress", "Vertical Barbell Machine", "Smith Rack"],
+    "category": "Multi-Purpose Strength",
+    "primary_muscles": ["quads", "chest"],
+    "secondary_muscles": ["glutes", "triceps", "hamstrings"],
+    "description": "A versatile machine consisting of a barbell fixed within steel rails, allowing only vertical or near-vertical movement. It features multiple lockout points for safety and is used for squats, presses, and rows.",
+    "setup_steps": [
+      "Set the barbell to the appropriate height for your chosen exercise.",
+      "Load weight plates onto the sides of the bar.",
+      "Stand or place a bench under the bar and unrack it by lifting slightly and rotating the bar backward to release the hooks."
+    ],
+    "exercise_steps": [
+      "Perform your chosen movement (e.g., squat or bench press) while maintaining proper form.",
+      "The bar will guide your path, removing the need to balance the weight horizontally.",
+      "To re-rack, rotate the bar forward so the hooks catch onto the nearest safety pegs on the rails."
+    ],
+    "tips": [
+      "Because the bar path is fixed, ensure your body positioning perfectly aligns with the rail angle to avoid joint strain.",
+      "Do not rely entirely on the machine for stability; keep your core engaged.",
+      "Always verify the hooks are securely engaged before letting go of the bar."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Deltoids"]
+  },
+  {
+    "machine_id": "cable_crossover",
+    "name": "Cable Crossover Machine",
+    "aliases": ["Functional Trainer", "Dual Cable Cross", "Cable Pulley Machine", "DAP", "Dual Adjustable Pulley", "Freemotion Machine", "Cable Column", "Cable Station"],
+    "category": "Multi-Purpose Functional",
+    "primary_muscles": ["chest"],
+    "secondary_muscles": ["triceps", "biceps", "obliques"],
+    "description": "A highly versatile, large frame featuring two independent weight stacks with adjustable pulleys on each side. It allows users to perform exercises in virtually any plane of motion.",
+    "setup_steps": [
+      "Adjust the height of the pulleys on both columns according to your exercise (e.g., high for downward flys, low for bicep curls).",
+      "Attach the appropriate handles (D-handles, rope, straight bar).",
+      "Select an equal amount of weight on both stacks."
+    ],
+    "exercise_steps": [
+      "Grasp a handle in each hand and step forward into the center of the machine.",
+      "Adopt a staggered stance for stability and maintain a slight bend in your elbows.",
+      "Pull the cables together in a hugging motion (for chest crossover) until your hands meet.",
+      "Slowly reverse the motion, resisting the weight as your arms open wide."
+    ],
+    "tips": [
+      "Maintain a stable core and avoid twisting your spine during bilateral movements.",
+      "Keep the slight bend in your elbows locked; the movement should come from the shoulders, not the arms.",
+      "Control the eccentric (return) phase of the lift to maximize muscle tension."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Deltoids", "Primary: Core"]
+  },
+  {
+    "machine_id": "leg_extension",
+    "name": "Leg Extension Machine",
+    "aliases": ["Quad Extension Machine", "Seated Leg Extension", "Knee Extension Machine", "Quad Machine"],
+    "category": "Lower Body Isolation",
+    "primary_muscles": ["quads"],
+    "secondary_muscles": [],
+    "description": "A seated isolation machine designed to target the quadriceps. The user lifts a padded lever by extending their knees against resistance.",
+    "setup_steps": [
+      "Adjust the backrest so your knees align exactly with the machine's pivot point (axis of rotation).",
+      "Adjust the lower pad so it rests comfortably just above your ankles.",
+      "Select your weight and sit down, gripping the side handles firmly."
+    ],
+    "exercise_steps": [
+      "Exhale and extend your legs smoothly until they are completely straight.",
+      "Pause for a brief second at the top to squeeze the quadriceps.",
+      "Inhale and slowly lower the weight back to the starting position without letting the weight stack crash."
+    ],
+    "tips": [
+      "Aligning your knee joint with the machine's pivot point is critical to prevent knee pain.",
+      "Avoid kicking the weight up forcefully; use a slow, controlled tempo.",
+      "Point your toes up (dorsiflexion) to keep tension firmly on the quads."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "seated_leg_curl",
+    "name": "Seated Leg Curl Machine",
+    "aliases": ["Hamstring Curl Machine", "Leg Curl Machine", "Seated Hamstring Machine", "Hamstring Flexion Machine"],
+    "category": "Lower Body Isolation",
+    "primary_muscles": ["hamstrings"],
+    "secondary_muscles": ["calves"],
+    "description": "A machine that isolates the hamstring muscles. The seated variation requires the user to push a padded lever downward and back by flexing their knees.",
+    "setup_steps": [
+      "Adjust the backrest so your knees align perfectly with the machine's pivot point.",
+      "Place your legs on top of the ankle pad and adjust it to sit just below your calves.",
+      "Lower the thigh pad firmly against your quadriceps to lock your legs in place."
+    ],
+    "exercise_steps": [
+      "Grip the handles and exhale as you curl the pad downward and under your thighs as far as possible.",
+      "Squeeze your hamstrings at the bottom of the movement.",
+      "Inhale and slowly return to the starting position, maintaining tension."
+    ],
+    "tips": [
+      "Do not lift your hips off the seat during the curl.",
+      "If you feel strain behind the knee rather than in the muscle belly, adjust the ankle pad higher.",
+      "Control the weight on the way up; do not let it snap your legs straight."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "pec_deck",
+    "name": "Pec Deck Machine",
+    "aliases": ["Machine Fly", "Chest Fly Machine", "Butterfly Machine", "Pec Fly Machine", "Rear Delt Machine", "Reverse Fly Machine"],
+    "category": "Upper Body Isolation",
+    "primary_muscles": ["chest"],
+    "secondary_muscles": ["shoulders"],
+    "description": "A seated machine that isolates the chest muscles using a flying motion. Many modern versions have adjustable arms that allow users to face backward and perform rear deltoid flys.",
+    "setup_steps": [
+      "Adjust the seat height so the handles or pads are level with your mid-chest.",
+      "Select your weight on the stack.",
+      "Sit with your back flat against the pad and grasp the handles with a slight bend in your elbows."
+    ],
+    "exercise_steps": [
+      "Exhale and squeeze the handles together in front of your chest.",
+      "Hold the contraction for a second when the handles meet.",
+      "Inhale and slowly allow the handles to return to the starting position, feeling a stretch in your chest."
+    ],
+    "tips": [
+      "Keep your shoulders depressed and chest puffed up; do not let your shoulders roll forward.",
+      "Maintain the same slight bend in your elbows throughout the entire movement.",
+      "Do not stretch back too far, which can place dangerous stress on the rotator cuffs."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "chest_press",
+    "name": "Seated Chest Press Machine",
+    "aliases": ["Machine Chest Press", "Vertical Chest Press", "Converging Chest Press", "Iso-Lateral Chest Press", "Bench Press Machine"],
+    "category": "Upper Body Strength - Push",
+    "primary_muscles": ["chest"],
+    "secondary_muscles": ["triceps", "shoulders"],
+    "description": "A machine that simulates the flat or incline bench press in an upright seated position, providing a fixed and safe path of motion for building chest strength.",
+    "setup_steps": [
+      "Adjust the seat height so the handles align with your mid-to-lower chest.",
+      "Select the desired weight or load plates if it is an iso-lateral machine.",
+      "Sit back firmly, puff your chest out, and retract your shoulder blades."
+    ],
+    "exercise_steps": [
+      "Grip the handles firmly and press the weight forward until your arms are fully extended.",
+      "Pause briefly at full extension without locking your elbows.",
+      "Slowly lower the weight back to the starting position."
+    ],
+    "tips": [
+      "Keep your back firmly against the pad; do not arch excessively to push the weight.",
+      "Ensure your elbows flare slightly but remain below shoulder level to protect the shoulder joints.",
+      "Squeeze your chest muscles at the peak of the movement."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "hack_squat",
+    "name": "Hack Squat Machine",
+    "aliases": ["Linear Hack Squat", "Sled Hack Squat", "V-Squat Machine", "Machine Squat", "Incline Squat Machine"],
+    "category": "Lower Body Strength",
+    "primary_muscles": ["quads"],
+    "secondary_muscles": ["glutes", "hamstrings", "calves"],
+    "description": "A machine where the user stands on a platform and rests their back and shoulders against a weighted sled, moving up and down in a guided diagonal plane. It heavily isolates the quadriceps.",
+    "setup_steps": [
+      "Load the desired weight plates on the sled.",
+      "Step onto the platform and position your shoulders securely under the shoulder pads.",
+      "Place your feet shoulder-width apart on the middle of the platform."
+    ],
+    "exercise_steps": [
+      "Stand up straight to unrack the sled and disengage the safety handles.",
+      "Lower yourself by bending your knees and hips until your thighs are parallel to the platform.",
+      "Drive through your heels and mid-foot to push the sled back to the starting position.",
+      "Engage the safeties before stepping off."
+    ],
+    "tips": [
+      "Keep your back totally flat against the backrest throughout the rep.",
+      "Do not let your heels lift off the platform; if they do, move your feet higher up.",
+      "Placing your feet lower on the platform increases quadriceps focus, while placing them higher targets the glutes."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "assisted_pullup_dip",
+    "name": "Assisted Pull-Up and Dip Machine",
+    "aliases": ["Gravitron", "Weight-Assisted Pull-Up", "Assisted Chin-Up Machine", "Dip Assist Machine", "Counterweight Pull-Up Machine"],
+    "category": "Upper Body Strength",
+    "primary_muscles": ["lats", "triceps", "chest"],
+    "secondary_muscles": ["biceps", "shoulders"],
+    "description": "A towering machine featuring a counter-weighted knee or foot pad that helps users perform pull-ups and dips by offsetting a portion of their body weight.",
+    "setup_steps": [
+      "Select the weight on the stack. Note: On this machine, more weight equals MORE assistance (making the exercise easier).",
+      "Grip the overhead handles for pull-ups or the parallel bars for dips.",
+      "Step or kneel onto the assist pad carefully."
+    ],
+    "exercise_steps": [
+      "For pull-ups: Pull your body upward until your chin clears the bar, then lower slowly.",
+      "For dips: Lower your body by bending your elbows until they are at 90 degrees, then press back up.",
+      "Step off the pad carefully one leg at a time to prevent the pad from snapping upward."
+    ],
+    "tips": [
+      "Focus on slow negatives (the lowering phase) to build the strength needed for unassisted variations.",
+      "Keep your core tight to avoid swinging.",
+      "Gradually decrease the weight on the stack over weeks to progress toward bodyweight reps."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
+  },
+  {
+    "machine_id": "seated_cable_row",
+    "name": "Seated Cable Row Machine",
+    "aliases": ["Low Row Machine", "Cable Row Station", "Horizontal Row Machine", "Pulley Row", "Long Pull Machine"],
+    "category": "Upper Body Strength - Pull",
+    "primary_muscles": ["lats", "traps"],
+    "secondary_muscles": ["biceps", "rear-deltoids", "lower-back"],
+    "description": "A horizontal pulling machine featuring a bench and footplates. It is highly effective for building mid-back thickness and improving posture.",
+    "setup_steps": [
+      "Attach a V-grip handle (or preferred bar) to the cable carabiner.",
+      "Sit on the bench, place your feet on the footplates with a slight bend in your knees.",
+      "Lean forward, grasp the handle, and sit up tall so your torso is perpendicular to the floor."
+    ],
+    "exercise_steps": [
+      "Keeping your chest up and back straight, pull the handle horizontally toward your belly button.",
+      "Squeeze your shoulder blades tightly together at peak contraction.",
+      "Slowly extend your arms and let your shoulders roll forward slightly for a deep stretch."
+    ],
+    "tips": [
+      "Do not rock back and forth heavily to move the weight; keep your torso relatively static.",
+      "Pull with your elbows, keeping them tucked close to your body.",
+      "Keep your knees slightly bent to take tension off the lower back."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Rhomboids"]
+  },
+  {
+    "machine_id": "hip_abductor_adductor",
+    "name": "Hip Abductor / Adductor Machine",
+    "aliases": ["Thigh Abductor", "Inner Thigh Machine", "Outer Thigh Machine", "Hip Fly", "Good Girl Bad Girl Machine (slang)"],
+    "category": "Lower Body Isolation",
+    "primary_muscles": ["glutes", "adductors"],
+    "secondary_muscles": [],
+    "description": "A dual-function seated machine used to target the inner (adductor) and outer (abductor) thigh muscles by opening or closing the legs against resistance.",
+    "setup_steps": [
+      "Adjust the machine settings to either push outward (abduction) or push inward (adduction).",
+      "Position the leg pads accordingly: outside the knees for abduction, inside for adduction.",
+      "Select your weight and sit with your back flat against the seat."
+    ],
+    "exercise_steps": [
+      "For Abduction: Push your knees outward against the pads as far as comfortable, then return slowly.",
+      "For Adduction: Squeeze your knees together against the pads until they touch, then return slowly.",
+      "Maintain a controlled tempo in both directions."
+    ],
+    "tips": [
+      "Avoid lifting your hips off the seat during heavy sets; maintain strict form.",
+      "Do not let the weight stack slam at the end of the negative rep; keep constant tension.",
+      "You can lean slightly forward to change the activation angle for the glutes during abduction."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
+  },
+  {
+    "machine_id": "treadmill",
+    "name": "Treadmill",
+    "aliases": ["Running Machine", "Tread", "Cardio Belt", "Walking Machine", "Runner", "Motorized Treadmill"],
+    "category": "Cardio",
+    "primary_muscles": ["quads", "calves"],
+    "secondary_muscles": ["hamstrings", "glutes"],
+    "description": "A motorized stationary machine featuring a moving belt used for walking, jogging, or running indoors. It typically features adjustable speed and incline settings to simulate uphill terrain.",
+    "setup_steps": [
+      "Step onto the side rails of the treadmill, not directly onto the belt.",
+      "Attach the safety clip to your clothing.",
+      "Press 'Quick Start' or select a specific program, then slowly increase the speed and incline to your desired levels."
+    ],
+    "exercise_steps": [
+      "Carefully step onto the moving belt and begin walking to find your balance.",
+      "Maintain a tall posture, look straight ahead, and let your arms swing naturally.",
+      "Adjust the speed to transition from a walk to a jog or run as needed.",
+      "When finishing, gradually reduce the speed to a slow walk before pressing stop."
+    ],
+    "tips": [
+      "Avoid holding onto the handrails while running, as this ruins your natural biomechanics and reduces calorie burn.",
+      "Look straight ahead rather than down at your feet to maintain proper neck alignment.",
+      "Utilize the incline feature to reduce impact on the knees while keeping the intensity high."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System", "Secondary: Core"]
+  },
+  {
+    "machine_id": "rowing_machine",
+    "name": "Rowing Machine",
+    "aliases": ["Rower", "Ergometer", "Ergo", "Erg", "Indoor Rower", "Concept 2", "Water Rower", "Air Rower"],
+    "category": "Cardio / Full Body",
+    "primary_muscles": ["lats", "quads", "hamstrings"],
+    "secondary_muscles": ["biceps", "glutes"],
+    "description": "An indoor machine that simulates the action of watercraft rowing. It provides a highly effective full-body cardiovascular and muscular endurance workout, utilizing both pulling mechanics and leg drive.",
+    "setup_steps": [
+      "Sit on the sliding seat and strap your feet securely into the foot stretchers.",
+      "Adjust the damper setting (resistance) on the flywheel if applicable (usually between 3-5 for standard workouts).",
+      "Lean forward slightly and grip the handle with an overhand, shoulder-width grip."
+    ],
+    "exercise_steps": [
+      "The Catch: Keep your shins vertical, back straight, and arms extended forward.",
+      "The Drive: Push powerfully through your heels to extend your legs, then hinge your torso back slightly, and finally pull the handle to your lower chest.",
+      "The Finish: Lean slightly back with legs straight and handle at your sternum.",
+      "The Recovery: Extend your arms, hinge forward from the hips, and then bend your knees to slide back to the catch position."
+    ],
+    "tips": [
+      "Remember the sequence: Legs, Core, Arms on the way out; Arms, Core, Legs on the way back in.",
+      "Power should come predominantly from your leg drive (about 60%), not just your upper body.",
+      "Keep your back straight; avoid rounding your shoulders at the catch."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System", "Secondary: Core", "Secondary: Rhomboids"]
+  },
+  {
+    "machine_id": "stair_climber",
+    "name": "Stair Climber",
+    "aliases": ["StairMaster", "Step Mill", "Step Machine", "Stair Stepper", "Escalator Machine", "Climber"],
+    "category": "Cardio",
+    "primary_muscles": ["quads", "glutes"],
+    "secondary_muscles": ["calves", "hamstrings"],
+    "description": "A stationary fitness machine that rotates steps, similar to a treadmill but simulating the continuous climbing of a flight of stairs. It provides an intense lower-body cardiovascular workout.",
+    "setup_steps": [
+      "Step onto the bottom stairs and grasp the handrails for balance.",
+      "Press the green 'Start' button to begin the movement at a slow, default pace.",
+      "Input your desired program or adjust the speed (steps per minute) using the console."
+    ],
+    "exercise_steps": [
+      "Step upward continuously as the stairs cycle downward.",
+      "Maintain a relatively upright posture, keeping your core engaged.",
+      "Push through your entire foot, especially the heel, to maximize glute activation.",
+      "When finishing, slow the machine down completely before stepping off."
+    ],
+    "tips": [
+      "Do not lean heavily on the handrails or support your body weight with your arms; this defeats the purpose of the workout.",
+      "Take full steps rather than short, quick taps to ensure full range of motion for the leg muscles.",
+      "Keep your spine neutral to avoid lower back pain."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System", "Secondary: Core"]
+  },
+  {
+    "machine_id": "elliptical_trainer",
+    "name": "Elliptical Trainer",
+    "aliases": ["Cross Trainer", "Glider", "X-Trainer", "Elliptical Machine", "Arc Trainer"],
+    "category": "Cardio",
+    "primary_muscles": ["quads", "glutes"],
+    "secondary_muscles": ["hamstrings", "calves", "chest"],
+    "description": "A stationary exercise machine used to simulate stair climbing, walking, or running without causing excessive pressure to the joints, hence decreasing the risk of impact injuries.",
+    "setup_steps": [
+      "Step onto the pedals carefully, as they can move freely.",
+      "Grasp the moving or stationary handles for stability.",
+      "Begin pedaling forward to turn on the console, then select your resistance and incline settings."
+    ],
+    "exercise_steps": [
+      "Push and pull the moving handles simultaneously while pedaling with your legs in a smooth, elliptical motion.",
+      "Keep your torso upright and your core engaged.",
+      "You can pedal backward to shift the focus slightly more toward the hamstrings and glutes."
+    ],
+    "tips": [
+      "Keep your feet flat on the pedals; avoid lifting your heels excessively, which can cause foot numbness.",
+      "Use both your upper and lower body actively rather than letting the machine's momentum do the work.",
+      "Adjust the resistance to ensure your heart rate remains elevated."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System", "Secondary: Back", "Secondary: Arms (if using moving handles)"]
+  },
+  {
+    "machine_id": "stationary_bike",
+    "name": "Stationary Bike",
+    "aliases": ["Spin Bike", "Upright Bike", "Exercise Bike", "Ergocycle", "Recumbent Bike", "Cycling Machine"],
+    "category": "Cardio",
+    "primary_muscles": ["quads"],
+    "secondary_muscles": ["hamstrings", "calves", "glutes"],
+    "description": "An indoor cycling machine designed for cardiovascular training. It comes in upright, spin, and recumbent variations, providing a low-impact workout focused on the lower body.",
+    "setup_steps": [
+      "Adjust the seat height so that when your pedal is at the lowest point, your knee has a very slight bend (about 5-10 degrees).",
+      "Adjust the seat distance and handlebar height for comfort and proper reach.",
+      "Strap your feet into the pedals or clip in if using cycling shoes."
+    ],
+    "exercise_steps": [
+      "Begin pedaling smoothly to activate the display.",
+      "Adjust the resistance dial or digital settings to simulate flat roads or heavy hills.",
+      "Maintain a steady cadence (RPM), using the handlebars for balance and varying positions if standing up (on a spin bike)."
+    ],
+    "tips": [
+      "Do not set the seat too low, as this puts excessive strain on the knees and reduces power output.",
+      "Keep a light grip on the handlebars; your core should support your upper body.",
+      "Focus on a smooth, circular pedal stroke—pulling up as well as pushing down."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System"]
+  },
+  {
+    "machine_id": "power_rack",
+    "name": "Power Rack",
+    "aliases": ["Squat Rack", "Squat Cage", "Power Cage", "Half Rack", "Rig", "Lifting Cage"],
+    "category": "Free Weights / Multi-Purpose",
+    "primary_muscles": ["quads", "hamstrings", "glutes", "chest"],
+    "secondary_muscles": [],
+    "description": "A sturdy steel cage featuring adjustable J-hooks to hold a barbell and horizontal safety pins. It is essential for performing heavy barbell exercises safely, such as squats, bench presses, and overhead presses.",
+    "setup_steps": [
+      "Adjust the J-hooks to the appropriate height for your exercise (e.g., armpit height for squats).",
+      "Set the safety bars/straps just below your lowest point of range of motion.",
+      "Place an Olympic barbell on the J-hooks and load it with weight plates evenly, securing them with collars."
+    ],
+    "exercise_steps": [
+      "Position yourself under the bar, unrack it by standing up, and take one or two steps back.",
+      "Perform your exercise (e.g., barbell squat) within the confines of the safety pins.",
+      "When finished, step forward until the bar hits the uprights, then lower it onto the J-hooks."
+    ],
+    "tips": [
+      "Always use collars to prevent weights from sliding off the bar.",
+      "Never skip setting the safety pins, especially if lifting heavy without a spotter.",
+      "Step *into* the rack to rack the weight, don't try to lean forward and guess where the hooks are."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Back (depending on exercise)", "Secondary: Core", "Secondary: Stabilizer Muscles"]
+  },
+  {
+    "machine_id": "olympic_flat_bench",
+    "name": "Olympic Flat Bench Press Station",
+    "aliases": ["Bench Press", "Flat Bench", "Barbell Bench Station", "Standard Bench Press"],
+    "category": "Free Weights",
+    "primary_muscles": ["chest"],
+    "secondary_muscles": ["shoulders", "triceps"],
+    "description": "A padded flat bench attached to sturdy metal uprights that hold a barbell. It is the primary station used for performing the traditional barbell bench press to build upper body pushing strength.",
+    "setup_steps": [
+      "Lie on the bench so your eyes are directly under the barbell.",
+      "Plant your feet firmly on the floor and slightly arch your lower back.",
+      "Grip the bar slightly wider than shoulder-width apart."
+    ],
+    "exercise_steps": [
+      "Squeeze your shoulder blades together, unrack the bar, and hold it straight over your chest.",
+      "Inhale and lower the bar slowly until it lightly touches your mid-chest.",
+      "Exhale and press the bar back up in a slight arc toward your upper chest/shoulders, locking out your arms.",
+      "Carefully guide the bar back into the upright hooks to rack it."
+    ],
+    "tips": [
+      "Do not bounce the bar off your chest; use control to maximize muscle tension.",
+      "Keep your glutes and upper back in contact with the bench at all times.",
+      "Tuck your elbows slightly (about 45 degrees from your torso) to protect your shoulder joints."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "preacher_curl_bench",
+    "name": "Preacher Curl Bench",
+    "aliases": ["Bicep Curl Bench", "Scott Bench", "Arm Curl Desk", "EZ Bar Curl Bench"],
+    "category": "Free Weights / Isolation",
+    "primary_muscles": ["biceps"],
+    "secondary_muscles": ["forearms"],
+    "description": "A seated bench featuring an angled, padded armrest. It isolates the biceps by locking the upper arms in place and preventing the user from using body momentum to lift the weight.",
+    "setup_steps": [
+      "Adjust the seat height so that your armpits rest comfortably over the top edge of the pad.",
+      "Load an EZ curl bar or grab dumbbells.",
+      "Sit down, rest your triceps firmly against the angled pad, and grasp the weight with an underhand grip."
+    ],
+    "exercise_steps": [
+      "Inhale and slowly lower the weight until your arms are almost fully extended, feeling a stretch in the biceps.",
+      "Exhale and curl the weight back up toward your shoulders, squeezing the biceps hard at the top.",
+      "Maintain contact between the back of your arms and the pad at all times."
+    ],
+    "tips": [
+      "Do not hyper-extend your elbows at the bottom of the movement to avoid tearing a tendon.",
+      "Keep your wrists straight; do not let them curl inward excessively.",
+      "Focus on a slow, 3-second negative (lowering) phase for maximum growth."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "back_extension_bench",
+    "name": "45-Degree Back Extension Bench",
+    "aliases": ["Roman Chair", "Hyperextension Bench", "Glute/Lower Back Bench", "Back Extension Station"],
+    "category": "Bodyweight / Free Weights",
+    "primary_muscles": ["lower-back"],
+    "secondary_muscles": ["glutes", "hamstrings"],
+    "description": "An angled bench equipped with ankle rollers and a hip pad. It allows the user to perform back extensions to strengthen the lower back, glutes, and hamstrings.",
+    "setup_steps": [
+      "Adjust the hip pad so its top edge sits just below your hip bones (anterior superior iliac spine) to allow your torso to hinge freely.",
+      "Step onto the footplate and secure your ankles securely under the rear roller pads.",
+      "Cross your arms over your chest or place your hands lightly behind your head."
+    ],
+    "exercise_steps": [
+      "Hinge at the hips and lower your upper body slowly toward the floor until you feel a stretch in your hamstrings.",
+      "Exhale and engage your lower back and glutes to raise your torso back up until your body forms a straight line.",
+      "Hold the top position for a brief second."
+    ],
+    "tips": [
+      "Do not hyperextend (arch past a straight line) at the top of the movement, as this causes lower back compression.",
+      "To target the glutes more than the lower back, slightly round your upper back and squeeze your glutes hard at the top.",
+      "You can hold a weight plate or dumbbell to your chest for added resistance."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "glute_ham_developer",
+    "name": "Glute Ham Developer",
+    "aliases": ["GHD", "Glute Ham Raise Machine", "GHR Bench"],
+    "category": "Bodyweight / Free Weights",
+    "primary_muscles": ["hamstrings", "glutes"],
+    "secondary_muscles": ["lower-back", "calves"],
+    "description": "A specialized bench that secures the user's feet and places the knees on a rounded pad. It is used to perform glute-ham raises, one of the most effective bodyweight exercises for the posterior chain.",
+    "setup_steps": [
+      "Adjust the footplate distance so that when your feet are locked in, your knees are resting slightly below the peak of the half-moon pad.",
+      "Climb in and secure your ankles between the roller pads, pressing your feet flat against the metal plate.",
+      "Start in a kneeling position with your torso perfectly upright."
+    ],
+    "exercise_steps": [
+      "Keeping your body in a straight line from knees to shoulders, slowly lower your torso forward by extending your knees.",
+      "Lower yourself as far as you can control (eventually to a horizontal position).",
+      "Squeeze your hamstrings and glutes to pull your body back up to the vertical starting position."
+    ],
+    "tips": [
+      "This is a highly advanced movement; beginners may need to use a PVC pipe for assistance or simply perform the eccentric (lowering) phase.",
+      "Do not break at the hips during the movement; your torso and thighs should remain locked in a straight line.",
+      "Ensure the machine is sturdy and won't tip over before attempting the exercise."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
+  },
+  {
+    "machine_id": "dumbbells",
+    "name": "Dumbbells",
+    "aliases": ["DBs", "Free Weights", "Hex Dumbbells", "Adjustable Dumbbells", "Fixed Dumbbells", "Hand Weights", "Bells"],
+    "category": "Free Weights",
+    "primary_muscles": [],
+    "secondary_muscles": [],
+    "description": "Short bars with weights on either end, held in each hand. They are the most versatile pieces of equipment in a gym, allowing for unilateral (single-arm) training and a natural range of motion to correct muscle imbalances.",
+    "setup_steps": [
+      "Select a pair of dumbbells of equal weight from the rack.",
+      "Ensure the grip area is clean and the weight ends are tightly secured (if adjustable).",
+      "Carry them safely to your workout area, keeping them close to your body."
+    ],
+    "exercise_steps": [
+      "Adopt a stable stance or position yourself on a bench.",
+      "Perform the desired movement (e.g., bicep curls, chest press, lunges) maintaining a strong core.",
+      "Control the eccentric (lowering) portion of the lift to maximize muscle engagement.",
+      "Place them gently on the floor when finished; do not drop them from a height."
+    ],
+    "tips": [
+      "Unlike barbells, dumbbells require your stabilizer muscles to work overtime; start with a lighter weight than your barbell equivalent.",
+      "Never drop rubber or metal dumbbells directly onto a hard floor, as they can bounce unpredictably or break.",
+      "Keep your wrists straight to avoid strain during pressing movements."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Full Body (Varies by exercise)", "Secondary: Stabilizer Muscles", "Secondary: Core"]
+  },
+  {
+    "machine_id": "kettlebells",
+    "name": "Kettlebell",
+    "aliases": ["KB", "Russian Kettlebell", "Cast Iron Kettlebell", "Competition Kettlebell", "Swinging Bell"],
+    "category": "Free Weights / Functional",
+    "primary_muscles": ["glutes", "hamstrings"],
+    "secondary_muscles": ["forearms"],
+    "description": "A cast-iron or steel weight shaped like a cannonball with a handle attached to the top. Its off-center center of mass makes it ideal for ballistic, swinging movements that build power, endurance, and grip strength.",
+    "setup_steps": [
+      "Select the appropriate kettlebell weight (commonly measured in kilograms, e.g., 16kg, 24kg).",
+      "Stand with your feet slightly wider than shoulder-width apart, with the kettlebell placed on the floor slightly in front of you.",
+      "Hinge at the hips and grasp the handle firmly with one or both hands."
+    ],
+    "exercise_steps": [
+      "For a Kettlebell Swing: Hike the bell back between your legs like a football.",
+      "Explosively drive your hips forward, contracting your glutes to propel the bell upward to chest level.",
+      "Let the bell fall naturally back between your legs, hinging at the hips to absorb the momentum.",
+      "Keep your back straight and core braced throughout."
+    ],
+    "tips": [
+      "Power for swings comes from the hips and glutes, not from pulling with the arms.",
+      "Maintain a strong, neutral spine; never round your back when picking up or swinging a kettlebell.",
+      "Chalk your hands lightly if the cast-iron handle becomes slippery."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Full Body (Varies by exercise)", "Primary: Core", "Secondary: Shoulders", "Secondary: Back"]
+  },
+  {
+    "machine_id": "adjustable_bench",
+    "name": "Adjustable Weight Bench",
+    "aliases": ["Incline Bench", "Decline Bench", "FID Bench", "Utility Bench", "Multi-Angle Bench", "Seat Bench"],
+    "category": "Free Weights / Benches",
+    "primary_muscles": [],
+    "secondary_muscles": [],
+    "description": "A versatile, padded bench with an adjustable backrest and often an adjustable seat. It can be set to flat, incline, or decline angles to target different muscle fibers during free weight exercises.",
+    "setup_steps": [
+      "Locate the adjustment pin or ladder mechanism under the backrest.",
+      "Set the backrest to the desired angle (e.g., 30-45 degrees for incline presses).",
+      "Adjust the seat pad slightly upward if doing incline exercises to prevent sliding off.",
+      "Check that the bench is stable and fully locked into position."
+    ],
+    "exercise_steps": [
+      "Sit securely on the pad and lie back.",
+      "Plant your feet firmly on the floor to create a stable base of support.",
+      "Perform your dumbbell or barbell exercise while keeping your head, upper back, and glutes in contact with the bench."
+    ],
+    "tips": [
+      "A 30-degree incline optimally targets the upper chest without shifting too much stress to the front deltoids.",
+      "Always ensure the pop-pin is fully engaged before putting your body weight on the bench.",
+      "Wipe down the vinyl upholstery after use to maintain hygiene."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: N/A (Support Equipment)"]
+  },
+  {
+    "machine_id": "ez_curl_bar",
+    "name": "EZ Curl Bar",
+    "aliases": ["Cambered Bar", "Curl Bar", "W-Bar", "Zig-Zag Bar", "Angled Barbell"],
+    "category": "Free Weights / Barbells",
+    "primary_muscles": ["biceps", "triceps"],
+    "secondary_muscles": ["biceps", "forearms"],
+    "description": "A shorter barbell with an angled, zig-zag grip area. The cambered design allows for a semi-supinated grip, significantly reducing strain on the wrists and elbows during arm exercises like bicep curls and skull crushers.",
+    "setup_steps": [
+      "Place the EZ bar on a rack or on the floor.",
+      "Load the desired Olympic weight plates on both sleeves.",
+      "Secure the plates tightly using spring collars or lockjaw collars."
+    ],
+    "exercise_steps": [
+      "Grasp the bar on the angled knurling where it feels most comfortable for your wrists.",
+      "For bicep curls: Stand tall, pin your elbows to your sides, and curl the weight upward.",
+      "For skull crushers: Lie on a bench, hold the bar above your chest, and bend your elbows to lower the bar toward your forehead, then extend back up."
+    ],
+    "tips": [
+      "Using the inner, closer grips targets the outer head of the bicep, while the wider grip targets the inner head.",
+      "Keep your wrists neutral; do not let the heavy weight bend them backward.",
+      "Avoid using body momentum to swing the bar during standing curls."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "trap_bar",
+    "name": "Trap Bar",
+    "aliases": ["Hex Bar", "Hexagon Bar", "Deadlift Bar", "Diamond Bar"],
+    "category": "Free Weights / Barbells",
+    "primary_muscles": ["quads", "glutes", "hamstrings", "traps"],
+    "secondary_muscles": ["lower-back", "forearms"],
+    "description": "A specialized, hexagon-shaped barbell that the user steps inside of. It features neutral parallel grips and is primarily used for deadlifts, allowing the load to be centered directly aligned with the user's center of gravity.",
+    "setup_steps": [
+      "Place the trap bar flat on the ground.",
+      "Load bumper or iron plates onto the sleeves and secure with collars.",
+      "Step into the center of the hexagon, positioning your feet shoulder-width apart."
+    ],
+    "exercise_steps": [
+      "Hinge at the hips and bend your knees to grab the parallel handles.",
+      "Flatten your back, puff your chest out, and brace your core.",
+      "Drive through the floor with your legs to stand up straight, keeping your arms fully extended.",
+      "Lower the weight back to the ground under control by pushing your hips back."
+    ],
+    "tips": [
+      "The trap bar deadlift is generally safer on the lower back than a traditional barbell deadlift because it allows for a more upright torso.",
+      "Most trap bars have two grip heights; use the higher handles if you lack mobility to reach the lower ones with a flat back.",
+      "Ensure you pull straight up without letting the bar tilt forward or backward."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
+  },
+  {
+    "machine_id": "chest_supported_t_bar_row",
+    "name": "Chest-Supported T-Bar Row Machine",
+    "aliases": ["T-Bar Row", "Supported Row", "Leverage Row", "Incline Row Machine", "Plate Loaded Row"],
+    "category": "Upper Body Strength - Pull",
+    "primary_muscles": ["lats", "traps"],
+    "secondary_muscles": ["rear-deltoids", "biceps", "lower-back"],
+    "description": "A plate-loaded pulling machine featuring a padded chest rest and various handle grips. The chest support eliminates the need to use the lower back for stabilization, allowing maximum isolation of the upper back muscles.",
+    "setup_steps": [
+      "Load standard Olympic plates onto the front peg.",
+      "Adjust the height of the foot platform so your upper chest rests comfortably at the top of the pad.",
+      "Step onto the platform and rest your torso firmly against the pad."
+    ],
+    "exercise_steps": [
+      "Reach down and grab the handles (wide grip for upper back, narrow grip for lats).",
+      "Unrack the weight if there is a release lever.",
+      "Pull the handles upward toward your torso, squeezing your shoulder blades together.",
+      "Slowly lower the handles back until your arms are fully extended and your lats stretch."
+    ],
+    "tips": [
+      "Do not lift your chest off the pad to heave the weight; keep your body glued to the support.",
+      "Focus on driving your elbows back and up, rather than just pulling with your biceps.",
+      "Use a controlled negative (lowering phase) to increase time under tension."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Rhomboids"]
+  },
+  {
+    "machine_id": "seated_calf_raise",
+    "name": "Seated Calf Raise Machine",
+    "aliases": ["Calf Machine", "Soleus Machine", "Plate Loaded Calf Raise", "Seated Calf Extension"],
+    "category": "Lower Body Isolation",
+    "primary_muscles": ["calves"],
+    "secondary_muscles": ["calves"],
+    "description": "A plate-loaded machine where the user sits with their knees bent at 90 degrees and pushes a padded lever up with the balls of their feet. The bent-knee position specifically isolates the deeper soleus muscle of the calf.",
+    "setup_steps": [
+      "Load weight plates onto the front peg.",
+      "Sit on the bench and place the balls of your feet on the edge of the footplate.",
+      "Lower the knee pad so it rests snugly over your lower thighs (just above the knees).",
+      "Lift your heels slightly to release the safety lever."
+    ],
+    "exercise_steps": [
+      "Lower your heels as far down as possible to achieve a deep stretch in the calves.",
+      "Push forcefully through the balls of your feet to raise your heels as high as possible.",
+      "Hold the peak contraction for a full second.",
+      "Slowly lower your heels back into the stretched position."
+    ],
+    "tips": [
+      "Do not bounce at the bottom of the movement; pausing for one second at the bottom eliminates the Achilles tendon stretch reflex and forces the muscle to do the work.",
+      "Ensure the knee pad is tightly secured; if it's loose, you lose leverage.",
+      "Full range of motion is critical; halfway reps will not build the calves effectively."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "iso_lateral_chest_press",
+    "name": "Iso-Lateral Chest Press",
+    "aliases": ["Hammer Strength Chest Press", "Plate-Loaded Chest Press", "Converging Chest Press", "Unilateral Chest Machine"],
+    "category": "Upper Body Strength - Push",
+    "primary_muscles": ["chest"],
+    "secondary_muscles": ["shoulders", "triceps"],
+    "description": "A plate-loaded machine (often made by Hammer Strength) where each arm moves entirely independently (iso-lateral). The arms slightly converge (come together) as you push, matching the natural function of the chest muscles.",
+    "setup_steps": [
+      "Load an equal amount of weight plates onto the pegs on both sides.",
+      "Adjust the seat height so the handles align with the middle or lower part of your chest.",
+      "Sit with your back flat against the pad and feet firmly planted."
+    ],
+    "exercise_steps": [
+      "Grip the handles firmly, pull your shoulders back, and puff your chest out.",
+      "Press the handles forward and slightly inward until your arms are fully extended.",
+      "Squeeze your chest at the top, then slowly return the handles back to the starting position without letting the weight rest."
+    ],
+    "tips": [
+      "Because the arms move independently, this machine is excellent for fixing strength imbalances between your left and right sides.",
+      "Do not let your shoulders roll forward at the bottom of the movement.",
+      "You can perform this exercise one arm at a time for greater core engagement and focus."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+  },
+  {
+    "machine_id": "iso_lateral_high_row",
+    "name": "Iso-Lateral High Row Machine",
+    "aliases": ["Hammer Strength High Row", "Plate-Loaded Pulldown", "Diverging Row", "Unilateral Row", "High Pull Machine"],
+    "category": "Upper Body Strength - Pull",
+    "primary_muscles": ["lats", "traps"],
+    "secondary_muscles": ["biceps", "rear-deltoids"],
+    "description": "A plate-loaded pulling machine where the handles start high and are pulled downward and backward. The independent arms diverge (widen) as you pull, maximizing lat stretch and contraction.",
+    "setup_steps": [
+      "Load the desired weight plates evenly onto both rear pegs.",
+      "Adjust the seat height so the chest pad hits your upper chest, and secure the thigh pad down if available.",
+      "Stand up slightly to grab the handles, then sit securely with your chest firmly against the pad."
+    ],
+    "exercise_steps": [
+      "Pull the handles down and back toward your sides, driving your elbows toward your hips.",
+      "Squeeze your back muscles forcefully at the bottom of the movement.",
+      "Slowly let the handles rise back to the starting position, allowing your lats to stretch fully."
+    ],
+    "tips": [
+      "Keep your chest glued to the pad; do not use lower back momentum to yank the weight.",
+      "Think about pulling with your elbows rather than gripping too tightly with your hands.",
+      "Try performing the exercise with a slight trunk twist to one side for maximum unilateral lat contraction."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Rhomboids"]
+  },
+  {
+    "machine_id": "hip_thrust_machine",
+    "name": "Hip Thrust Machine",
+    "aliases": ["Glute Drive", "Booty Builder", "Glute Thrust Station", "Plate Loaded Hip Thruster"],
+    "category": "Lower Body Isolation",
+    "primary_muscles": ["glutes"],
+    "secondary_muscles": ["hamstrings", "quads"],
+    "description": "A specialized machine featuring a padded backrest, a heavy padded belt or roller, and a foot platform. It allows users to perform heavy hip thrusts without the discomfort and awkward setup of balancing a loaded barbell on their pelvis.",
+    "setup_steps": [
+      "Load weight plates onto the side pegs.",
+      "Sit on the floor or seat, slide under the padded belt, and secure the belt tightly across your hip crease.",
+      "Place your feet flat on the angled platform, roughly shoulder-width apart.",
+      "Release the safety handles mechanism."
+    ],
+    "exercise_steps": [
+      "Drive through your heels to forcefully lift your hips upward.",
+      "At the top of the movement, your torso and thighs should form a straight line, parallel to the floor.",
+      "Squeeze your glutes hard for a full second at lockout.",
+      "Slowly lower your hips back down until the plates just hover above the stoppers."
+    ],
+    "tips": [
+      "Tuck your chin toward your chest throughout the movement; looking back or up can cause hyperextension of the lower back.",
+      "Ensure you are pushing through your heels to activate the glutes; pushing through your toes shifts focus to the quads.",
+      "Stop extending when your hips are locked out; do not arch your lower back to push higher."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
+  },
+  {
+    "machine_id": "captains_chair",
+    "name": "Captain's Chair",
+    "aliases": ["Knee Raise Station", "Leg Raise Tower", "Ab Tower", "Vertical Knee Raise", "VKR Machine", "Dip and Ab Tower"],
+    "category": "Core / Bodyweight",
+    "primary_muscles": ["abs"],
+    "secondary_muscles": ["obliques", "forearms"],
+    "description": "A tall, frame-like structure featuring armrests, hand grips, and a back pad. It is used to perform hanging knee raises or straight leg raises to intensely target the abdominal muscles.",
+    "setup_steps": [
+      "Step onto the foot pegs to reach the armrests.",
+      "Rest your forearms firmly on the padded armrests and grip the handles.",
+      "Press your lower back completely flat against the backrest and let your legs hang freely."
+    ],
+    "exercise_steps": [
+      "Exhale and engage your core to curl your knees upward toward your chest (or keep legs straight for advanced users).",
+      "Squeeze your abs at the top of the movement, ensuring your pelvis tilts slightly upward.",
+      "Inhale and lower your legs back to a dead hang in a slow, controlled manner."
+    ],
+    "tips": [
+      "Do not swing your legs or use momentum; if you have to swing, you are relying on hip flexors, not abs.",
+      "For true abdominal activation, focus on tilting your pelvis up at the top of the lift (like curling your tailbone toward your ribs).",
+      "Do not let your shoulders shrug up to your ears; press down actively through your forearms."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Iliopsoas (Hip Flexors)"]
+  },
+  {
+    "machine_id": "prowler_sled",
+    "name": "Push/Pull Sled",
+    "aliases": ["Prowler", "Weight Sled", "Turf Sled", "Power Sled", "Conditioning Sled"],
+    "category": "Functional / Conditioning",
+    "primary_muscles": ["quads", "glutes", "calves"],
+    "secondary_muscles": ["chest"],
+    "description": "A heavy metal frame that slides across artificial turf. It features vertical poles for pushing and rings for attaching pulling ropes. It is the ultimate tool for full-body conditioning, leg power, and anaerobic capacity.",
+    "setup_steps": [
+      "Ensure the sled is placed on an appropriate surface (usually indoor gym turf).",
+      "Load Olympic weight plates evenly onto the center or side pegs.",
+      "For pushing, stand behind the vertical poles. For pulling, attach a harness or rope."
+    ],
+    "exercise_steps": [
+      "For the Push: Grip the vertical poles high or low, lean your torso forward (almost parallel to the ground), and brace your core.",
+      "Drive your legs like a sprinter, taking powerful, rhythmic steps to move the sled forward.",
+      "For the Pull: Grip the ropes, sit your hips back into a squat position, and pull the sled towards you hand-over-hand, or attach a harness and walk backward."
+    ],
+    "tips": [
+      "Keep your back flat and core tight; do not let your lower back round while pushing.",
+      "Pushing with straight arms relies more on the legs, while keeping bent elbows involves more upper body stability.",
+      "Start with lighter weight to get accustomed to the friction of your gym's specific turf before loading heavily."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System", "Secondary: Core", "Secondary: Shoulders", "Secondary: Back (if pulling)"]
+  },
+  {
+    "machine_id": "cable_pulley_station",
+    "name": "Single Cable Pulley Station",
+    "aliases": ["Cable Column", "High/Low Pulley", "Tricep Pushdown Machine", "Cable Machine", "Pulley Tower"],
+    "category": "Multi-Purpose Functional",
+    "primary_muscles": ["triceps", "biceps"],
+    "secondary_muscles": [],
+    "description": "A single vertical steel column featuring a sliding pulley that can be adjusted from ankle height to well above head height. With interchangeable handles (ropes, bars, ankle straps), it can train almost any muscle group under constant tension.",
+    "setup_steps": [
+      "Adjust the pulley carriage to the desired height using the pull-pin (e.g., top for tricep pushdowns, bottom for bicep curls).",
+      "Attach the appropriate accessory (e.g., tricep rope, straight bar, D-handle) to the carabiner.",
+      "Select your desired weight via the pin in the weight stack."
+    ],
+    "exercise_steps": [
+      "Example - Tricep Pushdown: Stand facing the machine, grip the rope or bar, and pin your elbows to your sides.",
+      "Push the attachment down until your arms are fully extended, squeezing the triceps.",
+      "Slowly return to the starting position without letting your elbows move away from your ribs."
+    ],
+    "tips": [
+      "The main advantage of cables over free weights is constant tension; do not let the weight stack crash down between reps.",
+      "Maintain a stable athletic stance (slight bend in knees, braced core) to prevent being pulled forward by heavy weight.",
+      "Experiment with different handles (V-bar, EZ-bar, rope) to find the most comfortable joint alignment."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Core (Varies entirely by attachment and position)", "Secondary: Shoulders", "Secondary: Back", "Secondary: Glutes (depending on exercise)"]
+  },
+  {
+    "machine_id": "suspension_trainer",
+    "name": "Suspension Trainer",
+    "aliases": ["TRX", "Sling Trainer", "Suspension Straps", "Gymnastic Rings (similar)"],
+    "category": "Bodyweight / Functional",
+    "primary_muscles": [],
+    "secondary_muscles": [],
+    "description": "A system of heavy-duty nylon straps with handles and foot cradles, anchored to a high point (like a rig). It uses gravity and the user's body weight to perform hundreds of exercises, requiring constant core engagement for balance.",
+    "setup_steps": [
+      "Check that the anchor point is secure and the carabiner is locked.",
+      "Adjust the strap length according to the exercise (short for rows, long for push-ups or leg curls).",
+      "Grip the handles or place your feet into the cradles."
+    ],
+    "exercise_steps": [
+      "Example - TRX Row: Hold the handles, lean back, and walk your feet forward until your body is at an angle.",
+      "Keep your body in a perfectly straight line like a plank.",
+      "Pull your chest up to the handles by driving your elbows back.",
+      "Lower yourself back down with control."
+    ],
+    "tips": [
+      "To increase the difficulty of any standing exercise, simply walk your feet closer to the anchor point (creating a steeper angle).",
+      "Never let the straps go slack during a set; maintain tension at all times.",
+      "Ensure the straps do not scrape against your arms during pressing movements; adjust your hand position slightly."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Core", "Primary: Full Body (Varies by exercise)", "Secondary: Stabilizer Muscles"]
+  },
+  {
+    "machine_id": "sissy_squat_bench",
+    "name": "Sissy Squat Bench",
+    "aliases": ["Sissy Squat Machine", "Roman Chair Squat", "Quad Squat Bench"],
+    "category": "Lower Body Isolation",
+    "primary_muscles": ["quads"],
+    "secondary_muscles": ["calves"],
+    "description": "A compact floor unit that locks the user's feet and lower legs in place. Despite its name, it provides an intense, advanced bodyweight isolation workout for the quadriceps by locking the shins vertically and forcing the user to lean back.",
+    "setup_steps": [
+      "Adjust the front foot rollers to secure your ankles snugly.",
+      "Adjust the rear calf pad so it sits comfortably directly behind your calves.",
+      "Step into the machine, locking your feet beneath the rollers and standing straight up."
+    ],
+    "exercise_steps": [
+      "Keep your torso completely straight and aligned with your thighs.",
+      "Bend at the knees and lean your body straight back (do not hinge at the hips).",
+      "Go as low as you can comfortably control, feeling a massive stretch in the quads.",
+      "Contract your quads to pull yourself back to an upright standing position."
+    ],
+    "tips": [
+      "Keep your hips locked; if you hinge at the hips like a regular squat, you are defeating the purpose of the machine.",
+      "You can hold a weight plate to your chest to increase resistance.",
+      "This exercise places high shearing force on the knees; warm up thoroughly and avoid it if you have pre-existing knee pain."
+    ],
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
+  }
+]

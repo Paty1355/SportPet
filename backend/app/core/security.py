@@ -23,7 +23,6 @@ def create_access_token(subject: str) -> str:
 
 
 def decode_access_token(token: str) -> str | None:
-    """Zwraca `sub` (id użytkownika) albo None, gdy token jest nieprawidłowy lub wygasł."""
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
     except jwt.PyJWTError:

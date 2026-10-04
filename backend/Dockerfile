@@ -7,8 +7,9 @@ WORKDIR /app
 
 COPY pyproject.toml .
 COPY app ./app
-# Cache pip między buildami – chromadb jest ciężkie, przebudowa po zmianie kodu nie pobiera wszystkiego od nowa
 RUN --mount=type=cache,target=/root/.cache/pip pip install .
+
+COPY docs_RAG/vision ./docs_RAG/vision
 
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
