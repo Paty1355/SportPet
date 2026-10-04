@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from app.schemas.questionnaire import IntensityCheck, OptionOut, QuestionOut, TrainingQuestionnaire
 
 NONE = "none"
+MAX_NOTES = 300  # caps LLM-extracted free-text notes that later reach plan prompts
 
 
 @dataclass(frozen=True)
