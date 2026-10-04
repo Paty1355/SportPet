@@ -33,7 +33,7 @@ services:
       CHROMA_PORT: 8000
       UPLOAD_DIR: /app/data/uploads
     ports:
-      - "8000:8000"
+      - "8002:8000"
     volumes:
       - backend_data:/app/data
       - questionnaires:/app/data/questionnaires
