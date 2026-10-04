@@ -33,7 +33,7 @@ def machine():
         aliases=["example"],
         category="Example category",
         description="Opis z karty urządzenia.",
-        primary_muscles=["Partia główna"],
+        primary_muscles=["quads"],
         secondary_muscles=[],
         setup_steps=["Ustawienie ze źródła."],
         exercise_steps=["Wykonanie ze źródła."],
@@ -106,6 +106,9 @@ def test_endpoint_runs_full_pipeline_without_login(vision_client, machine):
     assert body["category"] == machine.category
     assert body["sources"] == machine.sources
     assert body["exercise_steps"] == machine.exercise_steps
+    assert body["primary_muscles"] == machine.primary_muscles
+    assert body["secondary_muscles"] == machine.secondary_muscles
+    assert "muscle_notes" not in body
     assert [call[0] for call in llm.calls] == ["identify", "describe"]
     with Image.open(BytesIO(llm.calls[0][1])) as prepared:
         assert prepared.format == "JPEG"
@@ -288,10 +291,10 @@ def test_sdk_sends_strict_schema_and_parses_valid_json(machine):
     [
         "missing_field",
         "extra_field",
+        "model_muscle_fields",
         "wrong_type",
         "blank_description",
         "blank_step",
-        "empty_primary_muscles",
         "empty_setup_steps",
         "empty_exercise_steps",
         "invalid_json",
@@ -305,14 +308,14 @@ def test_sdk_rejects_invalid_usage_output(machine, case):
             del payload["description"]
         case "extra_field":
             payload["machine_name"] = "A name invented by the model"
+        case "model_muscle_fields":
+            payload["primary_muscles"] = ["quads"]
         case "wrong_type":
             payload["setup_steps"] = "A string instead of an array"
         case "blank_description":
             payload["description"] = " "
         case "blank_step":
             payload["exercise_steps"] = [" "]
-        case "empty_primary_muscles":
-            payload["primary_muscles"] = []
         case "empty_setup_steps":
             payload["setup_steps"] = []
         case "empty_exercise_steps":
