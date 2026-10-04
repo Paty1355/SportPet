@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     upload_dir: str = "./data/uploads"
     questionnaire_dir: str = "./data/questionnaires"
     training_plan_dir: str = "./data/training_plans"
+    diet_plan_dir: str = "./data/diet_plans"
     max_upload_mb: int = 10
 
     # Klucz endpointów serwisowych (generator danych). Bez niego są wyłączone (503).

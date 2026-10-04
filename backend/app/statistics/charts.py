@@ -1,7 +1,7 @@
-"""Wykresy wyników `analyze(..., include_series=True)` pod raport PDF (statyczne, bez pyplot i GUI).
+"""Charts of `analyze(..., include_series=True)` results for the PDF report (static, no pyplot or GUI).
 
-Wszystkie funkcje biorą słownik z `analyze` i zwracają `matplotlib.figure.Figure` (albo None, gdy nie ma czego rysować).
-`render_pdf` składa wszystko w jeden PDF, `to_png` zamienia pojedynczy wykres na bajty PNG."""
+Every function takes the dict from `analyze` and returns a `matplotlib.figure.Figure` (or None if nothing to draw).
+`render_pdf` assembles everything into one PDF, `to_png` turns a single chart into PNG bytes."""
 
 from datetime import date
 from io import BytesIO
@@ -14,25 +14,25 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.figure import Figure
 
 LABELS = {
-    "rhr": ("Tętno spoczynkowe", "bpm"),
-    "night_dip": ("Nocny spadek tętna", "bpm"),
-    "stress_day_mean": ("Stres w ciągu dnia", "pkt 0-100"),
-    "stress_high_frac": ("Odsetek czasu z wysokim stresem (>60)", "ułamek"),
-    "spo2_min": ("SpO₂, minimum dobowe", "%"),
-    "spo2_low_count": ("SpO₂ <94%, liczba próbek", "szt."),
-    "bp_sys": ("Ciśnienie skurczowe (średnia dobowa)", "mmHg"),
-    "bp_dia": ("Ciśnienie rozkurczowe (średnia dobowa)", "mmHg"),
-    "bp_am_pm_diff": ("Ciśnienie skurczowe: rano minus wieczór", "mmHg"),
-    "bp_sys_sd_wk": ("Zmienność ciśnienia skurczowego (SD, tydzień)", "mmHg"),
-    "steps": ("Kroki", "kroki"),
-    "sleep_minutes": ("Sen", "min"),
-    "ecg_hr": ("Tętno z EKG", "bpm"),
-    "ecg_abnormal": ("EKG: rytm inny niż zatokowy", "0/1"),
+    "rhr": ("Resting heart rate", "bpm"),
+    "night_dip": ("Nocturnal heart rate dip", "bpm"),
+    "stress_day_mean": ("Daytime stress", "score 0-100"),
+    "stress_high_frac": ("Time share with high stress (>60)", "fraction"),
+    "spo2_min": ("SpO₂, daily minimum", "%"),
+    "spo2_low_count": ("SpO₂ <94%, sample count", "count"),
+    "bp_sys": ("Systolic blood pressure (daily mean)", "mmHg"),
+    "bp_dia": ("Diastolic blood pressure (daily mean)", "mmHg"),
+    "bp_am_pm_diff": ("Systolic blood pressure: morning minus evening", "mmHg"),
+    "bp_sys_sd_wk": ("Systolic blood pressure variability (SD, weekly)", "mmHg"),
+    "steps": ("Steps", "steps"),
+    "sleep_minutes": ("Sleep", "min"),
+    "ecg_hr": ("ECG heart rate", "bpm"),
+    "ecg_abnormal": ("ECG: non-sinus rhythm", "0/1"),
 }
-REFERENCE = {  # progi z README (tabela progów klinicznych)
-    "spo2_min": (94, "próg 94%"),
-    "bp_sys": (135, "próg domowy 135"),
-    "bp_dia": (85, "próg domowy 85"),
+REFERENCE = {  # thresholds from the README (clinical thresholds table)
+    "spo2_min": (94, "threshold 94%"),
+    "bp_sys": (135, "home threshold 135"),
+    "bp_dia": (85, "home threshold 85"),
     "sleep_minutes": (360, "6 h"),
 }
 PHASES = ("menstrual", "follicular", "ovulation", "luteal")
@@ -50,9 +50,9 @@ def _style():
 
 
 def plot_metric(name: str, r: dict) -> Figure:
-    """Szereg dzienny jednej metryki z zaznaczeniem: okna linii bazowej (szare) i ostatnich dni (pomarańczowe) z
-    medianami, prostej trendu Sena (ciągła czerwona = istotny po korekcie, przerywana szara = nieistotny), punktu
-    przełomu (fioletowa pionowa + mediany przed/po), dób odstających |z|>2 (czerwone kropki), progu klinicznego."""
+    """Daily series of one metric with marked: baseline window (grey) and recent days (orange) with their
+    medians, Sen trend line (solid red = significant after correction, dashed grey = not significant), change point
+    (purple vertical + medians before/after), outlier days |z|>2 (red dots), clinical threshold."""
     title, unit = LABELS.get(name, (name, ""))
     fig = Figure(figsize=(A4_WIDTH, 3.8), layout="constrained")
     with _style():
@@ -60,17 +60,17 @@ def plot_metric(name: str, r: dict) -> Figure:
     series = r.get("series") or []
     fig.suptitle(f"{title} [{unit}]", x=0.01, ha="left", fontsize=11, fontweight="bold")
     if not series:
-        ax.text(0.5, 0.5, "brak danych", ha="center", va="center", transform=ax.transAxes)
+        ax.text(0.5, 0.5, "no data", ha="center", va="center", transform=ax.transAxes)
         return fig
 
     xs, ys = [_d(p["date"]) for p in series], [p["value"] for p in series]
-    sns.lineplot(x=xs, y=ys, ax=ax, color=C_SERIES, marker="o", markersize=3, linewidth=1, label="wartość dobowa")
+    sns.lineplot(x=xs, y=ys, ax=ax, color=C_SERIES, marker="o", markersize=3, linewidth=1, label="daily value")
 
     if r["status"] != "ok":
         ax.text(
             0.5,
             0.92,
-            f"za mało danych do testów (n={r['n']}, wymagane {r['required']})",
+            f"not enough data for tests (n={r['n']}, required {r['required']})",
             ha="center",
             transform=ax.transAxes,
             color="#718096",
@@ -80,11 +80,11 @@ def plot_metric(name: str, r: dict) -> Figure:
         if bvr:
             delta = f" (Δ{bvr['delta']:+.1f}, p_adj={bvr['p_adj']:.3f})"
             for (lo, hi), color, label, med, extra in (
-                (bvr["baseline_window"], C_BASE, "linia bazowa", bvr["baseline_median"], ""),
-                (bvr["recent_window"], C_RECENT, "ostatnie 7 dni", bvr["recent_median"], delta),
+                (bvr["baseline_window"], C_BASE, "baseline", bvr["baseline_median"], ""),
+                (bvr["recent_window"], C_RECENT, "last 7 days", bvr["recent_median"], delta),
             ):
                 ax.axvspan(_d(lo), _d(hi), color=color, alpha=0.18, lw=0)
-                ax.hlines(med, _d(lo), _d(hi), color=color, lw=2, label=f"{label}: mediana {med:.1f}{extra}")
+                ax.hlines(med, _d(lo), _d(hi), color=color, lw=2, label=f"{label}: median {med:.1f}{extra}")
         significant = trend["p_adj"] < ALPHA
         line = r["trend_line"]
         ax.plot(
@@ -97,17 +97,17 @@ def plot_metric(name: str, r: dict) -> Figure:
         )
         if cp["p_adj"] < ALPHA:
             x_cp = _d(cp["date"])
-            ax.axvline(x_cp, color=C_BREAK, ls=":", lw=1.5, label=f"przełom {x_cp:%d.%m} (p_adj={cp['p_adj']:.3f})")
+            ax.axvline(x_cp, color=C_BREAK, ls=":", lw=1.5, label=f"change {x_cp:%d.%m} (p_adj={cp['p_adj']:.3f})")
             ax.hlines(cp["before_median"], xs[0], x_cp, color=C_BREAK, lw=1.2)
             ax.hlines(cp["after_median"], x_cp, xs[-1], color=C_BREAK, lw=1.2)
         if r["outlier_days"]:
             by_date = dict(zip(xs, ys, strict=True))
             out = [(_d(o["date"]), by_date[_d(o["date"])]) for o in r["outlier_days"]]
-            ax.scatter(*zip(*out, strict=True), color=C_OUT, s=40, zorder=5, label="odchylenie |z|>2")
+            ax.scatter(*zip(*out, strict=True), color=C_OUT, s=40, zorder=5, label="outlier |z|>2")
         lo, hi = trend["ci95_per_week"]
-        verdict = "istotny" if significant else "brak istotnego trendu"
+        verdict = "significant" if significant else "no significant trend"
         ax.set_title(
-            f"trend {trend['slope_per_week']:+.2f}/tydz. [95% CI {lo:+.2f}; {hi:+.2f}], "
+            f"trend {trend['slope_per_week']:+.2f}/week [95% CI {lo:+.2f}; {hi:+.2f}], "
             f"p_adj={trend['p_adj']:.3f} ({verdict})",
             loc="left",
             fontsize=8,
@@ -120,13 +120,13 @@ def plot_metric(name: str, r: dict) -> Figure:
     ax.set_ylabel(unit)
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m"))
     if ax.get_legend():
-        ax.get_legend().remove()  # seaborn dodaje własną legendę w osi; zbiorcza jest pod wykresem
+        ax.get_legend().remove()  # seaborn adds its own in-axes legend; the combined one sits below the chart
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=3, fontsize=7, frameon=False)
     return fig
 
 
 def plot_significance(result: dict) -> Figure | None:
-    """Przegląd: -log10(p_adj) trendu każdej metryki (istotne czerwone) wobec progu p_adj = 0,05."""
+    """Overview: -log10(p_adj) of each metric's trend (significant in red) against the p_adj = 0.05 threshold."""
     rows = sorted(
         ((LABELS.get(m, (m,))[0], r["trend"]["p_adj"]) for m, r in result["metrics"].items() if r["status"] == "ok"),
         key=lambda t: t[1],
@@ -140,16 +140,16 @@ def plot_significance(result: dict) -> Figure | None:
     score = [-np.log10(max(p, 1e-12)) for _, p in rows]
     ax.barh([n for n, _ in rows], score, color=[C_TREND if p < ALPHA else C_BASE for _, p in rows])
     ax.axvline(-np.log10(ALPHA), color="black", ls="--", lw=1)
-    ax.text(-np.log10(ALPHA) + 0.1, 0.01, "p_adj = 0,05", transform=ax.get_xaxis_transform(), fontsize=8)
-    ax.set_xlabel("-log10(p_adj) testu trendu (dalej od osi = silniejszy dowód)")
+    ax.text(-np.log10(ALPHA) + 0.1, 0.01, "p_adj = 0.05", transform=ax.get_xaxis_transform(), fontsize=8)
+    ax.set_xlabel("-log10(p_adj) of the trend test (further from the axis = stronger evidence)")
     fig.suptitle(
-        "Istotność trendów (po korekcie Benjaminiego-Hochberga)", x=0.01, ha="left", fontsize=11, fontweight="bold"
+        "Trend significance (after Benjamini-Hochberg correction)", x=0.01, ha="left", fontsize=11, fontweight="bold"
     )
     return fig
 
 
 def plot_correlations(result: dict) -> Figure | None:
-    """Mapa cieplna korelacji Spearmana z opóźnieniem 0-2 doby (przyczyna D -> skutek D+lag); * = p_adj < 0,05."""
+    """Heatmap of Spearman correlations with a 0-2 day lag (cause D -> effect D+lag); * = p_adj < 0.05."""
     corr = result["lagged_correlations"]
     if not corr:
         return None
@@ -173,17 +173,17 @@ def plot_correlations(result: dict) -> Figure | None:
         cmap="RdBu_r",
         vmin=-1,
         vmax=1,
-        cbar_kws={"label": "rho Spearmana"},
+        cbar_kws={"label": "Spearman rho"},
         xticklabels=[f"+{lag} d" for lag in lags],
         yticklabels=names,
         linewidths=1,
     )
-    fig.suptitle("Korelacje z opóźnieniem (* p_adj < 0,05)", x=0.01, ha="left", fontsize=11, fontweight="bold")
+    fig.suptitle("Lagged correlations (* p_adj < 0.05)", x=0.01, ha="left", fontsize=11, fontweight="bold")
     return fig
 
 
 def plot_cycle(result: dict) -> Figure | None:
-    """Mediany metryk w fazach cyklu (punkty, oś nie od zera), p_adj testu Kruskala-Wallisa w tytule panelu."""
+    """Metric medians by cycle phase (points, axis not from zero), Kruskal-Wallis p_adj in the panel title."""
     cycle = result["cycle"]
     if not cycle:
         return None
@@ -202,13 +202,13 @@ def plot_cycle(result: dict) -> Figure | None:
         )
         title, unit = LABELS[c["metric"]]
         ax.set_title(f"{title} [{unit}]\np_adj={c['p_adj']:.3f}", fontsize=9)
-        ax.set_ylabel("mediana")
-    fig.suptitle("Wpływ fazy cyklu (niebieski = istotny)", x=0.01, ha="left", fontsize=11, fontweight="bold")
+        ax.set_ylabel("median")
+    fig.suptitle("Effect of cycle phase (blue = significant)", x=0.01, ha="left", fontsize=11, fontweight="bold")
     return fig
 
 
 def figures(result: dict) -> list[tuple[str, Figure]]:
-    """Wszystkie wykresy raportu w kolejności: przegląd istotności, korelacje, cykl, potem każda metryka."""
+    """All report charts in order: significance overview, correlations, cycle, then each metric."""
     out = [
         ("significance", plot_significance(result)),
         ("correlations", plot_correlations(result)),
@@ -219,7 +219,7 @@ def figures(result: dict) -> list[tuple[str, Figure]]:
 
 
 def render_pdf(result: dict, dest: str | Path | BytesIO) -> None:
-    """Zapisuje `figures(result)` jako PDF (jedna strona na wykres, szerokość A4) do ścieżki lub bufora."""
+    """Writes `figures(result)` as a PDF (one page per chart, A4 width) to a path or buffer."""
     with PdfPages(dest) as pdf:
         for _, fig in figures(result):
             pdf.savefig(fig)

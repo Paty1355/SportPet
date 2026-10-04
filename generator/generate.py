@@ -1,11 +1,11 @@
-"""Generator syntetycznych danych zdrowotnych (rozkład normalny) → FastAPI /api/v1/health/ingest.
+"""Synthetic health data generator (normal distribution) → FastAPI /api/v1/health/ingest.
 
     SERVICE_KEY=... uv run --with httpx generator/generate.py --api http://localhost:8000 --days 7 --seed 1
 
-Generuje dane dla KAŻDEGO aktywnego użytkownika z tabeli users (endpointy /health/service/*, nagłówek X-Service-Key).
-Brakujący profil (sex, birth_date, weight_kg, height_cm) jest dosypywany deterministycznie z (seed, user_id);
-istniejący profil zostaje nietknięty. Dane to SYMULACJA, nie dane kliniczne.
---days N = ostatnie N dób UTC włącznie z dzisiejszą (dzisiaj tylko do bieżącej chwili).
+Generates data for EVERY active user from the users table (/health/service/* endpoints, X-Service-Key header).
+A missing profile (sex, birth_date, weight_kg, height_cm) is filled in deterministically from (seed, user_id);
+an existing profile is left untouched. The data is a SIMULATION, not clinical data.
+--days N = the last N UTC days including today (today only up to the current moment).
 """
 
 import argparse
@@ -25,12 +25,12 @@ def clamp(x: float, lo: float, hi: float) -> float:
 
 
 def night_dip(hour: float) -> float:
-    """0..1, maksimum o 03:00 UTC, ~0 w dzień. Obniża puls i stres w nocy."""
+    """0..1, maximum at 03:00 UTC, ~0 during the day. Lowers heart rate and stress at night."""
     return max(0.0, math.cos((hour - 3) / 24 * 2 * math.pi))
 
 
 def ecg_wave(rng: random.Random, hr: float) -> list[float]:
-    """Szablon PQRST (suma gaussów w fazie uderzenia) + szum N(0, 0.02 mV). Nie jest rozkładem normalnym samej fali."""
+    """PQRST template (sum of Gaussians in beat phase) + N(0, 0.02 mV) noise. The waveform itself is not normally distributed."""
     period = 60 / hr
     waves = [
         (0.20, 0.025, 0.15),
@@ -162,9 +162,9 @@ def random_profile(rng: random.Random, today: date) -> dict:
 
 
 def trim_to_now(payload: dict, now: datetime) -> dict:
-    """Dzisiejsza doba: pełny payload generujemy (strumień rng bez zmian), ale wysyłamy tylko to, co już się wydarzyło.
+    """Today: we generate the full payload (rng stream unchanged) but send only what has already happened.
 
-    Dziennych kroków i snu nie wysyłamy, bo zapis jest idempotentny: częściowa wartość z pierwszego uruchomienia zostałaby na stałe.
+    We do not send daily steps and sleep because writes are idempotent: a partial value from the first run would stay forever.
     """
     cutoff = now.replace(microsecond=0).isoformat()
     return {
@@ -185,7 +185,7 @@ def main():
     )
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--seed", type=int, default=1)
-    ap.add_argument("--email", help="tylko ten użytkownik (domyślnie wszyscy aktywni)")
+    ap.add_argument("--email", help="only this user (default all active users)")
     args = ap.parse_args()
     if not args.key:
         ap.error(
@@ -208,7 +208,7 @@ def main():
             if args.email is None or u["email"] == args.email.lower()
         ]
         if not selected:
-            ap.error(f"nie ma aktywnego użytkownika {args.email}")
+            ap.error(f"no active user {args.email}")
         for user in selected:
             rng = random.Random(args.seed * 1_000_003 + user["id"])
             wanted = random_profile(

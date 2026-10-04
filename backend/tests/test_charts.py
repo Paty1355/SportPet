@@ -80,7 +80,7 @@ def test_ecg_list_has_no_wave_and_detail_downsamples(client, auth_headers):
     listing = client.get(f"{H}/ecg", params=WINDOW, headers=auth_headers).json()
     assert len(listing) == 1 and "samples" not in listing[0]
     detail = client.get(f"{H}/ecg/{listing[0]['id']}", params={"max_points": 250}, headers=auth_headers).json()
-    assert len(detail["samples"]) == 250 and detail["returned_sample_rate_hz"] == 128  # co 4. próbka z 512 Hz
+    assert len(detail["samples"]) == 250 and detail["returned_sample_rate_hz"] == 128  # every 4th sample of 512 Hz
     assert len(client.get(f"{H}/ecg/{listing[0]['id']}", headers=auth_headers).json()["samples"]) == 1000
 
 

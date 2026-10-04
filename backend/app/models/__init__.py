@@ -7,7 +7,7 @@ from app.models.health import (
     VitalSample,
 )
 from app.models.message import Message
-from app.models.questionnaire import QuestionnaireState
+from app.models.questionnaire import DietQuestionnaireState, QuestionnaireState
 from app.models.user import User
 from app.models.workout_feedback import WorkoutFeedback
 
@@ -15,6 +15,7 @@ __all__ = [
     "BloodPressureReading",
     "CycleDay",
     "DailySummary",
+    "DietQuestionnaireState",
     "EcgRecording",
     "Message",
     "QuestionnaireState",
