@@ -220,7 +220,7 @@ def test_azure_routes_image_and_text_to_separate_deployments(machine):
     assert vision_call["messages"][1]["content"][1]["image_url"]["url"].startswith("data:image/png;base64,")
     assert text_call["model"] == "text-model"
     assert text_call["response_format"] is MachineUsage
-    assert text_call["messages"][0] == {"role": "system", "content": USAGE_SYSTEM_PROMPT}
+    assert text_call["messages"][0]["content"].startswith(USAGE_SYSTEM_PROMPT)
     assert text_call["messages"][1]["role"] == "user"
     assert json.loads(text_call["messages"][1]["content"]) == machine.model_dump()
 
@@ -264,7 +264,7 @@ def test_sdk_sends_strict_schema_and_parses_valid_json(machine):
     assert result.model_dump() == payload
     assert len(requests) == 1
     request = requests[0]
-    assert request["messages"][0] == {"role": "system", "content": USAGE_SYSTEM_PROMPT}
+    assert request["messages"][0]["content"].startswith(USAGE_SYSTEM_PROMPT)
     output_format = request["response_format"]
     assert output_format["type"] == "json_schema"
     assert output_format["json_schema"]["strict"] is True

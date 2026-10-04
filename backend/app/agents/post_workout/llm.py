@@ -5,10 +5,17 @@ from fastapi import HTTPException
 from openai import ContentFilterFinishReasonError, LengthFinishReasonError
 from pydantic import BaseModel, ValidationError
 
+from app.agents.base import GUARD
 from app.agents.post_workout.prompts import EXTRACTION_PROMPT, SUPPORT_PROMPT
 from app.core.azure import get_async_azure_client
 from app.core.config import settings
 from app.schemas.post_workout import AnswerExtraction, SupportText
+
+
+def untrusted_json(context: dict) -> str:
+    """JSON data block; `<`/`>` become \\u escapes (same JSON value) so user text cannot close the block."""
+    body = json.dumps(context, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e")
+    return f'<data label="check-in context">\n{body}\n</data>'
 
 
 class PostWorkoutModelError(RuntimeError):
@@ -35,8 +42,8 @@ class AzurePostWorkoutLLM:
             completion = await client.beta.chat.completions.parse(
                 model=settings.azure_openai_chat_deployment,
                 messages=[
-                    {"role": "system", "content": prompt},
-                    {"role": "user", "content": json.dumps(context, ensure_ascii=False)},
+                    {"role": "system", "content": f"{prompt}\n\n{GUARD}"},
+                    {"role": "user", "content": untrusted_json(context)},
                 ],
                 response_format=schema,
             )

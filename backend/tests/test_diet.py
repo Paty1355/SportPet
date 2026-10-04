@@ -78,7 +78,7 @@ def test_chat_injects_retrieved_chunks_into_system_prompt(client, auth_headers):
 
     class CapturingLLM:
         async def complete(self, system, messages, image=None, json_mode=False):
-            self.system = system
+            self.system, self.messages = system, messages
             return "ok"
 
     llm = CapturingLLM()
@@ -89,7 +89,8 @@ def test_chat_injects_retrieved_chunks_into_system_prompt(client, auth_headers):
     asyncio.run(agent.run(db, user, "Protein needs"))
 
     assert "[nutrition.pdf, p. 3]\nProtein needs" in llm.system
-    assert "Diet questionnaire:" in llm.system
+    assert '"dietType": "vegan"' in llm.messages[0]["content"]
+    assert "dietType" not in llm.system
 
 
 def test_schema_literals_match_question_options():
