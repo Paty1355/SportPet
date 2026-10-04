@@ -27,4 +27,5 @@ class User(Base):
     height_cm: Mapped[float | None] = mapped_column(Float)
     post_workout_reporting_frequency: Mapped[str] = mapped_column(String(16), default="weekly", server_default="weekly")
     timezone: Mapped[str] = mapped_column(String(64), default="Europe/Warsaw", server_default="Europe/Warsaw")
+    share_pet: Mapped[bool] = mapped_column(default=True, server_default="true")
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())

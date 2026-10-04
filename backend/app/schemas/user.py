@@ -62,3 +62,4 @@ class UserOut(BaseModel):
     height_cm: float | None
     post_workout_reporting_frequency: Literal["daily", "weekly", "monthly"]
     timezone: str
+    share_pet: bool

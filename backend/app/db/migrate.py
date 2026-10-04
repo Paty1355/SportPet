@@ -15,6 +15,7 @@ USER_COLUMNS = {
     "birth_date": "DATE",
     "weight_kg": "DOUBLE PRECISION",
     "height_cm": "DOUBLE PRECISION",
+    "share_pet": "BOOLEAN NOT NULL DEFAULT TRUE",
     "post_workout_reporting_frequency": "VARCHAR(16) NOT NULL DEFAULT 'weekly'",
     "timezone": "VARCHAR(64) NOT NULL DEFAULT 'Europe/Warsaw'",
 }
