@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -28,6 +29,24 @@ class UserCreate(HealthProfileFields):
 
 class UserUpdate(HealthProfileFields):
     name: str | None = Field(default=None, max_length=100)
+    post_workout_reporting_frequency: Literal["daily", "weekly", "monthly"] | None = None
+    timezone: str | None = Field(default=None, min_length=1, max_length=64)
+
+    @field_validator("post_workout_reporting_frequency", "timezone")
+    @classmethod
+    def preferences_cannot_be_null(cls, value):
+        if value is None:
+            raise ValueError("preferences cannot be null")
+        return value
+
+    @field_validator("timezone")
+    @classmethod
+    def valid_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except (ValueError, ZoneInfoNotFoundError) as exc:
+            raise ValueError("timezone must be a valid IANA timezone") from exc
+        return value
 
 
 class UserOut(BaseModel):
@@ -41,4 +60,6 @@ class UserOut(BaseModel):
     birth_date: date | None
     weight_kg: float | None
     height_cm: float | None
+    post_workout_reporting_frequency: Literal["daily", "weekly", "monthly"]
+    timezone: str
     share_pet: bool
