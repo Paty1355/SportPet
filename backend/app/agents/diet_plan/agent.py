@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.agents.diet_plan import prompts
-from app.agents.diet_plan.images import meal_image_urls
+from app.agents.diet_plan.images import allowed_dishes, image_url
 from app.agents.llm import LLMClient, get_llm
 from app.agents.plan.health import WINDOW_DAYS, health_summary
 from app.core.config import settings
@@ -40,11 +40,15 @@ class DietPlanAgent:
 
     async def generate(self, db: Session, user: User, questionnaire: DietQuestionnaire) -> DietPlan:
         health = health_summary(db, user)
+        dishes = allowed_dishes(questionnaire)
+        if not dishes:
+            raise DietPlanGenerationError("No dish in the catalogue fits the questionnaire")
         system = prompts.SYSTEM_PROMPT.format(
             count=len(PLAN_DAYS),
             days=", ".join(PLAN_DAYS),
             meals=questionnaire.meals_per_day,
             minutes=questionnaire.cooking_time_minutes,
+            catalogue="\n".join(f"- {name}" for name in dishes),
         )
         user_message = prompts.USER_MESSAGE.format(
             questionnaire=questionnaire.model_dump_json(by_alias=True, indent=2),
@@ -53,16 +57,12 @@ class DietPlanAgent:
             guidelines=self.guidelines(questionnaire),
         )
         raw = await self.llm.complete(system, [{"role": "user", "content": user_message}], json_mode=True)
-        llm_plan = parse_plan(raw, questionnaire.meals_per_day)
+        llm_plan = parse_plan(raw, questionnaire.meals_per_day, set(dishes))
 
-        images = meal_image_urls()
-        meals = (m for d in llm_plan.days for m in d.meals)
-        # Cycle through the images over the whole week, so neighbouring meals look different.
-        with_images = [
-            m.model_copy(update={"image_url": images[i % len(images)] if images else ""}) for i, m in enumerate(meals)
+        days = [
+            DietDay(day=day, meals=[m.model_copy(update={"image_url": image_url(dishes[m.title])}) for m in d.meals])
+            for day, d in zip(PLAN_DAYS, llm_plan.days, strict=True)
         ]
-        per_day = questionnaire.meals_per_day
-        days = [DietDay(day=day, meals=with_images[i * per_day : (i + 1) * per_day]) for i, day in enumerate(PLAN_DAYS)]
         plan = DietPlan(daily_calories=llm_plan.daily_calories, days=days, health_summary=health)
         self.plan_path(user.id).write_text(plan.model_dump_json(by_alias=True, indent=2), encoding="utf-8")
         return plan
@@ -89,8 +89,8 @@ class DietPlanAgent:
         return path / f"{user_id}.json"
 
 
-def parse_plan(raw: str, meals_per_day: int) -> LlmDietPlan:
-    """Validates the LLM's plan: exactly one day per plan day, each with the requested number of meals."""
+def parse_plan(raw: str, meals_per_day: int, dishes: set[str]) -> LlmDietPlan:
+    """Validates the LLM plan: one day per plan day, the requested meals per day, every dish from the catalogue."""
     try:
         llm_plan = LlmDietPlan.model_validate_json(raw)
     except ValidationError as e:
@@ -99,6 +99,8 @@ def parse_plan(raw: str, meals_per_day: int) -> LlmDietPlan:
     days = llm_plan.days[: len(PLAN_DAYS)]
     if len(days) != len(PLAN_DAYS) or any(len(d.meals) != meals_per_day for d in days):
         raise DietPlanGenerationError("LLM returned an incomplete diet plan")
+    if any(m.title not in dishes for d in days for m in d.meals):
+        raise DietPlanGenerationError("LLM returned a dish that is not in the catalogue")
     return llm_plan.model_copy(update={"days": days})
 
 
