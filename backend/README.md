@@ -103,6 +103,7 @@ All endpoints under `/api/v1`; auth and VisionAgent analyze are public. Other en
 | POST | `/agents/diet/chat` | diet agent chat (see [`app/agents/diet/README.md`](app/agents/diet/README.md)) |
 | GET | `/agents/diet/history` | diet agent history |
 | GET / DELETE | `/agents/diet/questionnaire` | diet questionnaire status / reset |
+| POST / GET | `/agents/diet-plan` | generate / get the weekly diet plan (needs a completed diet questionnaire) |
 | POST | `/agents/vision/analyze` | classify a machine photo and get usage instructions (public) |
 
 ## VisionAgent: machine photos

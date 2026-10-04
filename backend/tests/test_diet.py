@@ -1,10 +1,12 @@
 import asyncio
+import json
 from typing import get_args, get_origin
 
 from pydantic.alias_generators import to_camel
 
 from app.agents.diet.agent import DietAgent
 from app.agents.diet.questionnaire import NONE, QUESTIONS
+from app.agents.diet_plan.agent import DietPlanAgent, get_diet_plan_agent
 from app.db.session import get_db
 from app.main import app
 from app.models import User
@@ -13,6 +15,7 @@ from app.schemas.rag import Chunk
 
 URL = "/api/v1/agents/diet/questionnaire"
 CHAT_URL = "/api/v1/agents/diet/chat"
+PLAN_URL = "/api/v1/agents/diet-plan"
 ANSWERS = ["2", "vegan", "gluten, nuts", "1,4", "4", "30", "moderate", "diabetes", "late_night_snacking", "gradual"]
 
 
@@ -99,3 +102,31 @@ def test_schema_literals_match_question_options():
         if get_origin(annotation) is list:
             annotation = get_args(annotation)[0]
         assert {str(v) for v in get_args(annotation)} == set(question.options) - {NONE}, question.key
+
+
+class PlanLLM:
+    """Returns a 7-day plan with `meals` meals per day."""
+
+    def __init__(self, meals: int):
+        meal = {"name": "Lunch", "title": "Tofu bowl", "description": "...", "calories": 600}
+        meal |= {"proteinGrams": 30, "carbsGrams": 60, "fatGrams": 20, "prepTimeMinutes": 20}
+        self.plan = json.dumps({"dailyCalories": 2400, "days": [{"meals": [meal] * meals}] * 7})
+
+    async def complete(self, system, messages, image=None, json_mode=False):
+        return self.plan
+
+
+def test_diet_plan_needs_questionnaire_and_valid_llm_output(client, auth_headers):
+    assert client.post(PLAN_URL, headers=auth_headers).status_code == 409
+    assert client.get(PLAN_URL, headers=auth_headers).status_code == 404
+    complete(client, auth_headers)
+    assert client.post(PLAN_URL, headers=auth_headers).status_code == 502  # stub LLM returns "{}"
+
+    app.dependency_overrides[get_diet_plan_agent] = lambda: DietPlanAgent(PlanLLM(meals=3))
+    assert client.post(PLAN_URL, headers=auth_headers).status_code == 502  # questionnaire asks for 4 meals
+
+    app.dependency_overrides[get_diet_plan_agent] = lambda: DietPlanAgent(PlanLLM(meals=4))
+    plan = client.post(PLAN_URL, headers=auth_headers).json()
+    assert [d["day"] for d in plan["days"]][::6] == ["Monday", "Sunday"]
+    assert plan["dailyCalories"] == 2400 and all(len(d["meals"]) == 4 for d in plan["days"])
+    assert client.get(PLAN_URL, headers=auth_headers).json() == plan

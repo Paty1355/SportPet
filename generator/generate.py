@@ -32,7 +32,13 @@ def night_dip(hour: float) -> float:
 def ecg_wave(rng: random.Random, hr: float) -> list[float]:
     """PQRST template (sum of Gaussians in beat phase) + N(0, 0.02 mV) noise. The waveform itself is not normally distributed."""
     period = 60 / hr
-    waves = [(0.20, 0.025, 0.15), (0.36, 0.008, -0.15), (0.40, 0.010, 1.0), (0.44, 0.010, -0.25), (0.65, 0.04, 0.30)]
+    waves = [
+        (0.20, 0.025, 0.15),
+        (0.36, 0.008, -0.15),
+        (0.40, 0.010, 1.0),
+        (0.44, 0.010, -0.25),
+        (0.65, 0.04, 0.30),
+    ]
     out = []
     for i in range(SAMPLE_RATE_HZ * ECG_SECONDS):
         phase = (i / SAMPLE_RATE_HZ % period) / period
@@ -72,38 +78,68 @@ class Person:
             ts, dip = midnight + timedelta(minutes=minutes), night_dip(minutes / 60)
             hr = clamp(r.gauss(self.hr_mean - 8 * dip, 6), 35, 200)
             stress = clamp(r.gauss(self.stress_mean - 15 * dip, 12), 0, 100)
-            samples.append({"metric": "heart_rate", "ts": ts.isoformat(), "value": round(hr, 1)})
-            samples.append({"metric": "stress", "ts": ts.isoformat(), "value": round(stress, 1)})
+            samples.append(
+                {"metric": "heart_rate", "ts": ts.isoformat(), "value": round(hr, 1)}
+            )
+            samples.append(
+                {"metric": "stress", "ts": ts.isoformat(), "value": round(stress, 1)}
+            )
             if minutes % 15 == 0:
-                samples.append({"metric": "spo2", "ts": ts.isoformat(), "value": round(clamp(r.gauss(97, 1), 90, 100), 1)})
+                samples.append(
+                    {
+                        "metric": "spo2",
+                        "ts": ts.isoformat(),
+                        "value": round(clamp(r.gauss(97, 1), 90, 100), 1),
+                    }
+                )
 
         blood_pressure = []
         for hour in (8, 14, 20):
             diastolic = int(clamp(round(r.gauss(78, 7)), 40, 120))
             systolic = int(clamp(round(r.gauss(120, 10)), diastolic + 15, 220))
-            blood_pressure.append({"ts": (midnight + timedelta(hours=hour)).isoformat(), "systolic": systolic, "diastolic": diastolic})
+            blood_pressure.append(
+                {
+                    "ts": (midnight + timedelta(hours=hour)).isoformat(),
+                    "systolic": systolic,
+                    "diastolic": diastolic,
+                }
+            )
 
         ecg_hr = clamp(r.gauss(self.hr_mean, 6), 40, 180)
         ecg = {
             "started_at": (midnight + timedelta(hours=9)).isoformat(),
             "sample_rate_hz": SAMPLE_RATE_HZ,
             "avg_heart_rate": round(ecg_hr, 1),
-            "classification": "bradycardia" if ecg_hr < 50 else "tachycardia" if ecg_hr > 100 else "sinus_rhythm",
+            "classification": "bradycardia"
+            if ecg_hr < 50
+            else "tachycardia"
+            if ecg_hr > 100
+            else "sinus_rhythm",
             "samples": ecg_wave(r, ecg_hr),
         }
         payload = {
             "samples": samples,
-            "daily": [{
-                "date": day.isoformat(),
-                "steps": int(max(0, r.gauss(8000, 2500))),
-                "sleep_minutes": int(clamp(r.gauss(430, 50), 120, 720)),
-            }],
+            "daily": [
+                {
+                    "date": day.isoformat(),
+                    "steps": int(max(0, r.gauss(8000, 2500))),
+                    "sleep_minutes": int(clamp(r.gauss(430, 50), 120, 720)),
+                }
+            ],
             "blood_pressure": blood_pressure,
             "ecg": [ecg],
         }
         if self.sex == "F":
-            payload["cycle"] = [{"date": day.isoformat(), "cycle_day": self.cycle_day, "cycle_length": self.cycle_length,
-                                 "phase": cycle_phase(self.cycle_day, self.cycle_length, self.period_length)}]
+            payload["cycle"] = [
+                {
+                    "date": day.isoformat(),
+                    "cycle_day": self.cycle_day,
+                    "cycle_length": self.cycle_length,
+                    "phase": cycle_phase(
+                        self.cycle_day, self.cycle_length, self.period_length
+                    ),
+                }
+            ]
             self.cycle_day += 1
             if self.cycle_day > self.cycle_length:
                 self.cycle_day, self.cycle_length = 1, self._new_cycle_length()
@@ -116,8 +152,12 @@ def random_profile(rng: random.Random, today: date) -> dict:
     return {
         "sex": "F" if female else "M",
         "birth_date": (today - timedelta(days=int(age * 365.25))).isoformat(),
-        "weight_kg": round(clamp(rng.gauss(65 if female else 78, 11 if female else 12), 40, 140), 1),
-        "height_cm": round(clamp(rng.gauss(165 if female else 178, 6 if female else 7), 140, 205), 1),
+        "weight_kg": round(
+            clamp(rng.gauss(65 if female else 78, 11 if female else 12), 40, 140), 1
+        ),
+        "height_cm": round(
+            clamp(rng.gauss(165 if female else 178, 6 if female else 7), 140, 205), 1
+        ),
     }
 
 
@@ -138,26 +178,42 @@ def trim_to_now(payload: dict, now: datetime) -> dict:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--api", default="http://localhost:8000")
-    ap.add_argument("--key", default=os.environ.get("SERVICE_KEY"), help="X-Service-Key (default env SERVICE_KEY)")
+    ap.add_argument(
+        "--key",
+        default=os.environ.get("SERVICE_KEY"),
+        help="X-Service-Key (domyślnie env SERVICE_KEY)",
+    )
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--email", help="only this user (default all active users)")
     args = ap.parse_args()
     if not args.key:
-        ap.error("brak klucza: ustaw SERVICE_KEY albo --key (taki sam jak SERVICE_KEY backendu)")
+        ap.error(
+            "brak klucza: ustaw SERVICE_KEY albo --key (taki sam jak SERVICE_KEY backendu)"
+        )
 
     now = datetime.now(UTC)
     today = now.date()
     days = [today - timedelta(days=d) for d in range(args.days - 1, -1, -1)]
-    with httpx.Client(base_url=f"{args.api}/api/v1/health/service", headers={"X-Service-Key": args.key}, timeout=60) as http:
+    with httpx.Client(
+        base_url=f"{args.api}/api/v1/health/service",
+        headers={"X-Service-Key": args.key},
+        timeout=60,
+    ) as http:
         users = http.get("/users")
         users.raise_for_status()
-        selected = [u for u in users.json() if args.email is None or u["email"] == args.email.lower()]
+        selected = [
+            u
+            for u in users.json()
+            if args.email is None or u["email"] == args.email.lower()
+        ]
         if not selected:
             ap.error(f"no active user {args.email}")
         for user in selected:
             rng = random.Random(args.seed * 1_000_003 + user["id"])
-            wanted = random_profile(rng, today)  # always draw, so the rng stream does not depend on what the user already has
+            wanted = random_profile(
+                rng, today
+            )  # zawsze losujemy, żeby strumień rng nie zależał od tego, co user już ma
             missing = {k: v for k, v in wanted.items() if user[k] is None}
             if missing:
                 res = http.patch(f"/users/{user['id']}/profile", json=missing)
@@ -168,7 +224,10 @@ def main():
             totals: dict[str, int] = {}
             for day in days:
                 payload = person.day_payload(day)
-                res = http.post(f"/ingest/{user['id']}", json=trim_to_now(payload, now) if day == today else payload)
+                res = http.post(
+                    f"/ingest/{user['id']}",
+                    json=trim_to_now(payload, now) if day == today else payload,
+                )
                 res.raise_for_status()
                 for k, v in res.json().items():
                     totals[k] = totals.get(k, 0) + v

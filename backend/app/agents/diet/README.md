@@ -13,6 +13,9 @@ generic helpers (`Question`, `parse_answer`, `validate`) imported from `app/agen
    and in Chroma memory) and the agent switches to normal chat.
 4. In chat, the system prompt contains the questionnaire result, remembered facts and the top 4 chunks retrieved from the `diet` knowledge base
    (`[source, p. N]` + text).
+5. `POST /api/v1/agents/diet-plan` (`app/agents/diet_plan/`, the counterpart of the gym `plan` agent) builds a 7-day meal plan from the questionnaire,
+   the 14-day health summary (`app/agents/plan/health.py`) and the top 6 `diet` RAG chunks. Each day must have `mealsPerDay` meals, otherwise 502.
+   The plan is saved to `<DIET_PLAN_DIR>/<user_id>.json` (default `./data/diet_plans`). No post-meal feedback yet.
 
 ## Endpoints (JWT required)
 
@@ -22,6 +25,8 @@ generic helpers (`Question`, `parse_answer`, `validate`) imported from `app/agen
 | GET | `/agents/diet/history?limit=50` | message history |
 | GET | `/agents/diet/questionnaire` | progress, current question, or final result (`dietQuestionnaire`) |
 | DELETE | `/agents/diet/questionnaire` | reset the questionnaire (204) |
+| POST | `/agents/diet-plan` | generate the weekly diet plan (409 without a completed questionnaire, 502 on invalid LLM output) |
+| GET | `/agents/diet-plan` | last generated plan (404 if none) |
 
 ## Questionnaire
 
@@ -44,10 +49,12 @@ and the agent answers without excerpts.
 
 ## Configuration
 
-No agent-specific settings. It uses the same Azure OpenAI configuration as the other agents (`AZURE_OPENAI_*` in `backend/.env`, see `.env.example`)
+Only `DIET_PLAN_DIR` (diet plan JSON files). It uses the same Azure OpenAI configuration as the other agents (`AZURE_OPENAI_*` in `backend/.env`, see `.env.example`)
 via `get_llm()`; without Azure it falls back to the stub LLM.
 
 ## Files
 
 - `agent.py`: `DietAgent`, `get_diet_agent()`; `questionnaire.py`: questions, recap, `build_result`; `prompts.py`: system and extraction prompts.
-- Router: `app/api/v1/router_diet.py`. Model: `DietQuestionnaireState`. Tests: `tests/test_diet.py`.
+- `app/agents/diet_plan/`: `DietPlanAgent`, `get_diet_plan_agent()`, `prompts.py`; schema `app/schemas/diet_plan.py`.
+- Routers: `router_diet.py` (chat, history), `router_diet_questionnaire.py`, `router_diet_plan.py`. Model: `DietQuestionnaireState`.
+  Tests: `tests/test_diet.py`.

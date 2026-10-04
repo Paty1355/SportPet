@@ -9,6 +9,7 @@ from app.models.health import (
 from app.models.message import Message
 from app.models.questionnaire import DietQuestionnaireState, QuestionnaireState
 from app.models.user import User
+from app.models.workout_feedback import WorkoutFeedback
 
 __all__ = [
     "BloodPressureReading",
@@ -20,4 +21,5 @@ __all__ = [
     "QuestionnaireState",
     "User",
     "VitalSample",
+    "WorkoutFeedback",
 ]
