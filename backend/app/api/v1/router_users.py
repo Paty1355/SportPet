@@ -4,7 +4,7 @@ from app.core.deps import CurrentUser, DbSession
 from app.schemas.user import UserOut, UserUpdate
 from app.services import user_service
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from app.models.user import User
 from app.models.social import PetProfile
 from app.schemas.social import PrivacyUpdate, PetUpdate, UserSearchOut
@@ -25,7 +25,7 @@ def update_me(data: UserUpdate, user: CurrentUser, db: DbSession):
 @router.get("/search", response_model=list[UserSearchOut])
 def search_users(email: str, db: DbSession, user: CurrentUser):
     users = db.scalars(
-        select(User).where(User.email.ilike(f"%{email}%"), User.id != user.id)
+        select(User).where(func.lower(User.email) == email.strip().lower(), User.id != user.id)
     ).all()
     return [{"id": u.id, "name": u.name or u.email.split("@")[0]} for u in users]
 

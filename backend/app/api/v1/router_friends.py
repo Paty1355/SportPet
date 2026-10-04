@@ -3,11 +3,11 @@ from sqlalchemy import select, and_, or_
 from app.core.deps import CurrentUser, DbSession
 from app.models.social import Friendship, PetProfile
 from app.models.user import User
-from app.schemas.social import FriendRequestCreate
+from app.schemas.social import FriendPetOut, FriendRequestCreate, FriendRequestsOut, FriendshipOut
 
 router = APIRouter(prefix="/friends", tags=["friends"])
 
-@router.post("/requests", status_code=status.HTTP_201_CREATED)
+@router.post("/requests", status_code=status.HTTP_201_CREATED, response_model=FriendshipOut)
 def send_friend_request(data: FriendRequestCreate, user: CurrentUser, db: DbSession):
     addressee_id = data.user_id
     if addressee_id == user.id:
@@ -35,7 +35,7 @@ def send_friend_request(data: FriendRequestCreate, user: CurrentUser, db: DbSess
     db.refresh(new_friendship)
     return new_friendship
 
-@router.get("/requests")
+@router.get("/requests", response_model=FriendRequestsOut)
 def get_requests(user: CurrentUser, db: DbSession):
     incoming = db.scalars(
         select(Friendship).where(and_(Friendship.addressee_id == user.id, Friendship.status == "pending"))
@@ -94,7 +94,7 @@ def get_friends(user: CurrentUser, db: DbSession):
     
     return [{"id": f.id, "name": f.name} for f in friends]
 
-@router.get("/{friend_id}/pet")
+@router.get("/{friend_id}/pet", response_model=FriendPetOut | dict)
 def get_friend_pet(friend_id: int, user: CurrentUser, db: DbSession):
     friendship = db.scalar(
          select(Friendship).where(
