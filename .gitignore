@@ -7,8 +7,6 @@ backend/data/
 *.egg-info/
 build/
 graphify-out/
-
-# Claude
 CLAUDE.md
 CLAUDE.local.md
 .claude/
