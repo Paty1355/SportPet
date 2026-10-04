@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-import app.models  # noqa: F401
+import app.models
 from app.agents.diet.agent import DietAgent, get_diet_agent
 from app.agents.diet_plan.agent import DietPlanAgent, get_diet_plan_agent
 from app.agents.llm import StubLLM
@@ -25,14 +25,12 @@ from app.memory.embeddings import AzureEmbeddingFunction
 
 
 def _fake_embed(self, input):
-    # Deterministic: identical texts get identical vectors
     digests = (hashlib.sha256(text.encode()).digest()[:16] for text in input)
     return [np.frombuffer(d, dtype=np.uint8).astype(np.float32) for d in digests]
 
 
 @pytest.fixture
 def chroma(tmp_path, monkeypatch):
-    # Chroma in a temp dir; fake Azure credentials + fake embeddings, so tests never hit the network
     monkeypatch.setattr(settings, "chroma_path", str(tmp_path / "chroma"))
     monkeypatch.setattr(settings, "chroma_host", None)
     monkeypatch.setattr(settings, "azure_openai_endpoint", "https://test.openai.azure.com/")
@@ -46,7 +44,6 @@ def chroma(tmp_path, monkeypatch):
 
 @pytest.fixture
 def client(chroma, tmp_path, monkeypatch):
-    # In-memory SQLite instead of Postgres, uploads in a temp dir
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(engine)
     TestSession = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
@@ -63,14 +60,13 @@ def client(chroma, tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "training_plan_dir", str(tmp_path / "training_plans"))
     monkeypatch.setattr(settings, "jwt_secret", "test-secret-that-is-at-least-32-bytes-long")
 
-    OVERTRAINING_CACHE.clear()  # every test starts with a fresh database, often with the same user id
+    OVERTRAINING_CACHE.clear()
     app.dependency_overrides[get_db] = override_db
     app.dependency_overrides[get_photo_agent] = lambda: PhotoAgent(StubLLM())
     app.dependency_overrides[get_training_agent] = lambda: TrainingAgent(StubLLM())
     app.dependency_overrides[get_diet_agent] = lambda: DietAgent(StubLLM())
     app.dependency_overrides[get_diet_plan_agent] = lambda: DietPlanAgent(StubLLM())
     app.dependency_overrides[get_plan_agent] = lambda: PlanAgent(StubLLM())
-    # No `with` – lifespan (create_all on Postgres) does not run
     yield TestClient(app)
     app.dependency_overrides.clear()
 

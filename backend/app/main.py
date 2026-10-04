@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-import app.models  # noqa: F401 – rejestruje modele w Base.metadata
+import app.models
 from app.agents.diet_plan.images import IMAGE_DIR, IMAGE_URL_PREFIX
 from app.agents.plan.exercises import GIF_DIR, GIF_URL_PREFIX
 from app.api.v1.router import api_router
@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    # Zakładamy tabele i aktualizujemy istniejący schemat przed przyjęciem żądań.
     initialize_database()
     yield
 

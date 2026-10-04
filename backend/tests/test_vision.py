@@ -154,7 +154,7 @@ def test_non_equipment_photo_is_rejected_without_instructions(chroma, machine):
 def test_unsure_identification_asks_for_another_photo(chroma, machine, confidence):
     knowledge = GymMachineKnowledge()
     knowledge.seed([machine])
-    llm = ControlledLLM(confidence=confidence)  # even with a catalog match
+    llm = ControlledLLM(confidence=confidence)
     with pytest.raises(MachineNotRecognized, match="not sure"):
         asyncio.run(VisionAgent(llm, knowledge).run(b"image"))
     assert len(llm.calls) == 1

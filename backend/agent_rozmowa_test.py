@@ -1,15 +1,8 @@
-"""Talk to the training or diet agent in the terminal, without running the API.
-
-Uses the real DB, Chroma and LLM from .env. Run from backend/:
-    uv run python agent_rozmowa_test.py [email]
-Commands: /status, /plan, /reset, /diet (switch between the training and diet agent), /quit
-Once the questionnaire is completed, the matching plan agent generates a plan automatically.
-"""
 
 import asyncio
 import sys
 
-import app.models  # noqa: F401 – registers models in Base.metadata
+import app.models
 from app.agents.diet.agent import get_diet_agent
 from app.agents.diet_plan.agent import DietPlanGenerationError, get_diet_plan_agent
 from app.agents.plan.agent import PlanGenerationError, get_plan_agent
@@ -19,7 +12,6 @@ from app.db.session import SessionLocal, engine
 from app.schemas.user import UserCreate
 from app.services.user_service import create_user, get_by_email
 
-# mode -> (agent, status field holding the questionnaire result, plan agent, plan error)
 MODES = {
     "training": (get_training_agent, "training_questionnaire", get_plan_agent, PlanGenerationError),
     "diet": (get_diet_agent, "diet_questionnaire", get_diet_plan_agent, DietPlanGenerationError),

@@ -1,4 +1,3 @@
-"""Exercise descriptions grounded in the training knowledge base (Chroma RAG)."""
 
 from pydantic import BaseModel, ValidationError
 
@@ -14,7 +13,6 @@ class LlmDescriptions(BaseModel):
 
 
 async def describe_exercises(llm: LLMClient, knowledge: KnowledgeBase, names: list[str]) -> dict[str, str]:
-    """One LLM call for all exercises; an empty dict on invalid output, so the plan is still returned."""
     sections = []
     for name in names:
         fragments = [c.text for c in knowledge.search(f"{name} exercise technique", k=RAG_K)]

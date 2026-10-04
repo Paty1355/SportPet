@@ -3,11 +3,9 @@ from urllib.parse import quote
 
 from app.schemas.questionnaire import DislikedExercise, Injury, TrainingQuestionnaire
 
-# The exercise catalogue is the set of gifs: exercise name = file name without ".gif".
 GIF_DIR = Path(__file__).resolve().parents[1] / "training" / "exercises"
 GIF_URL_PREFIX = "/static/exercises"
 
-# Risky exercises excluded up front when the user has any of these injuries or dislikes; the LLM handles the rest.
 AVOID: dict[str, set[Injury | DislikedExercise]] = {
     "Burpees": {"burpees", "jumping", "knees", "diastasis"},
     "Jump Squats": {"jumping", "knees", "diastasis"},
@@ -50,7 +48,6 @@ AVOID: dict[str, set[Injury | DislikedExercise]] = {
 
 
 def available_exercises() -> list[str]:
-    """Read on every call, so a newly added gif is available right away."""
     return sorted(p.stem for p in GIF_DIR.glob("*.gif"))
 
 
@@ -60,7 +57,6 @@ def allowed_exercises(questionnaire: TrainingQuestionnaire) -> list[str]:
 
 
 def exercise_title(name: str) -> str:
-    # Some gif names list alternative names joined with " lub " ("or"); show the first one.
     return name.split(" lub ")[0]
 
 

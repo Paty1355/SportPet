@@ -22,11 +22,10 @@ from app.schemas.post_workout import SafetyNotice
 from app.schemas.questionnaire import DietQuestionnaireStatus
 
 RAG_TOP_K = 4
-MAX_CALORIES = 5000  # bigger numbers in a calorie answer are more likely typos than targets
+MAX_CALORIES = 5000
 
 
 class DietAgent(BaseAgent):
-    """Runs the diet questionnaire step by step first; after it's completed, chats as a dietitian with RAG."""
 
     name = "diet"
     system_prompt = prompts.SYSTEM_PROMPT
@@ -42,14 +41,12 @@ class DietAgent(BaseAgent):
             return await self.chat(db, user, message, image)
 
         if state is None:
-            # The client already shows the first question (GET /questionnaire), so this message answers it.
             state = DietQuestionnaireState(user_id=user.id, step=0, answers={})
             db.add(state)
 
         return await self.answer_question(db, user, state, message)
 
     async def chat(self, db: Session, user: User, message: str, image: bytes | None = None) -> AgentResponse:
-        """Same flow as `BaseAgent.run`, with the retrieved knowledge appended to the system prompt."""
         memories = self.memory.search(user.id, message, k=self.memory_k)
         messages = self.build_messages(db, user, memories, message)
 
@@ -75,7 +72,6 @@ class DietAgent(BaseAgent):
         question = QUESTIONS[state.step]
         notice = medical_notice(message)
         if notice is not None and notice.level == "urgent":
-            # Urgent symptoms come first: nothing is recorded and the same question waits for later.
             reply = f"{notice.message}\n\n{format_question(question, state.answers)}"
             return self.respond(db, user, message, reply, state, notice)
 
@@ -86,7 +82,7 @@ class DietAgent(BaseAgent):
             values, notes, warning = await self.extract_answer(question, message)
         prefix = "".join(f"{text}\n\n" for text in (notice and notice.message, warning) if text)
         if values is None and notes and question.key in NOTE_KEYS:
-            values = [NONE]  # e.g. only an allergy outside the options: keep it in the notes instead of re-asking
+            values = [NONE]
 
         if values is None:
             reply = f"{prefix}{prompts.NOT_UNDERSTOOD}\n\n{format_question(question, state.answers)}"
@@ -110,7 +106,6 @@ class DietAgent(BaseAgent):
         return self.respond(db, user, message, prefix + prompts.COMPLETED, state, notice)
 
     async def extract_answer(self, question: Question, message: str) -> tuple[list[str] | None, str, str]:
-        """LLM fallback for free-text answers; returns (values, notes, warning), values None when nothing valid."""
         system = prompts.EXTRACTION_PROMPT.format(
             question=question.text,
             options="\n".join(f"- {value}: {label}" for value, label in question.options.items()),
@@ -135,7 +130,7 @@ class DietAgent(BaseAgent):
         state: DietQuestionnaireState,
         notice: SafetyNotice | None = None,
     ) -> AgentResponse:
-        self.save_exchange(db, user, message, reply)  # commits the questionnaire state too
+        self.save_exchange(db, user, message, reply)
         if state.completed_at is not None:
             return AgentResponse(reply=reply, safety_notice=notice)
         question = QUESTIONS[state.step]
@@ -160,7 +155,6 @@ class DietAgent(BaseAgent):
         )
 
     def reset(self, db: Session, user_id: int) -> None:
-        # The previous result stays in Chroma memory; the system prompt always uses the current questionnaire.
         if state := self.get_state(db, user_id):
             db.delete(state)
             db.commit()
@@ -181,8 +175,7 @@ class DietAgent(BaseAgent):
 
 
 def custom_calories(message: str, sex: str | None) -> tuple[list[str] | None, str]:
-    """A calorie target typed as a number, raised to the healthy minimum with a warning; None when there's none."""
-    message = re.sub(r"(?<=\d)[ ,.](?=\d{3}\b)", "", message)  # "1,700" / "1 700" -> "1700"
+    message = re.sub(r"(?<=\d)[ ,.](?=\d{3}\b)", "", message)
     match = re.search(r"\b\d{3,4}\b", message)
     if match is None or int(match[0]) > MAX_CALORIES:
         return None, ""

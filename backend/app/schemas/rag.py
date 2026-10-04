@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class PageText(BaseModel):
-    page: int | None = None  # None for files without pages (txt)
+    page: int | None = None
     text: str
 
 
@@ -17,4 +17,4 @@ class RetrievedChunk(BaseModel):
     text: str
     source: str
     page: int | None = None
-    score: float  # cosine similarity, higher is better
+    score: float

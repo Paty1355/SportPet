@@ -40,7 +40,7 @@ def test_ingest_is_idempotent(client, auth_headers):
 
 
 def test_cycle_requires_female_user(client, auth_headers):
-    assert client.post(URL, json={"cycle": [CYCLE]}, headers=auth_headers).status_code == 422  # sex nieustawiona
+    assert client.post(URL, json={"cycle": [CYCLE]}, headers=auth_headers).status_code == 422
     set_sex(client, auth_headers, "M")
     assert client.post(URL, json={"cycle": [CYCLE]}, headers=auth_headers).status_code == 422
     set_sex(client, auth_headers, "F")
@@ -52,7 +52,7 @@ def test_cycle_requires_female_user(client, auth_headers):
     [
         {"blood_pressure": [{**BP, "systolic": 70, "diastolic": 90}]},
         {"samples": [{**HR, "value": 400}]},
-        {"samples": [{**HR, "ts": "2026-10-03T08:00:00"}]},  # brak strefy czasowej
+        {"samples": [{**HR, "ts": "2026-10-03T08:00:00"}]},
         {"samples": [{**HR, "metric": "bogus"}]},
         {"cycle": [{**CYCLE, "cycle_day": 30}]},
     ],
@@ -70,7 +70,6 @@ def test_users_do_not_collide(client, auth_headers):
     login = client.post("/api/v1/auth/login", data={"username": "b@example.com", "password": "password123"})
     token = login.json()["access_token"]
     other = {"Authorization": f"Bearer {token}"}
-    # the same key (ts, metric) for another user is a separate row
     assert client.post(URL, json={"samples": [HR]}, headers=auth_headers).json()["samples"] == 1
     assert client.post(URL, json={"samples": [HR]}, headers=other).json()["samples"] == 1
 
@@ -94,7 +93,7 @@ def service(client, monkeypatch):
 def test_service_endpoints_require_key(client, auth_headers, service):
     assert client.get("/api/v1/health/service/users").status_code == 401
     assert client.get("/api/v1/health/service/users", headers={"X-Service-Key": "nope"}).status_code == 401
-    assert client.get("/api/v1/health/service/users", headers=auth_headers).status_code == 401  # JWT to nie klucz
+    assert client.get("/api/v1/health/service/users", headers=auth_headers).status_code == 401
     assert client.get("/api/v1/health/service/users", headers=service).status_code == 200
 
 

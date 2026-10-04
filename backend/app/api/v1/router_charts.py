@@ -1,4 +1,3 @@
-"""Health data reads for charts. Always the logged-in user's data (JWT)."""
 
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated, Literal
@@ -22,11 +21,10 @@ router = APIRouter(prefix="/health", tags=["health-charts"])
 UNITS = {"heart_rate": "bpm", "spo2": "%", "stress": "score 0-100"}
 BUCKET_SECONDS = {"raw": 0, "5m": 300, "15m": 900, "1h": 3600, "1d": 86400}
 MAX_RANGE_DAYS = 60
-MAX_RAW_RANGE_DAYS = 3  # raw is ~864 points/day/metric; longer ranges should go through a bucket
+MAX_RAW_RANGE_DAYS = 3
 
 
 def _utc(dt: datetime) -> datetime:
-    # SQLite oddaje naive, Postgres aware; wszystko trzymamy w UTC
     return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
 
 
@@ -64,7 +62,6 @@ def series(
     end: EndDT = None,
     bucket: Literal["raw", "5m", "15m", "1h", "1d"] = "raw",
 ):
-    """Time series. bucket != raw returns the mean (`value`) and `min`/`max` within the interval (UTC)."""
     start, end = _range(start, end, default_days=1)
     if bucket == "raw" and end - start > timedelta(days=MAX_RAW_RANGE_DAYS):
         raise HTTPException(422, f"bucket=raw allows at most {MAX_RAW_RANGE_DAYS} days; use bucket=5m/15m/1h/1d")
@@ -102,8 +99,6 @@ def series(
 def dashboard(
     user: CurrentUser, db: DbSession, days: Annotated[int, Query(ge=7, le=MAX_RANGE_DAYS)] = 60, end: EndD = None
 ):
-    """Everything for the charts screen in one call: profile, latest vitals and the last `days` days up to `end`
-    (default today, UTC) of daily summaries, blood pressure, cycle and ECG list (no waveform), plus trend analysis."""
     start_d, end_d = _date_range(None, end, default_days=days)
     start = datetime.combine(start_d, time.min, UTC)
     stop = datetime.combine(end_d + timedelta(days=1), time.min, UTC)

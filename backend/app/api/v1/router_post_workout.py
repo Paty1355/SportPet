@@ -51,7 +51,6 @@ async def chat(
     except PostWorkoutModelError as exc:
         raise HTTPException(502, str(exc)) from exc
     if data.action == "confirm" and response.status == "completed":
-        # The last check-in of a plan triggers the next plan, built with this feedback.
         await plans.regenerate_if_finished(db, user, training.get_status(db, user.id).training_questionnaire)
     return response
 
@@ -96,7 +95,7 @@ async def generate_report(data: ReportRequest, user: CurrentUser, db: DbSession,
     anchor = data.anchor_date or datetime.now(ZoneInfo(profile["timezone"])).date()
     report = ensure_report(db, user_id, period, profile["timezone"], anchor)
     report_id = report.id
-    db.commit()  # Persist calculations even when Azure cannot produce the comment.
+    db.commit()
     return await describe_report(db, user_id, report_id, agent.llm, profile, data.regenerate_comment)
 
 

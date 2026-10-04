@@ -57,7 +57,6 @@ class CycleIn(BaseModel):
 
 
 class HealthIngest(BaseModel):
-    """Wszystkie sekcje opcjonalne. Limity chronią przed pojedynczym ogromnym requestem."""
 
     samples: list[SampleIn] = Field(default_factory=list, max_length=5_000)
     daily: list[DailyIn] = Field(default_factory=list, max_length=400)
@@ -67,7 +66,6 @@ class HealthIngest(BaseModel):
 
 
 class HealthIngestResult(BaseModel):
-    """Liczba faktycznie zapisanych wierszy. Duplikaty (ten sam klucz) nie są liczone."""
 
     samples: int
     daily: int
@@ -76,13 +74,12 @@ class HealthIngestResult(BaseModel):
     cycle: int
 
 
-# ---- odczyt (wykresy) ----
 
 
 class SeriesPoint(BaseModel):
     ts: datetime
     value: float
-    min: float | None = None  # tylko dla bucket != raw
+    min: float | None = None
     max: float | None = None
 
 
@@ -143,9 +140,9 @@ class Dashboard(BaseModel):
     weight_kg: float | None
     height_cm: float | None
     bmi: float | None
-    latest: dict[str, LatestValue | None]  # heart_rate | spo2 | stress
+    latest: dict[str, LatestValue | None]
     daily: list[DailyOut]
     blood_pressure: list[BloodPressureOut]
-    cycle: list[CycleOut]  # empty for users without cycle data
-    ecg: list[EcgSummary]  # without the waveform
-    stats: dict  # `app.statistics.analyze(..., include_series=True)`
+    cycle: list[CycleOut]
+    ecg: list[EcgSummary]
+    stats: dict

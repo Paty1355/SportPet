@@ -190,7 +190,6 @@ class ReportResponse(ApiModel):
 
 
 class AnswerExtraction(BaseModel):
-    """No numeric constraints in the wire schema; validate extracted scores locally too."""
 
     model_config = ConfigDict(extra="forbid", strict=True)
     score: int | None

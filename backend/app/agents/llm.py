@@ -13,7 +13,6 @@ class LLMClient(Protocol):
 
 
 class StubLLM:
-    """Atrapa używana, gdy Azure nie jest skonfigurowany (i w testach) – zwraca echo ostatniej wiadomości."""
 
     async def complete(
         self, system: str, messages: list[dict], image: bytes | None = None, json_mode: bool = False
@@ -25,7 +24,6 @@ class StubLLM:
 
 
 class AzureLLM:
-    """Azure OpenAI: tekst przez deployment czatu, a gdy jest zdjęcie – przez deployment vision."""
 
     def __init__(self, client: AsyncAzureOpenAI, chat_deployment: str, vision_deployment: str | None = None):
         self.client = client

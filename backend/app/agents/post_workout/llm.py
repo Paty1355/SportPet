@@ -13,7 +13,6 @@ from app.schemas.post_workout import AnswerExtraction, SupportText
 
 
 def untrusted_json(context: dict) -> str:
-    """JSON data block; `<`/`>` become \\u escapes (same JSON value) so user text cannot close the block."""
     body = json.dumps(context, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e")
     return f'<data label="check-in context">\n{body}\n</data>'
 

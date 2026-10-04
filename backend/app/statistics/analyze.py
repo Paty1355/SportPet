@@ -1,4 +1,3 @@
-"""User trend analysis: daily features -> tests -> JSON-serializable result (for the report / AI model context)."""
 
 from datetime import UTC, date, datetime, timedelta
 
@@ -10,39 +9,30 @@ from app.statistics import trends
 from app.statistics.daily import Series, cycle_phases, daily_features
 
 DEFAULT_DAYS = 60
-MIN_DAYS = 28  # with fewer days of data we draw no trend conclusion: "insufficient_data", not "no trend"
+MIN_DAYS = 28
 RECENT_DAYS = 7
-BASELINE_DAYS = 28  # days immediately before the "recent" window
+BASELINE_DAYS = 28
 MIN_BASELINE, MIN_RECENT = 14, 4
-MIN_POINTS = {"bp_sys_sd_wk": 8}  # 1 point per week (60 days = 8 full blocks): different minimum than daily
+MIN_POINTS = {"bp_sys_sd_wk": 8}
 OUTLIER_Z = 2.0
 METRICS = (
     "rhr", "night_dip", "stress_day_mean", "stress_high_frac", "spo2_min", "spo2_low_count", "bp_sys", "bp_dia",
     "bp_am_pm_diff", "bp_sys_sd_wk", "steps", "sleep_minutes", "ecg_hr", "ecg_abnormal",
-)  # fmt: skip
-# (cause D, effect D+lag); lag 0..2 days
+)
 LAG_PAIRS = (("sleep_minutes", "rhr"), ("sleep_minutes", "stress_day_mean"), ("steps", "rhr"))
 LAGS = (0, 1, 2)
 CYCLE_METRICS = ("rhr", "stress_day_mean")
-# Overtraining: (bad direction, min recent-vs-baseline change, min slope per week).
-# ponytail: heuristic thresholds (rhr from the README, the rest hand-picked); HRV unavailable, so not used.
 OVERTRAINING = {
     "rhr": (1, 5.0, 1.0),
     "night_dip": (-1, 3.0, 1.0),
     "stress_day_mean": (1, 5.0, 2.0),
     "sleep_minutes": (-1, 30.0, 15.0),
 }
-OVERTRAINING_MIN_SIGNALS = 2  # rhr is mandatory
+OVERTRAINING_MIN_SIGNALS = 2
 ALPHA = 0.05
 
 
 def analyze_series(s: Series, end: date, min_n: int = MIN_DAYS, with_series: bool = False) -> dict:
-    """Tests of a single metric. `end` = last day of the analysis (the "recent" window is `end` - 6 .. `end`).
-
-    Returns {"status": "insufficient_data", "n", "required"} or {"status": "ok", "n", "trend", "change_point",
-    "baseline_vs_recent", "outlier_days"}. "p" fields are raw; "p_adj" is added by `analyze` (Benjamini-Hochberg).
-    `with_series=True` adds "series" ([{date, value}] ascending; also for insufficient_data) and "trend_line"
-    (Sen line: points on the first and last day, for charts)."""
     pts = sorted(s.items())
     n = len(pts)
     series = [{"date": d.isoformat(), "value": v} for d, v in pts] if with_series else None
@@ -69,7 +59,7 @@ def analyze_series(s: Series, end: date, min_n: int = MIN_DAYS, with_series: boo
         "outlier_days": [],
     }
     if with_series:
-        intercept = float(np.median(y) - slope * np.median(x))  # intercept Theila-Sena
+        intercept = float(np.median(y) - slope * np.median(x))
         out["series"] = series
         out["trend_line"] = [{"date": dates[i].isoformat(), "value": intercept + slope * x[i]} for i in (0, n - 1)]
 
@@ -97,11 +87,6 @@ def analyze_series(s: Series, end: date, min_n: int = MIN_DAYS, with_series: boo
 
 
 def detect_overtraining(metrics: dict) -> dict:
-    """Overtraining from a finished `analyze()["metrics"]` (after `p_adj` correction): a rise in RHR (required) together
-    with at least one of: loss of the nocturnal heart-rate dip, higher stress, less sleep. A signal = a significant
-    (`p_adj` < 0.05) change beyond the threshold in the bad direction.
-    {"flag": bool, "signals": [{"metric", "delta", "slope_per_week"}]};
-    `delta` = last 7 days minus baseline (or None)."""
     signals = []
     for name, (sign, min_delta, min_slope) in OVERTRAINING.items():
         r = metrics.get(name, {})
@@ -119,7 +104,6 @@ def detect_overtraining(metrics: dict) -> dict:
 
 
 def _adjust(items: list[dict]) -> None:
-    """Benjamini-Hochberg in place: adds "p_adj" to every dict that has "p"."""
     if items:
         for item, adj in zip(items, stats.false_discovery_control([i["p"] for i in items]), strict=True):
             item["p_adj"] = float(adj)
@@ -128,13 +112,6 @@ def _adjust(items: list[dict]) -> None:
 def analyze(
     db: Session, user_id: int, end: date | None = None, days: int = DEFAULT_DAYS, include_series: bool = False
 ) -> dict:
-    """Full user analysis over `days` days up to and including `end` (default yesterday UTC: today is incomplete).
-
-    {"window": {start, end}, "metrics": {nazwa: analyze_series}, "lagged_correlations": [...], "cycle": [...],
-    "overtraining": {flag, signals}}.
-    `include_series=True` adds a daily series and a trend line to every metric (for charts, see `charts.py`).
-    P-values are corrected separately within each test family
-    (trend, change point, baseline-vs-recent, correlations, cycle)."""
     end = end or datetime.now(UTC).date() - timedelta(days=1)
     start = end - timedelta(days=days - 1)
     feats = daily_features(db, user_id, start, end)

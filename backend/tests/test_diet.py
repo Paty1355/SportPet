@@ -20,7 +20,7 @@ PLAN_URL = "/api/v1/agents/diet-plan"
 ANSWERS = [
     "2", "vegan", "gluten, nuts", "1,4", "4", "30", "moderate", "about 2,400 kcal", "diabetes", "late_night_snacking",
     "gradual",
-]  # fmt: skip
+]
 
 
 def complete(client, headers):
@@ -73,7 +73,7 @@ def test_too_low_calorie_target_warns_and_is_raised_to_minimum(client, auth_head
     for answer in ["none", "none", "standard"]:
         client.post(CHAT_URL, json={"message": answer}, headers=auth_headers)
     result = client.get(URL, headers=auth_headers).json()["dietQuestionnaire"]
-    assert result["calorieTarget"] == 1500  # the test user has no sex set, so the higher minimum applies
+    assert result["calorieTarget"] == 1500
 
 
 def test_gentle_question_recaps_and_recommends_gradual_start_for_medical_condition(client, auth_headers):
@@ -117,7 +117,7 @@ def test_schema_literals_match_question_options():
     fields = {to_camel(name): field.annotation for name, field in DietQuestionnaire.model_fields.items()}
 
     for question in QUESTIONS:
-        if question.key in ("gentleCheck", "calorieTarget"):  # an object / a number, not a literal
+        if question.key in ("gentleCheck", "calorieTarget"):
             continue
         annotation = fields[question.key]
         if get_origin(annotation) is list:
@@ -126,7 +126,6 @@ def test_schema_literals_match_question_options():
 
 
 class PlanLLM:
-    """Returns a 7-day plan with `meals` meals per day."""
 
     def __init__(self, meals: int, title: str = "Fruit with chickpeas"):
         meal = {"name": "Lunch", "title": title, "description": "...", "calories": 600}
@@ -141,10 +140,10 @@ def test_diet_plan_needs_questionnaire_and_valid_llm_output(client, auth_headers
     assert client.post(PLAN_URL, headers=auth_headers).status_code == 409
     assert client.get(PLAN_URL, headers=auth_headers).status_code == 404
     complete(client, auth_headers)
-    assert client.post(PLAN_URL, headers=auth_headers).status_code == 502  # stub LLM returns "{}"
+    assert client.post(PLAN_URL, headers=auth_headers).status_code == 502
 
     app.dependency_overrides[get_diet_plan_agent] = lambda: DietPlanAgent(PlanLLM(meals=3))
-    assert client.post(PLAN_URL, headers=auth_headers).status_code == 502  # questionnaire asks for 4 meals
+    assert client.post(PLAN_URL, headers=auth_headers).status_code == 502
 
     app.dependency_overrides[get_diet_plan_agent] = lambda: DietPlanAgent(PlanLLM(meals=4))
     plan = client.post(PLAN_URL, headers=auth_headers).json()
@@ -156,7 +155,7 @@ def test_diet_plan_needs_questionnaire_and_valid_llm_output(client, auth_headers
 
 
 def test_every_dish_photo_is_tagged():
-    assert set(available_dishes()) == set(CONTAINS)  # an untagged photo would be hidden from users with restrictions
+    assert set(available_dishes()) == set(CONTAINS)
 
 
 def questionnaire(**changes) -> DietQuestionnaire:
@@ -178,7 +177,7 @@ def test_dish_catalogue_respects_diet_allergies_and_dislikes():
 
 
 def test_plan_with_dish_outside_the_catalogue_is_rejected(client, auth_headers):
-    complete(client, auth_headers)  # vegan, no gluten/nuts, dislikes fish and vegetables
+    complete(client, auth_headers)
     app.dependency_overrides[get_diet_plan_agent] = lambda: DietPlanAgent(PlanLLM(meals=4, title="Chicken skewers"))
     assert client.post(PLAN_URL, headers=auth_headers).status_code == 502
 
@@ -205,5 +204,4 @@ def test_check_plan_flags_allergens_diet_type_and_low_calories():
     assert check_plan(make_plan("fruit", calories=2400), with_target, "F") == [
         "dailyCalories must be about 1800, the user's calorie target"
     ]
-    # Overtraining or a mental health concern: no deficit, so a plan above the target is fine.
     assert check_plan(make_plan("fruit", calories=2400), with_target, "F", recovery=True) == []

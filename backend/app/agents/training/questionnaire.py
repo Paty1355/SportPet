@@ -4,14 +4,14 @@ from dataclasses import dataclass
 from app.schemas.questionnaire import IntensityCheck, OptionOut, QuestionOut, TrainingQuestionnaire
 
 NONE = "none"
-MAX_NOTES = 300  # caps LLM-extracted free-text notes that later reach plan prompts
+MAX_NOTES = 300
 
 
 @dataclass(frozen=True)
 class Question:
     key: str
     text: str
-    options: dict[str, str]  # value -> label
+    options: dict[str, str]
     multi: bool = False
 
     def to_out(self, text: str | None = None) -> QuestionOut:
@@ -78,7 +78,6 @@ QUESTIONS: list[Question] = [
         },
         multi=True,
     ),
-    # TODO: back this question with medical documents (RAG) for injury-specific guidance.
     Question(
         "injuriesAndLimitations",
         "Do you have any pain, injuries or post-pregnancy limitations?",
@@ -131,12 +130,10 @@ QUESTIONS: list[Question] = [
 
 DAYS_PER_WEEK = {"mwf": 3, "weekends": 2, "any_weekdays": 3, "flexible": 3}
 CAUTION_FLAGS = {"postpartum", "beginner", "back", "knees", "diastasis"}
-# Free-text notes from these questions are kept, so injuries outside the options aren't lost.
 NOTE_KEYS = ("injuriesAndLimitations",)
 
 
 def parse_answer(question: Question, text: str) -> list[str] | None:
-    """Match option values, 1-based numbers or exact labels; None when the answer needs the LLM."""
     labels = {label.lower(): value for value, label in question.options.items()}
     keys = list(question.options)
     values: list[str] = []
@@ -165,7 +162,6 @@ def validate(question: Question, values: list[str]) -> list[str] | None:
 
 
 def question_text(question: Question, answers: dict) -> str:
-    """The intensity check also recaps the answers and recommends a cautious start when relevant."""
     if question.key != "intensityCheck":
         return question.text
 
@@ -179,7 +175,6 @@ def question_text(question: Question, answers: dict) -> str:
 
 
 def format_question(question: Question, answers: dict) -> str:
-    """Chat-friendly question text with numbered options, so plain-text clients can answer with "2" or "1, 3"."""
     options = "\n".join(f"{i}. {label}" for i, label in enumerate(question.options.values(), start=1))
     hint = "\n(You can pick more than one.)" if question.multi else ""
     return f"{question_text(question, answers)}\n{options}{hint}"

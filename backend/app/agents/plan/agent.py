@@ -26,7 +26,6 @@ from app.services.post_workout import feedback_for
 
 logger = logging.getLogger(__name__)
 
-# Lengths must match DAYS_PER_WEEK in the questionnaire.
 PLAN_DAYS = {
     "mwf": ["Monday", "Wednesday", "Friday"],
     "weekends": ["Saturday", "Sunday"],
@@ -59,9 +58,6 @@ class LlmPlan(CamelModel):
 
 
 class PlanAgent:
-    """Weekly training plan: the LLM picks exercises from the available gifs, then descriptions come from RAG.
-
-    Inputs: the questionnaire, recent health data and post-workout feedback."""
 
     def __init__(self, llm: LLMClient):
         self.llm = llm
@@ -121,7 +117,6 @@ class PlanAgent:
         return plan
 
     def complete_workout(self, user_id: int, workout_date: date) -> tuple[TrainingPlan, Workout] | None:
-        """Removes the workout from the saved plan; None when there's no workout on that date."""
         plan = self.get(user_id)
         workout = next((w for w in plan.workouts if w.date == workout_date), None) if plan else None
         if workout is None:
@@ -133,7 +128,6 @@ class PlanAgent:
     async def regenerate_if_finished(
         self, db: Session, user: User, questionnaire: TrainingQuestionnaire | None
     ) -> TrainingPlan | None:
-        """Generates the next plan once every workout of the current one is done."""
         plan = self.get(user.id)
         if questionnaire is None or plan is None or plan.workouts:
             return None
@@ -151,7 +145,6 @@ class PlanAgent:
         return FeedbackOut.model_validate(row)
 
     def get_feedback(self, db: Session, user_id: int, limit: int) -> list[FeedbackOut]:
-        """Newest first."""
         rows = db.scalars(
             select(WorkoutFeedback)
             .where(WorkoutFeedback.user_id == user_id)
@@ -161,7 +154,6 @@ class PlanAgent:
         return [FeedbackOut.model_validate(r) for r in rows]
 
     def get_check_ins(self, db: Session, user_id: int, limit: int) -> list[CheckInFeedback]:
-        """Completed post-workout check-ins, newest first."""
         rows = db.scalars(
             select(PostWorkoutCheckIn)
             .where(PostWorkoutCheckIn.user_id == user_id, PostWorkoutCheckIn.status == "completed")
@@ -180,7 +172,7 @@ class PlanAgent:
         try:
             return TrainingPlan.model_validate_json(path.read_text(encoding="utf-8"))
         except ValidationError:
-            return None  # saved in an older format; the user has to generate a new plan
+            return None
 
     def plan_path(self, user_id: int) -> Path:
         path = Path(settings.training_plan_dir)
@@ -189,14 +181,12 @@ class PlanAgent:
 
 
 def plan_dates(days: list[str], today: date) -> list[date]:
-    """Nearest date (today included) for each weekday; "Day N" labels are spread every other day from today."""
     if days[0] in WEEKDAYS:
         return [today + timedelta(days=(WEEKDAYS.index(d) - today.weekday()) % 7) for d in days]
     return [today + timedelta(days=i * FLEXIBLE_GAP_DAYS) for i in range(len(days))]
 
 
 def parse_selection(raw: str, count: int, allowed: set[str]) -> list[LlmWorkout]:
-    """Validates the LLM's exercise selection; exercises without a gif are dropped."""
     try:
         llm_plan = LlmPlan.model_validate_json(raw)
     except ValidationError as e:

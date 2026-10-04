@@ -57,6 +57,6 @@ def test_regenerates_only_when_plan_is_finished(client, monkeypatch):
 
     assert asyncio.run(agent.regenerate_if_finished(None, user, object())) is None
     agent.complete_workout(1, MONDAY)
-    assert asyncio.run(agent.regenerate_if_finished(None, user, None)) is None  # no questionnaire
+    assert asyncio.run(agent.regenerate_if_finished(None, user, None)) is None
     assert asyncio.run(agent.regenerate_if_finished(None, user, object())) is not None
     assert len(calls) == 1

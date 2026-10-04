@@ -1,7 +1,3 @@
-"""Weekly analysis of completed post-workout check-ins for the PDF report. Descriptive only, no medical/causal conclusions.
-
-Check-ins give RPE, mood, fatigue, motivation and pain. DOMS and life stress are not collected, so post-workout pain
-intensity and the watch's daytime stress (`daily.py`) stand in for them. Weeks are Monday-Sunday in the user's timezone."""
 
 from collections import Counter, defaultdict
 from datetime import date, timedelta
@@ -37,12 +33,10 @@ LABELS = {
     "sleep": ("Sleep", "min"),
 }
 GRID = ("rpe", "mood", "stress", "pain")
-# (x, y) on the same local day; watch features are per UTC day, close enough for daily means
 CORRELATION_PAIRS = (
     ("rpe", "mood"), ("rpe", "fatigue"), ("pain", "motivation"), ("stress", "rpe"), ("stress", "mood"),
     ("sleep", "rpe"), ("sleep", "mood"),
-)  # fmt: skip
-# ponytail: common sports-science heuristics (Gabbett ACWR, Foster monotony), not clinical thresholds
+)
 ACWR_SAFE, ACWR_HIGH = (0.8, 1.3), 1.5
 FEELINGS = ("better", "same", "worse")
 TOP_LOCATIONS = 8
@@ -64,9 +58,6 @@ def _per_day(checkins: list[tuple[date, PostWorkoutCheckIn]], attribute: str) ->
 
 
 def load_indices(daily_load: Series, start: date, anchor: date) -> dict:
-    """Foster monotony (mean / SD of daily load, rest days = 0) and strain (weekly load x monotony) over the 7 days
-    ending at `anchor`; ACWR = 7-day load / mean weekly load of the 28 days ending at `anchor`.
-    None when the window reaches before `start` or the denominator is 0."""
 
     def last(days: int) -> list[float]:
         return [daily_load.get(anchor - timedelta(days=i), 0.0) for i in range(days)]
@@ -83,12 +74,6 @@ def load_indices(daily_load: Series, start: date, anchor: date) -> dict:
 
 
 def analyze_checkins(db: Session, user_id: int, start: date, end: date, timezone: str) -> dict:
-    """Weekly statistics of completed check-ins for local days `start`..`end` inclusive (JSON-serializable).
-
-    {"status", "checkin_count", "weeks": [{start, end, partial, workouts, minutes, load, monotony, strain, acwr,
-    pain_share, feeling_change, metrics: {name: {n, median, q1, q3, delta}}}], "pain_locations", "correlations",
-    "acwr_high_weeks"}. Session load = RPE x duration in minutes (sRPE). `delta` = median minus the previous week's,
-    only when both weeks have >= MIN_COMPARISON_SAMPLES values. Correlations: Spearman on daily means, BH `p_adj`."""
     lo, hi = period_bounds(start, end, timezone)
     zone = ZoneInfo(timezone)
     rows = db.scalars(
@@ -175,7 +160,6 @@ def _title(fig: Figure, text: str) -> None:
 
 
 def plot_weekly_metrics(result: dict) -> Figure | None:
-    """2x2 grid of weekly medians with the IQR band: RPE, mood, watch stress, pain (DOMS proxy)."""
     if result["status"] != "ok":
         return None
     weeks = result["weeks"]
@@ -196,7 +180,6 @@ def plot_weekly_metrics(result: dict) -> Figure | None:
 
 
 def plot_training_load(result: dict) -> Figure | None:
-    """Weekly sRPE load (bars) with ACWR (line) against the 0.8-1.3 band and the 1.5 threshold."""
     weeks = result["weeks"]
     if not any(w["load"] for w in weeks):
         return None
@@ -229,7 +212,6 @@ def plot_training_load(result: dict) -> Figure | None:
 
 
 def plot_checkin_correlations(result: dict) -> Figure | None:
-    """Spearman rho of same-day pairs (bars, blue = p_adj < 0.05)."""
     corr = result["correlations"]
     if not corr:
         return None
@@ -240,7 +222,7 @@ def plot_checkin_correlations(result: dict) -> Figure | None:
     ax.barh(names, [c["rho"] for c in corr], color=[C_SERIES if c["p_adj"] < ALPHA else C_BASE for c in corr])
     for i, c in enumerate(corr):
         ax.text(c["rho"], i, f" {c['rho']:+.2f} (p_adj={c['p_adj']:.3f}) ", va="center", fontsize=7,
-                ha="left" if c["rho"] >= 0 else "right")  # fmt: skip
+                ha="left" if c["rho"] >= 0 else "right")
     ax.set_xlim(-1, 1)
     ax.axvline(0, color="black", lw=0.8)
     ax.set_xlabel("Spearman rho (same day, daily means)")
@@ -249,7 +231,6 @@ def plot_checkin_correlations(result: dict) -> Figure | None:
 
 
 def plot_pain(result: dict) -> Figure | None:
-    """Share of workouts with pain per week and the most frequent pain locations."""
     weeks = result["weeks"]
     if all(w["pain_share"] is None for w in weeks):
         return None
@@ -273,7 +254,6 @@ def plot_pain(result: dict) -> Figure | None:
 
 
 def plot_feeling_change(result: dict) -> Figure | None:
-    """Stacked weekly counts of 'better / same / worse than before the workout'."""
     weeks = result["weeks"]
     if not any(sum(w["feeling_change"].values()) for w in weeks):
         return None
@@ -294,7 +274,6 @@ def plot_feeling_change(result: dict) -> Figure | None:
 
 
 def figures(result: dict) -> list[tuple[str, Figure]]:
-    """Check-in report pages in order; charts with nothing to draw are skipped."""
     out = [
         ("checkins_weekly", plot_weekly_metrics(result)),
         ("checkins_load", plot_training_load(result)),

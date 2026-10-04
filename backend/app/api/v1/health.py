@@ -15,18 +15,14 @@ from app.statistics import analyze, weekly
 from app.statistics.charts import render_pdf
 
 router = APIRouter(prefix="/health", tags=["health"])
-# For the data generator: works on any user, protected by the X-Service-Key header
 service_router = APIRouter(prefix="/health/service", tags=["health-service"], dependencies=[ServiceAuth])
 
 
 def _insert_new(db: Session, model, user_id: int, items) -> int:
-    """Inserts rows, skipping those with an existing key (ingest is idempotent). Returns the number of new rows."""
     rows = [{**item.model_dump(), "user_id": user_id} for item in items]
     if not rows:
         return 0
-    # on_conflict_do_nothing jest per-dialekt: Postgres w produkcji, SQLite w testach
     insert = postgresql.insert if db.get_bind().dialect.name == "postgresql" else sqlite.insert
-    # rowcount may be -1 (psycopg), so we count rows from RETURNING – it returns only the actually inserted ones
     pk = next(iter(model.__table__.primary_key.columns))
     return len(db.execute(insert(model).values(rows).on_conflict_do_nothing().returning(pk)).all())
 

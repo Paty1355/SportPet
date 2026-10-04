@@ -44,8 +44,8 @@ class DocumentChunker:
     def clean(text: str) -> str:
         text = re.sub(r"[ \t]+", " ", text)
         text = re.sub(r" *\n *", "\n", text)
-        text = re.sub(r"(\w)-\n(\w)", r"\1\2", text)  # words hyphenated across lines
-        text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)  # single line breaks -> space
+        text = re.sub(r"(\w)-\n(\w)", r"\1\2", text)
+        text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)
         text = re.sub(r"\n{3,}", "\n\n", text)
         return text.strip()
 
@@ -84,7 +84,7 @@ class DocumentChunker:
         if sep not in text:
             return self._split(text, rest)
         pieces = text.split(sep)
-        pieces = [p + sep for p in pieces[:-1]] + [pieces[-1]]  # keep the separator with its piece
+        pieces = [p + sep for p in pieces[:-1]] + [pieces[-1]]
         return [part for piece in pieces if piece for part in self._split(piece, rest)]
 
     @staticmethod
@@ -94,7 +94,7 @@ class DocumentChunker:
         if len(text) <= n:
             return text
         tail = text[-n:]
-        cut = tail.find(" ")  # don't start the overlap mid-word
+        cut = tail.find(" ")
         return tail[cut + 1 :] if cut != -1 else tail
 
 

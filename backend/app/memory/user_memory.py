@@ -5,11 +5,6 @@ from app.memory.chroma_client import get_collection
 
 
 class UserMemory:
-    """Long-term semantic memory of an agent.
-
-    One collection per agent and embedding model (e.g. `training_memory_text-embedding-3-small`);
-    entries are scoped by `user_id` metadata and every search filters on it.
-    """
 
     def __init__(self, agent_name: str):
         self.collection = get_collection(f"{agent_name}_memory")

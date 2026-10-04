@@ -21,7 +21,6 @@ def register(data: UserCreate, db: DbSession):
 
 @router.post("/login", response_model=Token)
 def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], db: DbSession):
-    # OAuth2 form: pole `username` to email
     user = user_service.authenticate(db, form.username, form.password)
     if user is None:
         raise HTTPException(

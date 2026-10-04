@@ -5,7 +5,6 @@ from app.schemas.rag import Chunk, RetrievedChunk
 
 
 class KnowledgeBase:
-    """Document store for RAG, shared by all users (e.g. `training_docs_text-embedding-3-small`)."""
 
     batch_size = 100
 
@@ -14,7 +13,6 @@ class KnowledgeBase:
         self.collection = get_collection(self.name)
 
     def add_chunks(self, chunks: list[Chunk]) -> None:
-        # Deterministic ids: re-ingesting a file overwrites its chunks instead of duplicating them
         for batch in batched(chunks, self.batch_size):
             self.collection.upsert(
                 ids=[f"{c.source}:{c.chunk_index}" for c in batch],
@@ -48,6 +46,6 @@ class KnowledgeBase:
     @staticmethod
     def _metadata(chunk: Chunk) -> dict[str, str | int]:
         metadata: dict[str, str | int] = {"source": chunk.source, "chunk_index": chunk.chunk_index}
-        if chunk.page is not None:  # Chroma rejects None metadata values
+        if chunk.page is not None:
             metadata["page"] = chunk.page
         return metadata

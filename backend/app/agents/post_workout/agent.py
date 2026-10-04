@@ -44,7 +44,7 @@ class PostWorkoutAgent:
         snapshot = SimpleNamespace(
             **{column.key: copy.deepcopy(getattr(row, column.key)) for column in row.__table__.columns}
         )
-        db.rollback()  # Never keep a read transaction open while awaiting Azure.
+        db.rollback()
         answers = dict(snapshot.answers)
         observations = {item["code"]: item for item in snapshot.safety_observations}
         reply = None

@@ -1,4 +1,3 @@
-"""Decode supported uploads and send a single normalised JPEG to the vision model."""
 
 from io import BytesIO
 
@@ -21,14 +20,12 @@ class ImageTooLarge(ImagePreparationError):
 
 
 def prepare_image(data: bytes) -> bytes:
-    """Use decoded content, not the filename/MIME; preserve orientation and flatten transparency."""
     if not data:
         raise ImagePreparationError("Provide a non-empty image")
     try:
         with Image.open(BytesIO(data), formats=SUPPORTED_FORMATS) as source:
             if source.width * source.height > MAX_IMAGE_PIXELS:
                 raise ImageTooLarge("Image exceeds the 60 megapixel limit")
-            # Pillow opens GIF/TIFF at their first frame/page and HEIF at its primary image.
             source.load()
             oriented = ImageOps.exif_transpose(source)
             try:

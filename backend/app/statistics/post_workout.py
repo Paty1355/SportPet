@@ -1,4 +1,3 @@
-"""Descriptive comparisons of confirmed check-ins. No medical/causal conclusions."""
 
 from collections import Counter
 from datetime import UTC, date, datetime, time, timedelta
@@ -7,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 from app.schemas.post_workout import MetricComparison, Observation, PainStatistics, Period, ReportStatistics
 
-MIN_COMPARISON_SAMPLES = 3  # Product rule, not a clinical threshold or significance test.
+MIN_COMPARISON_SAMPLES = 3
 ANALYSIS_VERSION = "1"
 METRICS = {
     "fatigueLevel": "fatigue_level",

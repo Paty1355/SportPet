@@ -99,7 +99,7 @@ def test_complete_uses_shared_messages_and_saves_report(post_client, auth_header
     history = client.get(
         f"/api/v1/agents/post-workout/sessions/{session['sessionId']}/history", headers=auth_headers
     ).json()
-    assert len(history) == 15  # initial question + six answers + confirmation, each with its reply
+    assert len(history) == 15
     assert history[-1]["content"] == session["reply"]
     db = next(app.dependency_overrides[get_db]())
     assert db.scalar(select(func.count()).select_from(PostWorkoutCheckIn)) == 1
@@ -349,7 +349,7 @@ def test_reports_cache_and_provider_failure(post_client, auth_headers):
     first = client.post(url, headers=auth_headers, json={})
     assert first.status_code == 200, first.text
     assert first.json()["support"]["status"] == "available"
-    assert len(llm.support_calls) == 1  # comment generated during confirmation is reused
+    assert len(llm.support_calls) == 1
     llm.fail_support = True
     failed = client.post(url, headers=auth_headers, json={"regenerateComment": True})
     assert failed.status_code == 200

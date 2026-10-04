@@ -38,7 +38,6 @@ WELLBEING = """Healthy limits (they apply even if the user asks otherwise):
 
 
 def untrusted(label: str, text: str) -> str:
-    """Wraps user-controlled text as data; escaping `<`/`>` stops it from closing the block early."""
     return f'<data label="{label}">\n{text.replace("<", "&lt;").replace(">", "&gt;")}\n</data>'
 
 
@@ -47,7 +46,7 @@ class BaseAgent:
     system_prompt: str
     history_limit: int = 10
     memory_k: int = 5
-    use_health_flags: bool = False  # overtraining / mental health flags in the context and the safety notice
+    use_health_flags: bool = False
 
     def __init__(self, llm: LLMClient):
         self.llm = llm
@@ -65,7 +64,6 @@ class BaseAgent:
         return AgentResponse(reply=reply, memories_used=memories, safety_notice=notice or self.flags_notice(db, user))
 
     def health_flags(self, db: Session, user: User) -> tuple[list[str], set[str]]:
-        """(overtraining signals, distress codes), both empty for agents that don't use the flags."""
         if not self.use_health_flags:
             return [], set()
         return cached_overtraining_signals(db, user.id), distress_codes(db, user.id)
@@ -77,7 +75,6 @@ class BaseAgent:
     async def safe_reply(
         self, system: str, messages: list[dict], message: str, image: bytes | None = None
     ) -> tuple[str, SafetyNotice | None]:
-        """LLM reply, preceded by a doctor referral when needed; urgent symptoms get only the referral."""
         notice = medical_notice(message)
         if notice is not None and notice.level == "urgent":
             return notice.message, notice
@@ -116,7 +113,6 @@ class BaseAgent:
         return context
 
     def build_messages(self, db: Session, user: User, memories: list[str], message: str) -> list[dict]:
-        # Memories, name and questionnaire come from the user, so they go in a user-role message, never in `system`.
         history = self.get_history(db, user.id, limit=self.history_limit)
         return [
             {"role": "user", "content": "\n\n".join(self.build_context(db, user, memories))},
@@ -125,5 +121,4 @@ class BaseAgent:
         ]
 
     def remember(self, user: User, message: str, reply: str) -> None:
-        # Na start zapisujemy wypowiedzi użytkownika; docelowo LLM może wyciągać z rozmowy konkretne fakty.
         self.memory.add(user.id, message, source="user_message")

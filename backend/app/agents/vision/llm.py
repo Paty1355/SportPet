@@ -11,7 +11,7 @@ from app.schemas.vision import MachineCatalogEntry, MachineDocument, MachineIden
 
 
 class VisionModelResponseError(RuntimeError):
-    """A model refused, truncated or failed to produce the expected structured output."""
+    pass
 
 
 class VisionLLM(Protocol):
