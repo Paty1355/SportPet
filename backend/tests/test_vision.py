@@ -1,11 +1,13 @@
 import asyncio
 import json
+from io import BytesIO
 from types import SimpleNamespace
 
 import httpx
 import pytest
 from fastapi import HTTPException
 from openai import AsyncAzureOpenAI
+from PIL import Image
 from pydantic import ValidationError
 
 from app.agents.vision.agent import (
@@ -32,7 +34,7 @@ def machine():
         aliases=["example"],
         category="Example category",
         description="Opis z karty urządzenia.",
-        primary_muscles=["Partia główna"],
+        primary_muscles=["quads"],
         secondary_muscles=[],
         setup_steps=["Ustawienie ze źródła."],
         exercise_steps=["Wykonanie ze źródła."],
@@ -100,7 +102,9 @@ def test_knowledge_rejects_duplicate_ids_before_writing(chroma, machine):
 
 def test_endpoint_runs_full_pipeline_without_login(vision_client, machine):
     client, llm = vision_client
-    image = b"\x89PNG example image"
+    output = BytesIO()
+    Image.new("RGB", (16, 12), "green").save(output, format="PNG")
+    image = output.getvalue()
     response = client.post("/api/v1/agents/vision/analyze", files={"file": ("machine.png", image, "image/png")})
 
     assert response.status_code == 200
@@ -110,8 +114,13 @@ def test_endpoint_runs_full_pipeline_without_login(vision_client, machine):
     assert body["category"] == machine.category
     assert body["sources"] == machine.sources
     assert body["exercise_steps"] == machine.exercise_steps
+    assert body["primary_muscles"] == machine.primary_muscles
+    assert body["secondary_muscles"] == machine.secondary_muscles
+    assert "muscle_notes" not in body
     assert [call[0] for call in llm.calls] == ["identify", "describe"]
-    assert llm.calls[0][1] == image
+    with Image.open(BytesIO(llm.calls[0][1])) as prepared:
+        assert prepared.format == "JPEG"
+        assert prepared.size == (16, 12)
     assert llm.calls[1][1] == machine
 
 
@@ -165,7 +174,11 @@ def test_endpoint_maps_agent_errors(client, error, status):
             raise error
 
     app.dependency_overrides[get_vision_agent] = FailedAgent
-    response = client.post("/api/v1/agents/vision/analyze", files={"file": ("machine.png", b"image", "image/png")})
+    output = BytesIO()
+    Image.new("RGB", (16, 12), "green").save(output, format="PNG")
+    response = client.post(
+        "/api/v1/agents/vision/analyze", files={"file": ("machine.png", output.getvalue(), "image/png")}
+    )
     assert response.status_code == status
     assert response.json()["detail"] == str(error)
 
@@ -307,10 +320,10 @@ def test_sdk_sends_strict_schema_and_parses_valid_json(machine):
     [
         "missing_field",
         "extra_field",
+        "model_muscle_fields",
         "wrong_type",
         "blank_description",
         "blank_step",
-        "empty_primary_muscles",
         "empty_setup_steps",
         "empty_exercise_steps",
         "invalid_json",
@@ -324,14 +337,14 @@ def test_sdk_rejects_invalid_usage_output(machine, case):
             del payload["description"]
         case "extra_field":
             payload["machine_name"] = "A name invented by the model"
+        case "model_muscle_fields":
+            payload["primary_muscles"] = ["quads"]
         case "wrong_type":
             payload["setup_steps"] = "A string instead of an array"
         case "blank_description":
             payload["description"] = " "
         case "blank_step":
             payload["exercise_steps"] = [" "]
-        case "empty_primary_muscles":
-            payload["primary_muscles"] = []
         case "empty_setup_steps":
             payload["setup_steps"] = []
         case "empty_exercise_steps":

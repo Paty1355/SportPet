@@ -2,7 +2,7 @@
 
 Użytkownik wybiera zdjęcie maszyny z siłowni. Frontend wysyła plik do backendu, a w odpowiedzi otrzymuje rozpoznaną maszynę oraz prosty opis jej użycia: trenowane mięśnie, przygotowanie, kroki ćwiczenia i wskazówki.
 
-Model tekstowy ma generować treść **po angielsku**, prostymi słowami dla początkującego użytkownika. Nazwa, kategoria i źródła pochodzą z karty maszyny w bazie wiedzy.
+Model tekstowy ma generować treść **po angielsku**, prostymi słowami dla początkującego użytkownika. Nazwa, kategoria, źródła oraz identyfikatory mięśni pochodzą z karty maszyny w bazie wiedzy. Model nie wybiera ani nie zmienia obszarów mapy.
 
 ## Endpoint i adres backendu
 
@@ -36,13 +36,35 @@ Wyślij obiekt `File` przez `FormData`. Endpoint nie przyjmuje zdjęcia jako JSO
 
 **Nie ustawiaj ręcznie nagłówka `Content-Type` przy użyciu `fetch` z `FormData`.** Przeglądarka doda `multipart/form-data` wraz z prawidłowym `boundary`.
 
-Dla obecnego scenariusza można udostępnić wybór zdjęcia JPEG lub PNG:
+Obsługiwane formaty: **JPG/JPEG, PNG, WEBP, HEIC/HEIF, AVIF, BMP, TIFF/TIF i GIF**.
+Frontend wysyła oryginalny plik; nie musi sam konwertować zdjęć z iPhone'a.
 
 ```html
-<input type="file" accept="image/jpeg,image/png" />
+<input
+  type="file"
+  accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.bmp,.tif,.tiff,.gif,image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/bmp,image/tiff,image/gif"
+/>
 ```
 
-`accept` jest podpowiedzią dla selektora plików. Obecny endpoint sam nie sprawdza rozszerzenia ani MIME i nie narzuca własnego limitu rozmiaru. Ustawienie backendu `MAX_UPLOAD_MB` nie jest używane przez tę ścieżkę. Rzeczywiste możliwości odczytu obrazu zależą również od modelu Azure.
+`accept` jest podpowiedzią dla selektora. Backend rozpoznaje format z zawartości pliku,
+nie z rozszerzenia ani deklarowanego MIME. Nieobsługiwany lub uszkodzony obraz zwraca `422`.
+
+Przed analizą backend przygotowuje jeden JPEG:
+
+- poprawia orientację ze zdjęcia;
+- wybiera pierwszą klatkę GIF, WebP lub AVIF, pierwszą stronę TIFF albo główne zdjęcie HEIF;
+- zamienia przezroczystość na białe tło i kolory na RGB;
+- zmniejsza obraz do maksymalnie **2048 px na dłuższym boku**, zachowując proporcje;
+- nie kopiuje metadanych EXIF i profilu ICC do wyjściowego JPEG.
+
+Limit wejściowego pliku określa `MAX_UPLOAD_MB` w konfiguracji backendu: domyślnie **10 MB**
+(10 × 1024 × 1024 bajtów). Maksymalna rozdzielczość przed konwersją to **60 megapikseli**.
+Przekroczenie limitu pliku lub rozdzielczości zwraca `413` i nie uruchamia analizy obrazu przez model.
+Nie gwarantujemy odczytu uszkodzonych plików ani dowolnych wariantów kodeków w tych kontenerach.
+
+Odczyt i konwersja używają [Pillow](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html)
+oraz [pillow-heif](https://pillow-heif.readthedocs.io/en/stable/pillow-plugin.html).
+Nie wymagają nowego deploymentu Azure, zmiany promptów ani importowania embeddingów.
 
 ## Odpowiedź sukcesu
 
@@ -51,8 +73,8 @@ Przykład struktury odpowiedzi; treść i liczba elementów list zależą od kar
 ```json
 {
   "description": "This machine helps you train your legs. You push the platform away with your feet.",
-  "primary_muscles": ["Front of your thighs", "Glutes"],
-  "secondary_muscles": ["Back of your thighs", "Calves"],
+  "primary_muscles": ["quads", "glutes"],
+  "secondary_muscles": ["hamstrings", "calves", "adductors"],
   "setup_steps": [
     "Sit on the seat.",
     "Rest your back against the backrest.",
@@ -76,31 +98,90 @@ Przykład struktury odpowiedzi; treść i liczba elementów list zależą od kar
 | `machine_name` | `string` | Angielska nazwa urządzenia; tytuł widoku |
 | `category` | `string` | Kategoria z karty; etykieta pod tytułem |
 | `description` | `string` | Krótki opis zastosowania prostymi słowami |
-| `primary_muscles` | `string[]` | Główne partie mięśniowe |
-| `secondary_muscles` | `string[]` | Dodatkowe partie mięśniowe |
+| `primary_muscles` | `RegionId[]` | Główne obszary mapy, skopiowane z karty |
+| `secondary_muscles` | `RegionId[]` | Pomocnicze obszary mapy, skopiowane z karty |
 | `setup_steps` | `string[]` | Przygotowanie do ćwiczenia; lista numerowana |
 | `exercise_steps` | `string[]` | Kolejne kroki ćwiczenia; lista numerowana |
 | `tips` | `string[]` | Dodatkowe wskazówki |
 | `sources` | `string[]` | Źródła zapisane w karcie maszyny |
 
-Wszystkie pola są obecne w odpowiedzi sukcesu. `secondary_muscles` i `tips` mogą być pustymi tablicami — wtedy można ukryć ich sekcje. `description` jest niepuste; `primary_muscles`, `setup_steps` i `exercise_steps` zawierają przynajmniej jeden niepusty element.
+Wszystkie pola są obecne w odpowiedzi sukcesu. Obie listy mięśni oraz `tips` mogą być pustymi tablicami. Puste mięśnie oznaczają brak precyzyjnego przypisania do mapy, np. dla samej ławki lub sprzętu zależnego od wybranego ćwiczenia. `description` jest niepuste; `setup_steps` i `exercise_steps` zawierają przynajmniej jeden niepusty element.
 
 `machine_id` identyfikuje typ maszyny w katalogu, a nie konkretny egzemplarz czy numer produktu producenta. Odpowiedź nie zawiera oceny pewności rozpoznania, URL zdjęcia ani osobnego pola `message`.
 
 `sources` to teksty z karty, niekoniecznie adresy URL. Wyświetlaj je jako tekst; link twórz tylko wtedy, gdy wpis jest prawidłowym adresem. Pola odpowiedzi są zwykłym tekstem, więc nie wymagają renderowania HTML ani Markdown. Zachowaj kolejność kroków i nie zakładaj stałej długości list.
+
+## Stałe identyfikatory dla mapy mięśni
+
+`primary_muscles` i `secondary_muscles` zawierają wyłącznie wartości `RegionId` z
+`frontend/src/features/muscles/muscleRegions.ts`. Wielkość liter i myślniki są częścią kontraktu:
+
+```text
+chest, shoulders, rear-deltoids, biceps, triceps, forearms, abs, obliques,
+traps, lats, lower-back, glutes, quads, hamstrings, calves, adductors
+```
+
+Backend waliduje każdą kartę i odpowiedź. Nazwę do wyświetlania pobieraj z `REGION_LABELS`,
+np. `REGION_LABELS["quads"]`. Nie wyświetlaj identyfikatorów jako wygenerowanych zdań.
+Tekstowy model zwraca tylko opis, przygotowanie, kroki i wskazówki; backend dokłada listy
+mięśni z karty bez ich tłumaczenia. Zestaw pól publicznego JSON-a pozostaje taki sam.
+
+### Dostosowanie obecnego `regionsFor()` na froncie
+
+Kod frontendu znajduje się w innym checkoutcie/branchu; poniższą zmianę należy zastosować tam.
+Najpierw obsłuż identyfikator bezpośrednio, a dopiero potem starsze etykiety przez `RULES`.
+To istotne dla `rear-deltoids`, `lower-back` i `shoulders`: reguły szukające spacji lub
+ogólnych słów mogą pominąć identyfikator albo zaznaczyć dodatkowy obszar.
+
+```typescript
+function isRegionId(value: string): value is RegionId {
+  return Object.prototype.hasOwnProperty.call(REGION_LABELS, value);
+}
+
+export function regionsFor(labels: string[]): Set<RegionId> {
+  const found = new Set<RegionId>();
+  for (const label of labels) {
+    const lower = label.toLowerCase();
+    if (isRegionId(lower)) {
+      found.add(lower);
+      continue;
+    }
+    // Zachowaj dotychczasowe reguły jako obsługę starszych odpowiedzi.
+    for (const rule of RULES) {
+      if (rule.test(lower)) {
+        rule.regions.forEach((region) => found.add(region));
+        break;
+      }
+    }
+  }
+  return found;
+}
+```
+
+Lista oznacza obszary rysunku, nie pełny atlas anatomiczny. `shoulders` oznacza przód
+barków, a `rear-deltoids` ich tył. Nie przypisujemy automatycznie ogólnego `Back` do
+`lats`, `Core` do `abs` ani `Full Body` do wszystkich obszarów. Nieobsługiwane i warunkowe
+informacje pozostają w wewnętrznym `muscle_notes` karty, jako kontekst dla opisu.
+`muscle_notes` nie jest polem odpowiedzi endpointu.
 
 ## Przykład TypeScript: typy i wywołanie
 
 Przykład działa niezależnie od frameworka. `apiBaseUrl` oznacza sam adres backendu, np. `http://localhost:8002`, bez `/api/v1` na końcu.
 
 ```typescript
+// W aplikacji użyj istniejącego RegionId z muscleRegions.ts.
+export type RegionId =
+  | "chest" | "shoulders" | "rear-deltoids" | "biceps" | "triceps" | "forearms"
+  | "abs" | "obliques" | "traps" | "lats" | "lower-back" | "glutes"
+  | "quads" | "hamstrings" | "calves" | "adductors";
+
 export interface VisionResponse {
   machine_id: string;
   machine_name: string;
   category: string;
   description: string;
-  primary_muscles: string[];
-  secondary_muscles: string[];
+  primary_muscles: RegionId[];
+  secondary_muscles: RegionId[];
   setup_steps: string[];
   exercise_steps: string[];
   tips: string[];
@@ -188,9 +269,10 @@ Na czas oczekiwania pokaż stan ładowania i zablokuj ponowne wysłanie tego sam
 
 | Status | Kiedy występuje | Reakcja frontendu |
 |---|---|---|
-| `422` | Brak pola `file`, pusty plik, zdjęcie bez sprzętu siłownianego, niepewne rozpoznanie (`confidence` inne niż `high`) lub maszyna spoza obsługiwanego katalogu | Poproś o wybór zdjęcia; przy braku rozpoznania pokaż `detail`, który mówi, co poprawić |
+| `422` | Brak pola `file`, pusty, uszkodzony lub nieobsługiwany obraz, zdjęcie bez sprzętu siłownianego, niepewne rozpoznanie (`confidence` inne niż `high`) albo maszyna spoza obsługiwanego katalogu | Poproś o wybór zdjęcia; przy braku rozpoznania pokaż `detail`, który mówi, co poprawić |
+| `413` | Plik przekracza `MAX_UPLOAD_MB` lub obraz ma ponad 60 megapikseli | Poproś o mniejsze zdjęcie lub niższą rozdzielczość |
 | `502` | Błąd dostawcy modelu albo odpowiedź modelu odrzucona, ucięta lub niezgodna ze schematem | Pokaż błąd analizy i możliwość ponowienia |
-| `503` | Brak konfiguracji Azure, pusty katalog lub brak karty dla rozpoznanej maszyny | Pokaż komunikat o niedostępności analizy; konfigurację poprawia backend |
+| `503` | Brak konfiguracji Azure, pusty katalog, brak karty lub stare/nieprawidłowe karty w Chroma wymagające ponownego importu | Pokaż komunikat o niedostępności analizy; konfigurację poprawia backend |
 | Inny błąd, np. `500` | Nieobsłużony błąd serwera, np. problem połączenia z Chroma | Pokaż ogólny komunikat o błędzie usługi |
 
 Komunikaty błędów rozpoznania (`detail`):
@@ -201,7 +283,7 @@ Komunikaty błędów rozpoznania (`detail`):
 
 Błędy walidacji FastAPI, np. brak pola `file`, zwracają `detail` jako tablicę obiektów zawierających m.in. `loc`, `msg` i `type`. Pozostałe opisane błędy zwykle zwracają `detail` jako tekst. Nie zakładaj jednego typu tego pola ani identycznego komunikatu dla każdego `422`.
 
-Sprawdzaj `response.ok`: `fetch` nie rzuca wyjątku automatycznie dla statusów `422`, `502` czy `503`. Błąd sieci lub CORS może odrzucić `fetch` bez odpowiedzi HTTP dostępnej dla aplikacji.
+Sprawdzaj `response.ok`: `fetch` nie rzuca wyjątku automatycznie dla statusów `413`, `422`, `502` czy `503`. Błąd sieci lub CORS może odrzucić `fetch` bez odpowiedzi HTTP dostępnej dla aplikacji.
 
 ## CORS i konfiguracja frontendu
 
@@ -231,12 +313,13 @@ Do działania potrzebny jest skonfigurowany Azure oraz katalog maszyn zaimportow
 
 ## Co robi backend i gdzie szukać kodu
 
-1. [Endpoint](../../api/v1/vision.py) odczytuje zdjęcie z pola `file`.
+1. [Endpoint](../../api/v1/vision.py) odczytuje zdjęcie z pola `file` z limitem rozmiaru,
+   a [przygotowanie obrazu](images.py) dekoduje je i konwertuje do JPEG w osobnym wątku.
 2. [Agent](agent.py) pobiera katalog maszyn z osobnej kolekcji Chromy.
 3. [Model vision](llm.py) identyfikuje maszynę z tego katalogu.
 4. [Warstwa wiedzy](knowledge.py) wyszukuje kartę przez embedding tekstowej nazwy z filtrem po rozpoznanym `machine_id`.
-5. Model tekstowy generuje sześć pól opisu zgodnie z [promptem](prompts.py) i schematem Structured Outputs. Backend waliduje ich strukturę, typy i wymagane niepuste wartości.
-6. Backend dodaje z karty `machine_id`, `machine_name`, `category` i `sources`, następnie zwraca jeden obiekt JSON.
+5. Model tekstowy generuje cztery pola: `description`, `setup_steps`, `exercise_steps`, `tips`, zgodnie z [promptem](prompts.py) i schematem Structured Outputs. Backend waliduje ich strukturę, typy i wymagane niepuste wartości.
+6. Backend dodaje z karty `primary_muscles`, `secondary_muscles`, `machine_id`, `machine_name`, `category` i `sources`, następnie zwraca jeden obiekt JSON.
 
 Walidacja schematu nie sprawdza poprawności merytorycznej instrukcji ani języka tekstu. Model jest instruowany, aby korzystać z karty i odpowiadać po angielsku.
 
@@ -260,3 +343,18 @@ docker compose up -d --force-recreate backend
 ```
 
 Zmiana samego promptu nie wymaga ponownego importu embeddingów. Zmiana samego README nie wymaga przebudowy kontenera. Frontend nie wywołuje importera — to czynność po stronie backendu.
+
+### Migracja kart do stałych nazw mięśni
+
+Po wdrożeniu tego kontraktu konieczny jest ponowny import wszystkich kart ze starymi nazwami:
+
+```bash
+docker compose up -d --build --force-recreate backend
+docker compose exec backend python -m app.agents.vision.seed --dry-run
+docker compose exec backend python -m app.agents.vision.seed
+```
+
+Do zakończenia importu endpoint może zwracać `503` z komunikatem o nieprawidłowym schemacie kart.
+Importer aktualizuje istniejące identyfikatory i nie usuwa kolekcji ani pozostałych danych.
+Karty, które były w Chroma, ale nie występują w pliku, pozostają w kolekcji: również trzeba
+je zaktualizować i dołączyć do importu, jeżeli mają stare nazwy. Nie usuwaj wolumenów Dockera.

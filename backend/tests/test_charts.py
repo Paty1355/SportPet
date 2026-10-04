@@ -62,26 +62,27 @@ def test_series_range_limits(client, auth_headers):
     assert client.get(f"{H}/series", params={"metric": "bogus"}, headers=auth_headers).status_code == 422
 
 
-def test_daily_range_inclusive_and_ordered(client, auth_headers):
+DASH = {"end": "2026-10-03", "days": 7}
+
+
+def test_dashboard_collects_window_and_latest_values(client, auth_headers):
     seed(client, auth_headers)
-    res = client.get(f"{H}/daily", params={"start": "2026-10-02", "end": "2026-10-03"}, headers=auth_headers).json()
-    assert [(d["date"], d["steps"]) for d in res] == [("2026-10-02", 5000), ("2026-10-03", 9000)]
-    one_day = {"start": "2026-10-03", "end": "2026-10-03"}
-    assert len(client.get(f"{H}/daily", params=one_day, headers=auth_headers).json()) == 1
+    profile = {"sex": "M", "birth_date": "1990-01-01", "weight_kg": 80, "height_cm": 200}
+    client.patch("/api/v1/users/me", json=profile, headers=auth_headers)
+    res = client.get(f"{H}/dashboard", params=DASH, headers=auth_headers).json()
+    assert res["latest"]["heart_rate"]["value"] == 100 and res["latest"]["stress"] is None
+    assert res["bmi"] == 20.0 and res["age"] >= 35 and res["cycle"] == []
+    assert [(d["date"], d["steps"]) for d in res["daily"]] == [("2026-10-02", 5000), ("2026-10-03", 9000)]
+    assert res["blood_pressure"][0]["systolic"] == 120
+    assert len(res["ecg"]) == 1 and "samples" not in res["ecg"][0]
+    assert "metrics" in res["stats"]
 
 
-def test_cycle_empty_for_user_without_cycle(client, auth_headers):
+def test_dashboard_window_is_inclusive_and_bounded(client, auth_headers):
     seed(client, auth_headers)
-    assert client.get(f"{H}/cycle", headers=auth_headers).json() == []
-
-
-def test_ecg_list_has_no_wave_and_detail_downsamples(client, auth_headers):
-    seed(client, auth_headers)
-    listing = client.get(f"{H}/ecg", params=WINDOW, headers=auth_headers).json()
-    assert len(listing) == 1 and "samples" not in listing[0]
-    detail = client.get(f"{H}/ecg/{listing[0]['id']}", params={"max_points": 250}, headers=auth_headers).json()
-    assert len(detail["samples"]) == 250 and detail["returned_sample_rate_hz"] == 128  # every 4th sample of 512 Hz
-    assert len(client.get(f"{H}/ecg/{listing[0]['id']}", headers=auth_headers).json()["samples"]) == 1000
+    one_day = client.get(f"{H}/dashboard", params={"end": "2026-10-02", "days": 7}, headers=auth_headers).json()
+    assert [d["date"] for d in one_day["daily"]] == ["2026-10-02"] and one_day["ecg"] == []
+    assert client.get(f"{H}/dashboard", params={"days": 61}, headers=auth_headers).status_code == 422
 
 
 def test_users_cannot_read_each_others_data(client, auth_headers):
@@ -89,22 +90,11 @@ def test_users_cannot_read_each_others_data(client, auth_headers):
     client.post("/api/v1/auth/register", json={"email": "b@example.com", "password": "password123"})
     login = client.post("/api/v1/auth/login", data={"username": "b@example.com", "password": "password123"})
     other = {"Authorization": f"Bearer {login.json()['access_token']}"}
-    ecg_id = client.get(f"{H}/ecg", params=WINDOW, headers=auth_headers).json()[0]["id"]
-    assert client.get(f"{H}/ecg/{ecg_id}", headers=other).status_code == 404
     assert client.get(f"{H}/series", params={"metric": "heart_rate", **WINDOW}, headers=other).json()["points"] == []
-    assert client.get(f"{H}/daily", params={"start": "2026-10-02", "end": "2026-10-03"}, headers=other).json() == []
-
-
-def test_overview_latest_values_and_derived_fields(client, auth_headers):
-    seed(client, auth_headers)
-    profile = {"sex": "M", "birth_date": "1990-01-01", "weight_kg": 80, "height_cm": 200}
-    client.patch("/api/v1/users/me", json=profile, headers=auth_headers)
-    res = client.get(f"{H}/overview", headers=auth_headers).json()
-    assert res["latest"]["heart_rate"]["value"] == 100 and res["latest"]["stress"] is None
-    assert res["daily"]["date"] == "2026-10-03" and res["blood_pressure"]["systolic"] == 120
-    assert res["bmi"] == 20.0 and res["age"] >= 35 and res["cycle"] is None
+    res = client.get(f"{H}/dashboard", params=DASH, headers=other).json()
+    assert res["daily"] == [] and res["ecg"] == [] and res["blood_pressure"] == []
 
 
 def test_charts_require_auth(client):
-    for path in ("series?metric=spo2", "daily", "blood-pressure", "cycle", "ecg", "ecg/1", "overview"):
+    for path in ("series?metric=spo2", "dashboard"):
         assert client.get(f"{H}/{path}").status_code == 401

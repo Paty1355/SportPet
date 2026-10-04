@@ -3,6 +3,8 @@ user's recent health data from a wearable and excerpts from dietary guidelines.
 
 Create exactly {count} days, one for each of these days in order: {days}.
 Each day must have exactly {meals} meals, and each meal must take at most {minutes} minutes to prepare.
+Every meal is one dish from this list; copy its name exactly into "title":
+{catalogue}
 
 Guidelines:
 - Set dailyCalories from the goal, sex, age, BMI, activity level and daily steps (null means no data, so ignore
@@ -10,7 +12,8 @@ Guidelines:
   protein for muscle gain, maintenance otherwise. If calorieTarget is set, use it as dailyCalories instead, unless
   the user is pregnant or breastfeeding (then never plan a deficit). The meals of each day should add up to about
   dailyCalories.
-- Respect the diet type strictly, never use the listed allergens or intolerances and avoid disliked foods.
+- Respect the diet type strictly, never use the listed allergens or intolerances and avoid disliked foods: the list
+  already excludes dishes that break these rules, so repeat dishes rather than add forbidden ingredients.
   healthNotes may name more allergies, intolerances or conditions: respect them just as strictly.
 - Medical conditions:
   - diabetes: low glycaemic index, carbohydrates spread evenly over the day, no added sugar;
@@ -32,7 +35,7 @@ Guidelines:
 - Do not diagnose anything.
 
 Reply with a JSON object only:
-{{"dailyCalories": 2000, "days": [{{"meals": [{{"name": "Breakfast", "title": "short English dish name",
+{{"dailyCalories": 2000, "days": [{{"meals": [{{"name": "Breakfast", "title": "dish name from the list",
 "description": "ingredients with amounts and a short preparation", "calories": 450, "proteinGrams": 25,
 "carbsGrams": 50, "fatGrams": 15, "prepTimeMinutes": 10}}]}}]}}"""
 

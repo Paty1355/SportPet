@@ -4,8 +4,8 @@
     "name": "45-Degree Leg Press Machine",
     "aliases": ["Leg Press", "Linear Leg Press", "Incline Leg Press", "Sled Leg Press", "Angled Leg Press", "Leg Press Sled", "Plate-Loaded Leg Press"],
     "category": "Lower Body Strength",
-    "primary_muscles": ["Quadriceps", "Gluteus Maximus"],
-    "secondary_muscles": ["Hamstrings", "Calves", "Adductors"],
+    "primary_muscles": ["quads", "glutes"],
+    "secondary_muscles": ["hamstrings", "calves", "adductors"],
     "description": "A heavy-duty machine where the user sits in a reclined position and pushes a loaded sled away from their body using their legs. It allows for heavy lower-body training without placing a direct load on the spine.",
     "setup_steps": [
       "Load the desired weight plates evenly on both sides of the sled.",
@@ -30,8 +30,8 @@
     "name": "Lat Pulldown Machine",
     "aliases": ["Lat Machine", "Cable Pulldown", "High Pulley Machine", "Pulldown Station", "Wide Grip Pulldown", "Back Pulldown Machine"],
     "category": "Upper Body Strength - Pull",
-    "primary_muscles": ["Latissimus Dorsi"],
-    "secondary_muscles": ["Biceps Brachii", "Rear Deltoids", "Rhomboids", "Trapezius"],
+    "primary_muscles": ["lats"],
+    "secondary_muscles": ["biceps", "rear-deltoids", "traps"],
     "description": "A tall cable-based machine equipped with a thigh pad and a top-mounted pulley. It is designed to simulate a pull-up motion, targeting the broad muscles of the back.",
     "setup_steps": [
       "Select the desired weight using the pin in the weight stack.",
@@ -49,15 +49,16 @@
       "Pull with your back, not your arms; imagine your hands are just hooks.",
       "Do not pull the bar behind your neck, as this places excessive stress on the shoulder joint."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Rhomboids"]
   },
   {
     "machine_id": "smith_machine",
     "name": "Smith Machine",
     "aliases": ["Guided Barbell Machine", "Smith Squat Rack", "Counterbalanced Smith Machine", "Multipress", "Vertical Barbell Machine", "Smith Rack"],
     "category": "Multi-Purpose Strength",
-    "primary_muscles": ["Quadriceps", "Pectoralis Major", "Deltoids"],
-    "secondary_muscles": ["Gluteus Maximus", "Triceps", "Hamstrings"],
+    "primary_muscles": ["quads", "chest"],
+    "secondary_muscles": ["glutes", "triceps", "hamstrings"],
     "description": "A versatile machine consisting of a barbell fixed within steel rails, allowing only vertical or near-vertical movement. It features multiple lockout points for safety and is used for squats, presses, and rows.",
     "setup_steps": [
       "Set the barbell to the appropriate height for your chosen exercise.",
@@ -74,15 +75,16 @@
       "Do not rely entirely on the machine for stability; keep your core engaged.",
       "Always verify the hooks are securely engaged before letting go of the bar."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Deltoids"]
   },
   {
     "machine_id": "cable_crossover",
     "name": "Cable Crossover Machine",
     "aliases": ["Functional Trainer", "Dual Cable Cross", "Cable Pulley Machine", "DAP", "Dual Adjustable Pulley", "Freemotion Machine", "Cable Column", "Cable Station"],
     "category": "Multi-Purpose Functional",
-    "primary_muscles": ["Pectoralis Major", "Deltoids", "Core"],
-    "secondary_muscles": ["Triceps", "Biceps", "Obliques"],
+    "primary_muscles": ["chest"],
+    "secondary_muscles": ["triceps", "biceps", "obliques"],
     "description": "A highly versatile, large frame featuring two independent weight stacks with adjustable pulleys on each side. It allows users to perform exercises in virtually any plane of motion.",
     "setup_steps": [
       "Adjust the height of the pulleys on both columns according to your exercise (e.g., high for downward flys, low for bicep curls).",
@@ -100,14 +102,15 @@
       "Keep the slight bend in your elbows locked; the movement should come from the shoulders, not the arms.",
       "Control the eccentric (return) phase of the lift to maximize muscle tension."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Deltoids", "Primary: Core"]
   },
   {
     "machine_id": "leg_extension",
     "name": "Leg Extension Machine",
     "aliases": ["Quad Extension Machine", "Seated Leg Extension", "Knee Extension Machine", "Quad Machine"],
     "category": "Lower Body Isolation",
-    "primary_muscles": ["Quadriceps (Rectus Femoris, Vastus Lateralis, Vastus Medialis, Vastus Intermedius)"],
+    "primary_muscles": ["quads"],
     "secondary_muscles": [],
     "description": "A seated isolation machine designed to target the quadriceps. The user lifts a padded lever by extending their knees against resistance.",
     "setup_steps": [
@@ -132,8 +135,8 @@
     "name": "Seated Leg Curl Machine",
     "aliases": ["Hamstring Curl Machine", "Leg Curl Machine", "Seated Hamstring Machine", "Hamstring Flexion Machine"],
     "category": "Lower Body Isolation",
-    "primary_muscles": ["Hamstrings (Biceps Femoris, Semitendinosus, Semimembranosus)"],
-    "secondary_muscles": ["Gastrocnemius (Calves)"],
+    "primary_muscles": ["hamstrings"],
+    "secondary_muscles": ["calves"],
     "description": "A machine that isolates the hamstring muscles. The seated variation requires the user to push a padded lever downward and back by flexing their knees.",
     "setup_steps": [
       "Adjust the backrest so your knees align perfectly with the machine's pivot point.",
@@ -157,8 +160,8 @@
     "name": "Pec Deck Machine",
     "aliases": ["Machine Fly", "Chest Fly Machine", "Butterfly Machine", "Pec Fly Machine", "Rear Delt Machine", "Reverse Fly Machine"],
     "category": "Upper Body Isolation",
-    "primary_muscles": ["Pectoralis Major"],
-    "secondary_muscles": ["Anterior Deltoids"],
+    "primary_muscles": ["chest"],
+    "secondary_muscles": ["shoulders"],
     "description": "A seated machine that isolates the chest muscles using a flying motion. Many modern versions have adjustable arms that allow users to face backward and perform rear deltoid flys.",
     "setup_steps": [
       "Adjust the seat height so the handles or pads are level with your mid-chest.",
@@ -182,8 +185,8 @@
     "name": "Seated Chest Press Machine",
     "aliases": ["Machine Chest Press", "Vertical Chest Press", "Converging Chest Press", "Iso-Lateral Chest Press", "Bench Press Machine"],
     "category": "Upper Body Strength - Push",
-    "primary_muscles": ["Pectoralis Major"],
-    "secondary_muscles": ["Triceps Brachii", "Anterior Deltoids"],
+    "primary_muscles": ["chest"],
+    "secondary_muscles": ["triceps", "shoulders"],
     "description": "A machine that simulates the flat or incline bench press in an upright seated position, providing a fixed and safe path of motion for building chest strength.",
     "setup_steps": [
       "Adjust the seat height so the handles align with your mid-to-lower chest.",
@@ -207,8 +210,8 @@
     "name": "Hack Squat Machine",
     "aliases": ["Linear Hack Squat", "Sled Hack Squat", "V-Squat Machine", "Machine Squat", "Incline Squat Machine"],
     "category": "Lower Body Strength",
-    "primary_muscles": ["Quadriceps"],
-    "secondary_muscles": ["Gluteus Maximus", "Hamstrings", "Calves"],
+    "primary_muscles": ["quads"],
+    "secondary_muscles": ["glutes", "hamstrings", "calves"],
     "description": "A machine where the user stands on a platform and rests their back and shoulders against a weighted sled, moving up and down in a guided diagonal plane. It heavily isolates the quadriceps.",
     "setup_steps": [
       "Load the desired weight plates on the sled.",
@@ -233,8 +236,8 @@
     "name": "Assisted Pull-Up and Dip Machine",
     "aliases": ["Gravitron", "Weight-Assisted Pull-Up", "Assisted Chin-Up Machine", "Dip Assist Machine", "Counterweight Pull-Up Machine"],
     "category": "Upper Body Strength",
-    "primary_muscles": ["Latissimus Dorsi", "Triceps Brachii", "Pectoralis Major"],
-    "secondary_muscles": ["Biceps Brachii", "Anterior Deltoids", "Core"],
+    "primary_muscles": ["lats", "triceps", "chest"],
+    "secondary_muscles": ["biceps", "shoulders"],
     "description": "A towering machine featuring a counter-weighted knee or foot pad that helps users perform pull-ups and dips by offsetting a portion of their body weight.",
     "setup_steps": [
       "Select the weight on the stack. Note: On this machine, more weight equals MORE assistance (making the exercise easier).",
@@ -251,15 +254,16 @@
       "Keep your core tight to avoid swinging.",
       "Gradually decrease the weight on the stack over weeks to progress toward bodyweight reps."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
   },
   {
     "machine_id": "seated_cable_row",
     "name": "Seated Cable Row Machine",
     "aliases": ["Low Row Machine", "Cable Row Station", "Horizontal Row Machine", "Pulley Row", "Long Pull Machine"],
     "category": "Upper Body Strength - Pull",
-    "primary_muscles": ["Latissimus Dorsi", "Rhomboids", "Trapezius"],
-    "secondary_muscles": ["Biceps Brachii", "Posterior Deltoids", "Erector Spinae"],
+    "primary_muscles": ["lats", "traps"],
+    "secondary_muscles": ["biceps", "rear-deltoids", "lower-back"],
     "description": "A horizontal pulling machine featuring a bench and footplates. It is highly effective for building mid-back thickness and improving posture.",
     "setup_steps": [
       "Attach a V-grip handle (or preferred bar) to the cable carabiner.",
@@ -276,15 +280,16 @@
       "Pull with your elbows, keeping them tucked close to your body.",
       "Keep your knees slightly bent to take tension off the lower back."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Rhomboids"]
   },
   {
     "machine_id": "hip_abductor_adductor",
     "name": "Hip Abductor / Adductor Machine",
     "aliases": ["Thigh Abductor", "Inner Thigh Machine", "Outer Thigh Machine", "Hip Fly", "Good Girl Bad Girl Machine (slang)"],
     "category": "Lower Body Isolation",
-    "primary_muscles": ["Hip Abductors (Gluteus Medius, Minimus)", "Hip Adductors (Inner Thighs)"],
-    "secondary_muscles": ["Core"],
+    "primary_muscles": ["glutes", "adductors"],
+    "secondary_muscles": [],
     "description": "A dual-function seated machine used to target the inner (adductor) and outer (abductor) thigh muscles by opening or closing the legs against resistance.",
     "setup_steps": [
       "Adjust the machine settings to either push outward (abduction) or push inward (adduction).",
@@ -301,15 +306,16 @@
       "Do not let the weight stack slam at the end of the negative rep; keep constant tension.",
       "You can lean slightly forward to change the activation angle for the glutes during abduction."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
   },
   {
     "machine_id": "treadmill",
     "name": "Treadmill",
     "aliases": ["Running Machine", "Tread", "Cardio Belt", "Walking Machine", "Runner", "Motorized Treadmill"],
     "category": "Cardio",
-    "primary_muscles": ["Cardiovascular System", "Quadriceps", "Calves (Gastrocnemius, Soleus)"],
-    "secondary_muscles": ["Hamstrings", "Gluteus Maximus", "Core"],
+    "primary_muscles": ["quads", "calves"],
+    "secondary_muscles": ["hamstrings", "glutes"],
     "description": "A motorized stationary machine featuring a moving belt used for walking, jogging, or running indoors. It typically features adjustable speed and incline settings to simulate uphill terrain.",
     "setup_steps": [
       "Step onto the side rails of the treadmill, not directly onto the belt.",
@@ -327,15 +333,16 @@
       "Look straight ahead rather than down at your feet to maintain proper neck alignment.",
       "Utilize the incline feature to reduce impact on the knees while keeping the intensity high."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System", "Secondary: Core"]
   },
   {
     "machine_id": "rowing_machine",
     "name": "Rowing Machine",
     "aliases": ["Rower", "Ergometer", "Ergo", "Erg", "Indoor Rower", "Concept 2", "Water Rower", "Air Rower"],
     "category": "Cardio / Full Body",
-    "primary_muscles": ["Latissimus Dorsi", "Quadriceps", "Hamstrings", "Cardiovascular System"],
-    "secondary_muscles": ["Biceps Brachii", "Core", "Rhomboids", "Glutes"],
+    "primary_muscles": ["lats", "quads", "hamstrings"],
+    "secondary_muscles": ["biceps", "glutes"],
     "description": "An indoor machine that simulates the action of watercraft rowing. It provides a highly effective full-body cardiovascular and muscular endurance workout, utilizing both pulling mechanics and leg drive.",
     "setup_steps": [
       "Sit on the sliding seat and strap your feet securely into the foot stretchers.",
@@ -353,15 +360,16 @@
       "Power should come predominantly from your leg drive (about 60%), not just your upper body.",
       "Keep your back straight; avoid rounding your shoulders at the catch."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System", "Secondary: Core", "Secondary: Rhomboids"]
   },
   {
     "machine_id": "stair_climber",
     "name": "Stair Climber",
     "aliases": ["StairMaster", "Step Mill", "Step Machine", "Stair Stepper", "Escalator Machine", "Climber"],
     "category": "Cardio",
-    "primary_muscles": ["Quadriceps", "Gluteus Maximus", "Cardiovascular System"],
-    "secondary_muscles": ["Calves", "Hamstrings", "Core"],
+    "primary_muscles": ["quads", "glutes"],
+    "secondary_muscles": ["calves", "hamstrings"],
     "description": "A stationary fitness machine that rotates steps, similar to a treadmill but simulating the continuous climbing of a flight of stairs. It provides an intense lower-body cardiovascular workout.",
     "setup_steps": [
       "Step onto the bottom stairs and grasp the handrails for balance.",
@@ -379,15 +387,16 @@
       "Take full steps rather than short, quick taps to ensure full range of motion for the leg muscles.",
       "Keep your spine neutral to avoid lower back pain."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System", "Secondary: Core"]
   },
   {
     "machine_id": "elliptical_trainer",
     "name": "Elliptical Trainer",
     "aliases": ["Cross Trainer", "Glider", "X-Trainer", "Elliptical Machine", "Arc Trainer"],
     "category": "Cardio",
-    "primary_muscles": ["Cardiovascular System", "Quadriceps", "Glutes"],
-    "secondary_muscles": ["Hamstrings", "Calves", "Chest", "Back", "Arms (if using moving handles)"],
+    "primary_muscles": ["quads", "glutes"],
+    "secondary_muscles": ["hamstrings", "calves", "chest"],
     "description": "A stationary exercise machine used to simulate stair climbing, walking, or running without causing excessive pressure to the joints, hence decreasing the risk of impact injuries.",
     "setup_steps": [
       "Step onto the pedals carefully, as they can move freely.",
@@ -404,15 +413,16 @@
       "Use both your upper and lower body actively rather than letting the machine's momentum do the work.",
       "Adjust the resistance to ensure your heart rate remains elevated."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System", "Secondary: Back", "Secondary: Arms (if using moving handles)"]
   },
   {
     "machine_id": "stationary_bike",
     "name": "Stationary Bike",
     "aliases": ["Spin Bike", "Upright Bike", "Exercise Bike", "Ergocycle", "Recumbent Bike", "Cycling Machine"],
     "category": "Cardio",
-    "primary_muscles": ["Cardiovascular System", "Quadriceps"],
-    "secondary_muscles": ["Hamstrings", "Calves", "Glutes"],
+    "primary_muscles": ["quads"],
+    "secondary_muscles": ["hamstrings", "calves", "glutes"],
     "description": "An indoor cycling machine designed for cardiovascular training. It comes in upright, spin, and recumbent variations, providing a low-impact workout focused on the lower body.",
     "setup_steps": [
       "Adjust the seat height so that when your pedal is at the lowest point, your knee has a very slight bend (about 5-10 degrees).",
@@ -429,15 +439,16 @@
       "Keep a light grip on the handlebars; your core should support your upper body.",
       "Focus on a smooth, circular pedal stroke—pulling up as well as pushing down."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System"]
   },
   {
     "machine_id": "power_rack",
     "name": "Power Rack",
     "aliases": ["Squat Rack", "Squat Cage", "Power Cage", "Half Rack", "Rig", "Lifting Cage"],
     "category": "Free Weights / Multi-Purpose",
-    "primary_muscles": ["Quadriceps", "Hamstrings", "Glutes", "Pectoralis Major", "Back (depending on exercise)"],
-    "secondary_muscles": ["Core", "Stabilizer Muscles"],
+    "primary_muscles": ["quads", "hamstrings", "glutes", "chest"],
+    "secondary_muscles": [],
     "description": "A sturdy steel cage featuring adjustable J-hooks to hold a barbell and horizontal safety pins. It is essential for performing heavy barbell exercises safely, such as squats, bench presses, and overhead presses.",
     "setup_steps": [
       "Adjust the J-hooks to the appropriate height for your exercise (e.g., armpit height for squats).",
@@ -454,15 +465,16 @@
       "Never skip setting the safety pins, especially if lifting heavy without a spotter.",
       "Step *into* the rack to rack the weight, don't try to lean forward and guess where the hooks are."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Back (depending on exercise)", "Secondary: Core", "Secondary: Stabilizer Muscles"]
   },
   {
     "machine_id": "olympic_flat_bench",
     "name": "Olympic Flat Bench Press Station",
     "aliases": ["Bench Press", "Flat Bench", "Barbell Bench Station", "Standard Bench Press"],
     "category": "Free Weights",
-    "primary_muscles": ["Pectoralis Major"],
-    "secondary_muscles": ["Anterior Deltoids", "Triceps Brachii"],
+    "primary_muscles": ["chest"],
+    "secondary_muscles": ["shoulders", "triceps"],
     "description": "A padded flat bench attached to sturdy metal uprights that hold a barbell. It is the primary station used for performing the traditional barbell bench press to build upper body pushing strength.",
     "setup_steps": [
       "Lie on the bench so your eyes are directly under the barbell.",
@@ -487,8 +499,8 @@
     "name": "Preacher Curl Bench",
     "aliases": ["Bicep Curl Bench", "Scott Bench", "Arm Curl Desk", "EZ Bar Curl Bench"],
     "category": "Free Weights / Isolation",
-    "primary_muscles": ["Biceps Brachii", "Brachialis"],
-    "secondary_muscles": ["Brachioradialis (Forearm)"],
+    "primary_muscles": ["biceps"],
+    "secondary_muscles": ["forearms"],
     "description": "A seated bench featuring an angled, padded armrest. It isolates the biceps by locking the upper arms in place and preventing the user from using body momentum to lift the weight.",
     "setup_steps": [
       "Adjust the seat height so that your armpits rest comfortably over the top edge of the pad.",
@@ -512,8 +524,8 @@
     "name": "45-Degree Back Extension Bench",
     "aliases": ["Roman Chair", "Hyperextension Bench", "Glute/Lower Back Bench", "Back Extension Station"],
     "category": "Bodyweight / Free Weights",
-    "primary_muscles": ["Erector Spinae (Lower Back)"],
-    "secondary_muscles": ["Gluteus Maximus", "Hamstrings"],
+    "primary_muscles": ["lower-back"],
+    "secondary_muscles": ["glutes", "hamstrings"],
     "description": "An angled bench equipped with ankle rollers and a hip pad. It allows the user to perform back extensions to strengthen the lower back, glutes, and hamstrings.",
     "setup_steps": [
       "Adjust the hip pad so its top edge sits just below your hip bones (anterior superior iliac spine) to allow your torso to hinge freely.",
@@ -537,8 +549,8 @@
     "name": "Glute Ham Developer",
     "aliases": ["GHD", "Glute Ham Raise Machine", "GHR Bench"],
     "category": "Bodyweight / Free Weights",
-    "primary_muscles": ["Hamstrings", "Gluteus Maximus"],
-    "secondary_muscles": ["Erector Spinae", "Calves", "Core"],
+    "primary_muscles": ["hamstrings", "glutes"],
+    "secondary_muscles": ["lower-back", "calves"],
     "description": "A specialized bench that secures the user's feet and places the knees on a rounded pad. It is used to perform glute-ham raises, one of the most effective bodyweight exercises for the posterior chain.",
     "setup_steps": [
       "Adjust the footplate distance so that when your feet are locked in, your knees are resting slightly below the peak of the half-moon pad.",
@@ -555,15 +567,16 @@
       "Do not break at the hips during the movement; your torso and thighs should remain locked in a straight line.",
       "Ensure the machine is sturdy and won't tip over before attempting the exercise."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
   },
   {
     "machine_id": "dumbbells",
     "name": "Dumbbells",
     "aliases": ["DBs", "Free Weights", "Hex Dumbbells", "Adjustable Dumbbells", "Fixed Dumbbells", "Hand Weights", "Bells"],
     "category": "Free Weights",
-    "primary_muscles": ["Full Body (Varies by exercise)"],
-    "secondary_muscles": ["Stabilizer Muscles", "Core"],
+    "primary_muscles": [],
+    "secondary_muscles": [],
     "description": "Short bars with weights on either end, held in each hand. They are the most versatile pieces of equipment in a gym, allowing for unilateral (single-arm) training and a natural range of motion to correct muscle imbalances.",
     "setup_steps": [
       "Select a pair of dumbbells of equal weight from the rack.",
@@ -581,15 +594,16 @@
       "Never drop rubber or metal dumbbells directly onto a hard floor, as they can bounce unpredictably or break.",
       "Keep your wrists straight to avoid strain during pressing movements."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Full Body (Varies by exercise)", "Secondary: Stabilizer Muscles", "Secondary: Core"]
   },
   {
     "machine_id": "kettlebells",
     "name": "Kettlebell",
     "aliases": ["KB", "Russian Kettlebell", "Cast Iron Kettlebell", "Competition Kettlebell", "Swinging Bell"],
     "category": "Free Weights / Functional",
-    "primary_muscles": ["Full Body (Varies by exercise)", "Gluteus Maximus", "Hamstrings", "Core"],
-    "secondary_muscles": ["Forearms", "Shoulders", "Back"],
+    "primary_muscles": ["glutes", "hamstrings"],
+    "secondary_muscles": ["forearms"],
     "description": "A cast-iron or steel weight shaped like a cannonball with a handle attached to the top. Its off-center center of mass makes it ideal for ballistic, swinging movements that build power, endurance, and grip strength.",
     "setup_steps": [
       "Select the appropriate kettlebell weight (commonly measured in kilograms, e.g., 16kg, 24kg).",
@@ -607,14 +621,15 @@
       "Maintain a strong, neutral spine; never round your back when picking up or swinging a kettlebell.",
       "Chalk your hands lightly if the cast-iron handle becomes slippery."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Full Body (Varies by exercise)", "Primary: Core", "Secondary: Shoulders", "Secondary: Back"]
   },
   {
     "machine_id": "adjustable_bench",
     "name": "Adjustable Weight Bench",
     "aliases": ["Incline Bench", "Decline Bench", "FID Bench", "Utility Bench", "Multi-Angle Bench", "Seat Bench"],
     "category": "Free Weights / Benches",
-    "primary_muscles": ["N/A (Support Equipment)"],
+    "primary_muscles": [],
     "secondary_muscles": [],
     "description": "A versatile, padded bench with an adjustable backrest and often an adjustable seat. It can be set to flat, incline, or decline angles to target different muscle fibers during free weight exercises.",
     "setup_steps": [
@@ -633,15 +648,16 @@
       "Always ensure the pop-pin is fully engaged before putting your body weight on the bench.",
       "Wipe down the vinyl upholstery after use to maintain hygiene."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: N/A (Support Equipment)"]
   },
   {
     "machine_id": "ez_curl_bar",
     "name": "EZ Curl Bar",
     "aliases": ["Cambered Bar", "Curl Bar", "W-Bar", "Zig-Zag Bar", "Angled Barbell"],
     "category": "Free Weights / Barbells",
-    "primary_muscles": ["Biceps Brachii", "Triceps Brachii"],
-    "secondary_muscles": ["Brachialis", "Brachioradialis", "Forearms"],
+    "primary_muscles": ["biceps", "triceps"],
+    "secondary_muscles": ["biceps", "forearms"],
     "description": "A shorter barbell with an angled, zig-zag grip area. The cambered design allows for a semi-supinated grip, significantly reducing strain on the wrists and elbows during arm exercises like bicep curls and skull crushers.",
     "setup_steps": [
       "Place the EZ bar on a rack or on the floor.",
@@ -665,8 +681,8 @@
     "name": "Trap Bar",
     "aliases": ["Hex Bar", "Hexagon Bar", "Deadlift Bar", "Diamond Bar"],
     "category": "Free Weights / Barbells",
-    "primary_muscles": ["Quadriceps", "Gluteus Maximus", "Hamstrings", "Trapezius"],
-    "secondary_muscles": ["Erector Spinae", "Forearms", "Core"],
+    "primary_muscles": ["quads", "glutes", "hamstrings", "traps"],
+    "secondary_muscles": ["lower-back", "forearms"],
     "description": "A specialized, hexagon-shaped barbell that the user steps inside of. It features neutral parallel grips and is primarily used for deadlifts, allowing the load to be centered directly aligned with the user's center of gravity.",
     "setup_steps": [
       "Place the trap bar flat on the ground.",
@@ -684,15 +700,16 @@
       "Most trap bars have two grip heights; use the higher handles if you lack mobility to reach the lower ones with a flat back.",
       "Ensure you pull straight up without letting the bar tilt forward or backward."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
   },
   {
     "machine_id": "chest_supported_t_bar_row",
     "name": "Chest-Supported T-Bar Row Machine",
     "aliases": ["T-Bar Row", "Supported Row", "Leverage Row", "Incline Row Machine", "Plate Loaded Row"],
     "category": "Upper Body Strength - Pull",
-    "primary_muscles": ["Latissimus Dorsi", "Rhomboids", "Trapezius"],
-    "secondary_muscles": ["Posterior Deltoids", "Biceps Brachii", "Erector Spinae"],
+    "primary_muscles": ["lats", "traps"],
+    "secondary_muscles": ["rear-deltoids", "biceps", "lower-back"],
     "description": "A plate-loaded pulling machine featuring a padded chest rest and various handle grips. The chest support eliminates the need to use the lower back for stabilization, allowing maximum isolation of the upper back muscles.",
     "setup_steps": [
       "Load standard Olympic plates onto the front peg.",
@@ -710,15 +727,16 @@
       "Focus on driving your elbows back and up, rather than just pulling with your biceps.",
       "Use a controlled negative (lowering phase) to increase time under tension."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Rhomboids"]
   },
   {
     "machine_id": "seated_calf_raise",
     "name": "Seated Calf Raise Machine",
     "aliases": ["Calf Machine", "Soleus Machine", "Plate Loaded Calf Raise", "Seated Calf Extension"],
     "category": "Lower Body Isolation",
-    "primary_muscles": ["Soleus (Calf Muscle)"],
-    "secondary_muscles": ["Gastrocnemius"],
+    "primary_muscles": ["calves"],
+    "secondary_muscles": ["calves"],
     "description": "A plate-loaded machine where the user sits with their knees bent at 90 degrees and pushes a padded lever up with the balls of their feet. The bent-knee position specifically isolates the deeper soleus muscle of the calf.",
     "setup_steps": [
       "Load weight plates onto the front peg.",
@@ -744,8 +762,8 @@
     "name": "Iso-Lateral Chest Press",
     "aliases": ["Hammer Strength Chest Press", "Plate-Loaded Chest Press", "Converging Chest Press", "Unilateral Chest Machine"],
     "category": "Upper Body Strength - Push",
-    "primary_muscles": ["Pectoralis Major"],
-    "secondary_muscles": ["Anterior Deltoids", "Triceps Brachii"],
+    "primary_muscles": ["chest"],
+    "secondary_muscles": ["shoulders", "triceps"],
     "description": "A plate-loaded machine (often made by Hammer Strength) where each arm moves entirely independently (iso-lateral). The arms slightly converge (come together) as you push, matching the natural function of the chest muscles.",
     "setup_steps": [
       "Load an equal amount of weight plates onto the pegs on both sides.",
@@ -769,8 +787,8 @@
     "name": "Iso-Lateral High Row Machine",
     "aliases": ["Hammer Strength High Row", "Plate-Loaded Pulldown", "Diverging Row", "Unilateral Row", "High Pull Machine"],
     "category": "Upper Body Strength - Pull",
-    "primary_muscles": ["Latissimus Dorsi", "Rhomboids", "Trapezius"],
-    "secondary_muscles": ["Biceps Brachii", "Posterior Deltoids"],
+    "primary_muscles": ["lats", "traps"],
+    "secondary_muscles": ["biceps", "rear-deltoids"],
     "description": "A plate-loaded pulling machine where the handles start high and are pulled downward and backward. The independent arms diverge (widen) as you pull, maximizing lat stretch and contraction.",
     "setup_steps": [
       "Load the desired weight plates evenly onto both rear pegs.",
@@ -787,15 +805,16 @@
       "Think about pulling with your elbows rather than gripping too tightly with your hands.",
       "Try performing the exercise with a slight trunk twist to one side for maximum unilateral lat contraction."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Rhomboids"]
   },
   {
     "machine_id": "hip_thrust_machine",
     "name": "Hip Thrust Machine",
     "aliases": ["Glute Drive", "Booty Builder", "Glute Thrust Station", "Plate Loaded Hip Thruster"],
     "category": "Lower Body Isolation",
-    "primary_muscles": ["Gluteus Maximus"],
-    "secondary_muscles": ["Hamstrings", "Quadriceps", "Core"],
+    "primary_muscles": ["glutes"],
+    "secondary_muscles": ["hamstrings", "quads"],
     "description": "A specialized machine featuring a padded backrest, a heavy padded belt or roller, and a foot platform. It allows users to perform heavy hip thrusts without the discomfort and awkward setup of balancing a loaded barbell on their pelvis.",
     "setup_steps": [
       "Load weight plates onto the side pegs.",
@@ -814,15 +833,16 @@
       "Ensure you are pushing through your heels to activate the glutes; pushing through your toes shifts focus to the quads.",
       "Stop extending when your hips are locked out; do not arch your lower back to push higher."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
   },
   {
     "machine_id": "captains_chair",
     "name": "Captain's Chair",
     "aliases": ["Knee Raise Station", "Leg Raise Tower", "Ab Tower", "Vertical Knee Raise", "VKR Machine", "Dip and Ab Tower"],
     "category": "Core / Bodyweight",
-    "primary_muscles": ["Rectus Abdominis", "Iliopsoas (Hip Flexors)"],
-    "secondary_muscles": ["Obliques", "Forearms (Isometrics)"],
+    "primary_muscles": ["abs"],
+    "secondary_muscles": ["obliques", "forearms"],
     "description": "A tall, frame-like structure featuring armrests, hand grips, and a back pad. It is used to perform hanging knee raises or straight leg raises to intensely target the abdominal muscles.",
     "setup_steps": [
       "Step onto the foot pegs to reach the armrests.",
@@ -839,15 +859,16 @@
       "For true abdominal activation, focus on tilting your pelvis up at the top of the lift (like curling your tailbone toward your ribs).",
       "Do not let your shoulders shrug up to your ears; press down actively through your forearms."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Iliopsoas (Hip Flexors)"]
   },
   {
     "machine_id": "prowler_sled",
     "name": "Push/Pull Sled",
     "aliases": ["Prowler", "Weight Sled", "Turf Sled", "Power Sled", "Conditioning Sled"],
     "category": "Functional / Conditioning",
-    "primary_muscles": ["Quadriceps", "Glutes", "Calves", "Cardiovascular System"],
-    "secondary_muscles": ["Core", "Chest", "Shoulders", "Back (if pulling)"],
+    "primary_muscles": ["quads", "glutes", "calves"],
+    "secondary_muscles": ["chest"],
     "description": "A heavy metal frame that slides across artificial turf. It features vertical poles for pushing and rings for attaching pulling ropes. It is the ultimate tool for full-body conditioning, leg power, and anaerobic capacity.",
     "setup_steps": [
       "Ensure the sled is placed on an appropriate surface (usually indoor gym turf).",
@@ -864,15 +885,16 @@
       "Pushing with straight arms relies more on the legs, while keeping bent elbows involves more upper body stability.",
       "Start with lighter weight to get accustomed to the friction of your gym's specific turf before loading heavily."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Cardiovascular System", "Secondary: Core", "Secondary: Shoulders", "Secondary: Back (if pulling)"]
   },
   {
     "machine_id": "cable_pulley_station",
     "name": "Single Cable Pulley Station",
     "aliases": ["Cable Column", "High/Low Pulley", "Tricep Pushdown Machine", "Cable Machine", "Pulley Tower"],
     "category": "Multi-Purpose Functional",
-    "primary_muscles": ["Triceps Brachii", "Biceps Brachii", "Core (Varies entirely by attachment and position)"],
-    "secondary_muscles": ["Shoulders", "Back", "Glutes (depending on exercise)"],
+    "primary_muscles": ["triceps", "biceps"],
+    "secondary_muscles": [],
     "description": "A single vertical steel column featuring a sliding pulley that can be adjusted from ankle height to well above head height. With interchangeable handles (ropes, bars, ankle straps), it can train almost any muscle group under constant tension.",
     "setup_steps": [
       "Adjust the pulley carriage to the desired height using the pull-pin (e.g., top for tricep pushdowns, bottom for bicep curls).",
@@ -889,15 +911,16 @@
       "Maintain a stable athletic stance (slight bend in knees, braced core) to prevent being pulled forward by heavy weight.",
       "Experiment with different handles (V-bar, EZ-bar, rope) to find the most comfortable joint alignment."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Core (Varies entirely by attachment and position)", "Secondary: Shoulders", "Secondary: Back", "Secondary: Glutes (depending on exercise)"]
   },
   {
     "machine_id": "suspension_trainer",
     "name": "Suspension Trainer",
     "aliases": ["TRX", "Sling Trainer", "Suspension Straps", "Gymnastic Rings (similar)"],
     "category": "Bodyweight / Functional",
-    "primary_muscles": ["Core", "Full Body (Varies by exercise)"],
-    "secondary_muscles": ["Stabilizer Muscles"],
+    "primary_muscles": [],
+    "secondary_muscles": [],
     "description": "A system of heavy-duty nylon straps with handles and foot cradles, anchored to a high point (like a rig). It uses gravity and the user's body weight to perform hundreds of exercises, requiring constant core engagement for balance.",
     "setup_steps": [
       "Check that the anchor point is secure and the carabiner is locked.",
@@ -915,15 +938,16 @@
       "Never let the straps go slack during a set; maintain tension at all times.",
       "Ensure the straps do not scrape against your arms during pressing movements; adjust your hand position slightly."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Primary: Core", "Primary: Full Body (Varies by exercise)", "Secondary: Stabilizer Muscles"]
   },
   {
     "machine_id": "sissy_squat_bench",
     "name": "Sissy Squat Bench",
     "aliases": ["Sissy Squat Machine", "Roman Chair Squat", "Quad Squat Bench"],
     "category": "Lower Body Isolation",
-    "primary_muscles": ["Quadriceps"],
-    "secondary_muscles": ["Core", "Calves"],
+    "primary_muscles": ["quads"],
+    "secondary_muscles": ["calves"],
     "description": "A compact floor unit that locks the user's feet and lower legs in place. Despite its name, it provides an intense, advanced bodyweight isolation workout for the quadriceps by locking the shins vertically and forcing the user to lean back.",
     "setup_steps": [
       "Adjust the front foot rollers to secure your ankles snugly.",
@@ -941,6 +965,7 @@
       "You can hold a weight plate to your chest to increase resistance.",
       "This exercise places high shearing force on the knees; warm up thoroughly and avoid it if you have pre-existing knee pain."
     ],
-    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"]
+    "sources": ["General Kinesiology Guidelines", "Standard Gym Equipment Manuals"],
+    "muscle_notes": ["Secondary: Core"]
   }
 ]

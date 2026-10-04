@@ -1,6 +1,6 @@
 """Health data reads for charts. Always the logged-in user's data (JWT)."""
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query
@@ -9,13 +9,9 @@ from sqlalchemy import select
 from app.core.deps import CurrentUser, DbSession
 from app.models import BloodPressureReading, CycleDay, DailySummary, EcgRecording, VitalSample
 from app.schemas.health import (
-    BloodPressureOut,
-    CycleOut,
-    DailyOut,
-    EcgDetail,
+    Dashboard,
     EcgSummary,
     LatestValue,
-    Overview,
     SeriesOut,
     SeriesPoint,
 )
@@ -56,7 +52,6 @@ def _date_range(start: date | None, end: date | None, default_days: int):
 
 StartDT = Annotated[datetime | None, Query(description="ISO 8601 (with timezone). Default end − 24 h")]
 EndDT = Annotated[datetime | None, Query(description="ISO 8601 (with timezone). Default now")]
-StartD = Annotated[date | None, Query(description="YYYY-MM-DD, inclusive. Default 14 days back from end")]
 EndD = Annotated[date | None, Query(description="YYYY-MM-DD, inclusive. Default today (UTC)")]
 
 
@@ -103,79 +98,16 @@ def series(
     return SeriesOut(metric=metric, unit=UNITS[metric], bucket=bucket, start=start, end=end, points=points)
 
 
-@router.get("/daily", response_model=list[DailyOut])
-def daily(user: CurrentUser, db: DbSession, start: StartD = None, end: EndD = None):
-    """Steps and sleep, one row per day (ascending by date)."""
-    start, end = _date_range(start, end, default_days=14)
-    return db.scalars(
-        select(DailySummary)
-        .where(DailySummary.user_id == user.id, DailySummary.date.between(start, end))
-        .order_by(DailySummary.date)
-    ).all()
-
-
-@router.get("/blood-pressure", response_model=list[BloodPressureOut])
-def blood_pressure(user: CurrentUser, db: DbSession, start: StartDT = None, end: EndDT = None):
-    start, end = _range(start, end, default_days=14)
-    return db.scalars(
-        select(BloodPressureReading)
-        .where(BloodPressureReading.user_id == user.id, BloodPressureReading.ts >= start, BloodPressureReading.ts < end)
-        .order_by(BloodPressureReading.ts)
-    ).all()
-
-
-@router.get("/cycle", response_model=list[CycleOut])
-def cycle(user: CurrentUser, db: DbSession, start: StartD = None, end: EndD = None):
-    """Empty list for users without cycle data (e.g. men)."""
-    start, end = _date_range(start, end, default_days=60)
-    return db.scalars(
-        select(CycleDay).where(CycleDay.user_id == user.id, CycleDay.date.between(start, end)).order_by(CycleDay.date)
-    ).all()
-
-
-@router.get("/ecg", response_model=list[EcgSummary])
-def ecg_list(user: CurrentUser, db: DbSession, start: StartDT = None, end: EndDT = None):
-    """List of recordings without the waveform (the waveform is large: /ecg/{id})."""
-    start, end = _range(start, end, default_days=14)
-    rows = db.execute(
-        select(
-            EcgRecording.id,
-            EcgRecording.started_at,
-            EcgRecording.sample_rate_hz,
-            EcgRecording.avg_heart_rate,
-            EcgRecording.classification,
-        )
-        .where(EcgRecording.user_id == user.id, EcgRecording.started_at >= start, EcgRecording.started_at < end)
-        .order_by(EcgRecording.started_at.desc())
-    ).all()
-    return [EcgSummary.model_validate(r._asdict()) for r in rows]
-
-
-@router.get("/ecg/{ecg_id}", response_model=EcgDetail)
-def ecg_detail(
-    ecg_id: int,
-    user: CurrentUser,
-    db: DbSession,
-    max_points: Annotated[int | None, Query(ge=100, le=20_000, description="keep every n-th sample")] = None,
+@router.get("/dashboard", response_model=Dashboard)
+def dashboard(
+    user: CurrentUser, db: DbSession, days: Annotated[int, Query(ge=7, le=MAX_RANGE_DAYS)] = 60, end: EndD = None
 ):
-    rec = db.scalar(select(EcgRecording).where(EcgRecording.id == ecg_id, EcgRecording.user_id == user.id))
-    if rec is None:
-        raise HTTPException(404, "ECG recording not found")
-    step = max(1, -(-len(rec.samples) // max_points)) if max_points else 1
-    return EcgDetail(
-        id=rec.id,
-        started_at=rec.started_at,
-        sample_rate_hz=rec.sample_rate_hz,
-        avg_heart_rate=rec.avg_heart_rate,
-        classification=rec.classification,
-        samples=rec.samples[::step],
-        returned_sample_rate_hz=rec.sample_rate_hz / step,
-    )
+    """Everything for the charts screen in one call: profile, latest vitals and the last `days` days up to `end`
+    (default today, UTC) of daily summaries, blood pressure, cycle and ECG list (no waveform), plus trend analysis."""
+    start_d, end_d = _date_range(None, end, default_days=days)
+    start = datetime.combine(start_d, time.min, UTC)
+    stop = datetime.combine(end_d + timedelta(days=1), time.min, UTC)
 
-
-@router.get("/overview", response_model=Overview)
-def overview(user: CurrentUser, db: DbSession):
-    """Latest values for dashboard tiles."""
     latest = {}
     for metric in UNITS:
         row = db.execute(
@@ -188,15 +120,23 @@ def overview(user: CurrentUser, db: DbSession):
 
     age = None
     if user.birth_date:
-        today = datetime.now(UTC).date()
-        born = user.birth_date
+        today, born = datetime.now(UTC).date(), user.birth_date
         age = today.year - born.year - ((today.month, today.day) < (born.month, born.day))
     bmi = round(user.weight_kg / (user.height_cm / 100) ** 2, 1) if user.weight_kg and user.height_cm else None
 
-    def newest(model, order_col):
-        return db.scalars(select(model).where(model.user_id == user.id).order_by(order_col.desc()).limit(1)).first()
+    ecg = db.execute(
+        select(
+            EcgRecording.id,
+            EcgRecording.started_at,
+            EcgRecording.sample_rate_hz,
+            EcgRecording.avg_heart_rate,
+            EcgRecording.classification,
+        )
+        .where(EcgRecording.user_id == user.id, EcgRecording.started_at >= start, EcgRecording.started_at < stop)
+        .order_by(EcgRecording.started_at.desc())
+    ).all()
 
-    return Overview(
+    return Dashboard(
         user_id=user.id,
         name=user.name,
         sex=user.sex,
@@ -205,13 +145,25 @@ def overview(user: CurrentUser, db: DbSession):
         height_cm=user.height_cm,
         bmi=bmi,
         latest=latest,
-        daily=newest(DailySummary, DailySummary.date),
-        blood_pressure=newest(BloodPressureReading, BloodPressureReading.ts),
-        cycle=newest(CycleDay, CycleDay.date),
+        daily=db.scalars(
+            select(DailySummary)
+            .where(DailySummary.user_id == user.id, DailySummary.date.between(start_d, end_d))
+            .order_by(DailySummary.date)
+        ).all(),
+        blood_pressure=db.scalars(
+            select(BloodPressureReading)
+            .where(
+                BloodPressureReading.user_id == user.id,
+                BloodPressureReading.ts >= start,
+                BloodPressureReading.ts < stop,
+            )
+            .order_by(BloodPressureReading.ts)
+        ).all(),
+        cycle=db.scalars(
+            select(CycleDay)
+            .where(CycleDay.user_id == user.id, CycleDay.date.between(start_d, end_d))
+            .order_by(CycleDay.date)
+        ).all(),
+        ecg=[EcgSummary.model_validate(r._asdict()) for r in ecg],
+        stats=analyze(db, user.id, end=end, days=days, include_series=True),
     )
-
-
-@router.get("/stats")
-def stats(user: CurrentUser, db: DbSession, days: Annotated[int, Query(ge=7, le=365)] = 60, end: EndD = None):
-    """Trend analysis of the logged-in user (`app.statistics.analyze`) with daily series and trend lines."""
-    return analyze(db, user.id, end=end, days=days, include_series=True)

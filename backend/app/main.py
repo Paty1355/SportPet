@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 import app.models  # noqa: F401 – rejestruje modele w Base.metadata
+from app.agents.diet_plan.images import IMAGE_DIR, IMAGE_URL_PREFIX
 from app.agents.plan.exercises import GIF_DIR, GIF_URL_PREFIX
 from app.api.v1.router import api_router
 from app.core.config import settings
@@ -35,6 +36,7 @@ app.add_middleware(
 
 app.include_router(api_router, prefix="/api/v1")
 app.mount(GIF_URL_PREFIX, StaticFiles(directory=GIF_DIR), name="exercises")
+app.mount(IMAGE_URL_PREFIX, StaticFiles(directory=IMAGE_DIR), name="meals")
 
 
 @app.exception_handler(openai.APIError)
