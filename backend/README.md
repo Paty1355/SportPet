@@ -1,6 +1,7 @@
 # HackYeah Backend
 
-FastAPI backend: JWT auth, users (Postgres), photo & training agents with Chroma memory, plus a VisionAgent for gym-machine photos backed by Azure OpenAI and a dedicated RAG collection.
+FastAPI backend: JWT auth, users (Postgres), photo & training agents with Chroma memory, a VisionAgent for gym-machine photos backed by Azure OpenAI and a dedicated RAG collection,
+and a PostWorkoutAgent for check-ins and per-user reports in PostgreSQL.
 
 ## Requirements
 
@@ -43,7 +44,7 @@ docker compose up -d --build
 
 | Service   | Host port | Notes                                   |
 |-----------|-----------|-----------------------------------------|
-| `backend` | 8002      | reads `backend/.env`                    |
+| `backend` | 8000      | reads `backend/.env`                    |
 | `db`      | 5432      | Postgres 16, volume `pgdata`            |
 | `chroma`  | 8001      | Chroma server, volume `chroma_data`     |
 
@@ -105,6 +106,11 @@ All endpoints under `/api/v1`; auth and VisionAgent analyze are public. Other en
 | GET / DELETE | `/agents/diet/questionnaire` | diet questionnaire status / reset |
 | POST / GET | `/agents/diet-plan` | generate / get the weekly diet plan (needs a completed diet questionnaire) |
 | POST | `/agents/vision/analyze` | classify a machine photo and get usage instructions (public) |
+| POST / GET | `/agents/post-workout/sessions` / `/sessions/{sessionId}` | start/resume a post-workout check-in |
+| POST | `/agents/post-workout/sessions/{sessionId}/chat` | answer, skip, correct, confirm or retry a comment |
+| GET | `/agents/post-workout/sessions/{sessionId}/history` | this check-in's conversation |
+| GET | `/agents/post-workout/feedback` | confirmed check-ins for the current user |
+| POST / GET | `/agents/post-workout/reports` | compute/read saved daily, weekly or monthly reports |
 
 ## VisionAgent: machine photos
 
@@ -167,13 +173,51 @@ After changing the usage prompt, rebuild the backend from the repository root:
 docker compose up -d --build --force-recreate backend
 ```
 
-With the current Compose configuration, Swagger is available at http://localhost:8002/docs.
+With the current Compose configuration, Swagger is available at http://localhost:8000/docs.
 A prompt-only change does not require re-importing machine cards or regenerating embeddings.
 
 Errors: HTTP 422 for an empty upload or an unsupported machine; HTTP 503 for missing credentials
 or missing knowledge; HTTP 502 for provider failures or invalid structured model responses.
 The existing application startup still requires its configured Postgres database.
 
+
+## PostWorkoutAgent: check-ins and reports
+
+A JWT-protected interview after every workout collects pain, fatigue, feeling change, mood,
+motivation and perceived effort. Users can skip answers, review the draft and correct it before confirmation.
+The API returns English questions/comments and camelCase JSON.
+
+The agent reuses `users`, `messages` and completed `training_questionnaires` as context.
+It adds `post_workout_checkins` and `post_workout_reports`; subjective scores remain separate
+from the existing health measurement tables. It does not use Chroma or RAG.
+
+Set `post_workout_reporting_frequency` (`daily`/`weekly`/`monthly`) and an IANA `timezone`
+through `PATCH /api/v1/users/me`. Defaults: `weekly`, `Europe/Warsaw`.
+The setting controls report periods; interviews still happen after each workout.
+Reports are saved on confirmation or generated on demand, without a background notification scheduler.
+
+The backend computes medians and descriptive comparisons. The existing Azure chat deployment
+interprets free-text answers and generates a short supportive comment with strict Structured Outputs.
+Confirmed feedback and statistics are committed before comment generation; a provider failure
+returns the saved data with `support.status = "unavailable"`, allowing a comment retry.
+Backend safety notices are displayed separately from generated encouragement.
+
+Full endpoint contract, state transitions, retry handling and examples:
+[`app/agents/post_workout/README.md`](app/agents/post_workout/README.md).
+
+After pulling these changes, from the repository root:
+
+```bash
+docker compose up -d --build --force-recreate backend
+docker compose logs --tail=100 backend
+```
+
+Startup runs the additive PostgreSQL schema upgrade automatically, including existing databases.
+It retains existing users/messages. The same step can be run manually after building the image:
+
+```bash
+docker compose run --rm --no-deps backend python -m app.db.migrate
+```
 
 ## Tests & linting
 
@@ -190,14 +234,15 @@ Tests use in-memory SQLite, a temp embedded Chroma and fake embeddings – no Do
 ```
 app/
   api/v1/     # routers
-  agents/     # photo & training agents, LLM wrapper
+  agents/     # photo, training, vision and post_workout agents
   core/       # config, security, Azure client, deps
-  db/         # SQLAlchemy engine/session
+  db/         # SQLAlchemy engine/session, additive schema upgrade
   memory/     # Chroma client, embeddings, per-user memory
   models/     # ORM models
   rag/        # chunking, knowledge base, ingest CLI
   schemas/    # Pydantic schemas
   services/   # business logic
+  statistics/ # health analysis and post-workout comparisons
   storage/    # file uploads
 docs_RAG/     # RAG source documents (training)
 docs_RAG_diet/ # RAG source documents (diet)
