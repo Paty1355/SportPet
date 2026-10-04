@@ -70,7 +70,7 @@ def test_users_do_not_collide(client, auth_headers):
     login = client.post("/api/v1/auth/login", data={"username": "b@example.com", "password": "password123"})
     token = login.json()["access_token"]
     other = {"Authorization": f"Bearer {token}"}
-    # ten sam klucz (ts, metric) u innego użytkownika to osobny wiersz
+    # the same key (ts, metric) for another user is a separate row
     assert client.post(URL, json={"samples": [HR]}, headers=auth_headers).json()["samples"] == 1
     assert client.post(URL, json={"samples": [HR]}, headers=other).json()["samples"] == 1
 

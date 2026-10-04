@@ -1,4 +1,4 @@
-"""Analiza trendów użytkownika: cechy dzienne -> testy -> wynik JSON-owalny (do raportu / kontekstu modelu AI)."""
+"""User trend analysis: daily features -> tests -> JSON-serializable result (for the report / AI model context)."""
 
 from datetime import UTC, date, datetime, timedelta
 
@@ -10,17 +10,17 @@ from app.statistics import trends
 from app.statistics.daily import Series, cycle_phases, daily_features
 
 DEFAULT_DAYS = 60
-MIN_DAYS = 28  # poniżej tylu dób z danymi nie wnioskujemy o trendzie: "insufficient_data", nie "brak trendu"
+MIN_DAYS = 28  # with fewer days of data we draw no trend conclusion: "insufficient_data", not "no trend"
 RECENT_DAYS = 7
-BASELINE_DAYS = 28  # doby bezpośrednio przed oknem "ostatnie"
+BASELINE_DAYS = 28  # days immediately before the "recent" window
 MIN_BASELINE, MIN_RECENT = 14, 4
-MIN_POINTS = {"bp_sys_sd_wk": 8}  # 1 punkt na tydzień (60 dób = 8 pełnych bloków), więc inne minimum niż dobowe
+MIN_POINTS = {"bp_sys_sd_wk": 8}  # 1 point per week (60 days = 8 full blocks): different minimum than daily
 OUTLIER_Z = 2.0
 METRICS = (
     "rhr", "night_dip", "stress_day_mean", "stress_high_frac", "spo2_min", "spo2_low_count", "bp_sys", "bp_dia",
     "bp_am_pm_diff", "bp_sys_sd_wk", "steps", "sleep_minutes", "ecg_hr", "ecg_abnormal",
 )  # fmt: skip
-# (przyczyna D, skutek D+lag); lag 0..2 dób
+# (cause D, effect D+lag); lag 0..2 days
 LAG_PAIRS = (("sleep_minutes", "rhr"), ("sleep_minutes", "stress_day_mean"), ("steps", "rhr"))
 LAGS = (0, 1, 2)
 CYCLE_METRICS = ("rhr", "stress_day_mean")
@@ -37,12 +37,12 @@ ALPHA = 0.05
 
 
 def analyze_series(s: Series, end: date, min_n: int = MIN_DAYS, with_series: bool = False) -> dict:
-    """Testy jednej metryki. `end` = ostatnia doba analizy (okno "ostatnie" to `end` - 6 .. `end`).
+    """Tests of a single metric. `end` = last day of the analysis (the "recent" window is `end` - 6 .. `end`).
 
-    Zwraca {"status": "insufficient_data", "n", "required"} albo {"status": "ok", "n", "trend", "change_point",
-    "baseline_vs_recent", "outlier_days"}. Pola "p" są surowe; "p_adj" dopisuje `analyze` (Benjamini-Hochberg).
-    `with_series=True` dokłada "series" ([{date, value}] rosnąco; także przy insufficient_data) oraz "trend_line"
-    (prosta Sena: punkty na pierwszej i ostatniej dobie, do wykresu)."""
+    Returns {"status": "insufficient_data", "n", "required"} or {"status": "ok", "n", "trend", "change_point",
+    "baseline_vs_recent", "outlier_days"}. "p" fields are raw; "p_adj" is added by `analyze` (Benjamini-Hochberg).
+    `with_series=True` adds "series" ([{date, value}] ascending; also for insufficient_data) and "trend_line"
+    (Sen line: points on the first and last day, for charts)."""
     pts = sorted(s.items())
     n = len(pts)
     series = [{"date": d.isoformat(), "value": v} for d, v in pts] if with_series else None
@@ -119,7 +119,7 @@ def detect_overtraining(metrics: dict) -> dict:
 
 
 def _adjust(items: list[dict]) -> None:
-    """Benjamini-Hochberg in place: dopisuje "p_adj" do każdego słownika z "p"."""
+    """Benjamini-Hochberg in place: adds "p_adj" to every dict that has "p"."""
     if items:
         for item, adj in zip(items, stats.false_discovery_control([i["p"] for i in items]), strict=True):
             item["p_adj"] = float(adj)
@@ -128,12 +128,13 @@ def _adjust(items: list[dict]) -> None:
 def analyze(
     db: Session, user_id: int, end: date | None = None, days: int = DEFAULT_DAYS, include_series: bool = False
 ) -> dict:
-    """Pełna analiza użytkownika za `days` dób do `end` włącznie (domyślnie wczoraj UTC: dzisiejsza doba jest niepełna).
+    """Full user analysis over `days` days up to and including `end` (default yesterday UTC: today is incomplete).
 
     {"window": {start, end}, "metrics": {nazwa: analyze_series}, "lagged_correlations": [...], "cycle": [...],
     "overtraining": {flag, signals}}.
-    `include_series=True` dokłada do każdej metryki szereg dzienny i prostą trendu (pod wykresy, patrz `charts.py`).
-    P-value są korygowane osobno w każdej rodzinie testów (trend, przełom, bazowa-vs-ostatnie, korelacje, cykl)."""
+    `include_series=True` adds a daily series and a trend line to every metric (for charts, see `charts.py`).
+    P-values are corrected separately within each test family
+    (trend, change point, baseline-vs-recent, correlations, cycle)."""
     end = end or datetime.now(UTC).date() - timedelta(days=1)
     start = end - timedelta(days=days - 1)
     feats = daily_features(db, user_id, start, end)

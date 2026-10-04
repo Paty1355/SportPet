@@ -84,6 +84,8 @@ Re-ingesting a file overwrites its chunks (no duplicates). Run ingest again when
 - the Chroma volume was removed (`docker compose down -v`),
 - you change the embedding deployment (collection names include the embedding tag, so a new, empty collection is used).
 
+Diet agent documents live in [`docs_RAG_diet/`](docs_RAG_diet/); ingest with `uv run python -m app.rag.ingest --dir docs_RAG_diet --name diet`.
+
 Chroma data persists in the `chroma_data` volume across restarts and rebuilds.
 
 ## API
@@ -99,6 +101,10 @@ All endpoints under `/api/v1`; auth and VisionAgent analyze are public. Other en
 | GET | `/agents/photo/history` | photo agent history |
 | POST | `/agents/training/chat` | training agent chat |
 | GET | `/agents/training/history` | training agent history |
+| POST | `/agents/diet/chat` | diet agent chat (see [`app/agents/diet/README.md`](app/agents/diet/README.md)) |
+| GET | `/agents/diet/history` | diet agent history |
+| GET / DELETE | `/agents/diet/questionnaire` | diet questionnaire status / reset |
+| POST / GET | `/agents/diet-plan` | generate / get the weekly diet plan (needs a completed diet questionnaire) |
 | POST | `/agents/vision/analyze` | classify a machine photo and get usage instructions (public) |
 | POST / GET | `/agents/post-workout/sessions` / `/sessions/{sessionId}` | start/resume a post-workout check-in |
 | POST | `/agents/post-workout/sessions/{sessionId}/chat` | answer, skip, correct, confirm or retry a comment |
@@ -238,6 +244,7 @@ app/
   services/   # business logic
   statistics/ # health analysis and post-workout comparisons
   storage/    # file uploads
-docs_RAG/     # RAG source documents
+docs_RAG/     # RAG source documents (training)
+docs_RAG_diet/ # RAG source documents (diet)
 tests/
 ```

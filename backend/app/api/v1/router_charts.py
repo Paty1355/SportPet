@@ -1,4 +1,4 @@
-"""Odczyt danych zdrowotnych pod wykresy. Zawsze dane zalogowanego użytkownika (JWT)."""
+"""Health data reads for charts. Always the logged-in user's data (JWT)."""
 
 from datetime import UTC, date, datetime, timedelta
 from typing import Annotated, Literal
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/health", tags=["health-charts"])
 UNITS = {"heart_rate": "bpm", "spo2": "%", "stress": "score 0-100"}
 BUCKET_SECONDS = {"raw": 0, "5m": 300, "15m": 900, "1h": 3600, "1d": 86400}
 MAX_RANGE_DAYS = 60
-MAX_RAW_RANGE_DAYS = 3  # raw to ~864 punktów/dobę/metrykę; dłuższe zakresy mają iść przez bucket
+MAX_RAW_RANGE_DAYS = 3  # raw is ~864 points/day/metric; longer ranges should go through a bucket
 
 
 def _utc(dt: datetime) -> datetime:
@@ -54,10 +54,10 @@ def _date_range(start: date | None, end: date | None, default_days: int):
     return start, end
 
 
-StartDT = Annotated[datetime | None, Query(description="ISO 8601 (ze strefą). Domyślnie end − 24 h")]
-EndDT = Annotated[datetime | None, Query(description="ISO 8601 (ze strefą). Domyślnie teraz")]
-StartD = Annotated[date | None, Query(description="YYYY-MM-DD, włącznie. Domyślnie 14 dni wstecz od end")]
-EndD = Annotated[date | None, Query(description="YYYY-MM-DD, włącznie. Domyślnie dziś (UTC)")]
+StartDT = Annotated[datetime | None, Query(description="ISO 8601 (with timezone). Default end − 24 h")]
+EndDT = Annotated[datetime | None, Query(description="ISO 8601 (with timezone). Default now")]
+StartD = Annotated[date | None, Query(description="YYYY-MM-DD, inclusive. Default 14 days back from end")]
+EndD = Annotated[date | None, Query(description="YYYY-MM-DD, inclusive. Default today (UTC)")]
 
 
 @router.get("/series", response_model=SeriesOut)
@@ -69,7 +69,7 @@ def series(
     end: EndDT = None,
     bucket: Literal["raw", "5m", "15m", "1h", "1d"] = "raw",
 ):
-    """Szereg czasowy. bucket != raw zwraca średnią (`value`) oraz `min`/`max` w przedziale (UTC)."""
+    """Time series. bucket != raw returns the mean (`value`) and `min`/`max` within the interval (UTC)."""
     start, end = _range(start, end, default_days=1)
     if bucket == "raw" and end - start > timedelta(days=MAX_RAW_RANGE_DAYS):
         raise HTTPException(422, f"bucket=raw allows at most {MAX_RAW_RANGE_DAYS} days; use bucket=5m/15m/1h/1d")
@@ -105,7 +105,7 @@ def series(
 
 @router.get("/daily", response_model=list[DailyOut])
 def daily(user: CurrentUser, db: DbSession, start: StartD = None, end: EndD = None):
-    """Kroki i sen, jeden wiersz na dzień (rosnąco po dacie)."""
+    """Steps and sleep, one row per day (ascending by date)."""
     start, end = _date_range(start, end, default_days=14)
     return db.scalars(
         select(DailySummary)
@@ -126,7 +126,7 @@ def blood_pressure(user: CurrentUser, db: DbSession, start: StartDT = None, end:
 
 @router.get("/cycle", response_model=list[CycleOut])
 def cycle(user: CurrentUser, db: DbSession, start: StartD = None, end: EndD = None):
-    """Pusta lista dla użytkowników bez danych cyklu (np. mężczyzn)."""
+    """Empty list for users without cycle data (e.g. men)."""
     start, end = _date_range(start, end, default_days=60)
     return db.scalars(
         select(CycleDay).where(CycleDay.user_id == user.id, CycleDay.date.between(start, end)).order_by(CycleDay.date)
@@ -135,7 +135,7 @@ def cycle(user: CurrentUser, db: DbSession, start: StartD = None, end: EndD = No
 
 @router.get("/ecg", response_model=list[EcgSummary])
 def ecg_list(user: CurrentUser, db: DbSession, start: StartDT = None, end: EndDT = None):
-    """Lista nagrań bez fali (fala jest duża: /ecg/{id})."""
+    """List of recordings without the waveform (the waveform is large: /ecg/{id})."""
     start, end = _range(start, end, default_days=14)
     rows = db.execute(
         select(
@@ -156,7 +156,7 @@ def ecg_detail(
     ecg_id: int,
     user: CurrentUser,
     db: DbSession,
-    max_points: Annotated[int | None, Query(ge=100, le=20_000, description="zmniejsza falę co n-tą próbkę")] = None,
+    max_points: Annotated[int | None, Query(ge=100, le=20_000, description="keep every n-th sample")] = None,
 ):
     rec = db.scalar(select(EcgRecording).where(EcgRecording.id == ecg_id, EcgRecording.user_id == user.id))
     if rec is None:
@@ -175,7 +175,7 @@ def ecg_detail(
 
 @router.get("/overview", response_model=Overview)
 def overview(user: CurrentUser, db: DbSession):
-    """Najnowsze wartości do kafelków na dashboardzie."""
+    """Latest values for dashboard tiles."""
     latest = {}
     for metric in UNITS:
         row = db.execute(
@@ -213,5 +213,5 @@ def overview(user: CurrentUser, db: DbSession):
 
 @router.get("/stats")
 def stats(user: CurrentUser, db: DbSession, days: Annotated[int, Query(ge=7, le=365)] = 60, end: EndD = None):
-    """Analiza trendów zalogowanego użytkownika (`app.statistics.analyze`) z szeregami dziennymi i prostymi trendu."""
+    """Trend analysis of the logged-in user (`app.statistics.analyze`) with daily series and trend lines."""
     return analyze(db, user.id, end=end, days=days, include_series=True)

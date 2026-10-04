@@ -56,3 +56,40 @@ class QuestionnaireStatus(CamelModel):
     completed: bool
     question: QuestionOut | None = None  # current question, None once completed
     training_questionnaire: TrainingQuestionnaire | None = None  # final result, set once completed
+
+
+DietGoal = Literal["weight_loss", "muscle_gain", "maintenance", "healthy_habits"]
+DietType = Literal["omnivore", "vegetarian", "vegan", "pescatarian"]
+Allergy = Literal["gluten", "lactose", "nuts", "eggs"]
+DislikedFood = Literal["fish", "red_meat", "dairy", "vegetables"]
+ActivityLevel = Literal["sedentary", "light", "moderate", "high"]
+MedicalCondition = Literal["diabetes", "hypertension", "thyroid", "pregnancy_breastfeeding"]
+EatingHabit = Literal["skip_breakfast", "late_night_snacking", "emotional_eating"]
+
+
+class GentleCheck(CamelModel):
+    gradual_start: bool
+    notes: str = ""
+
+
+class DietQuestionnaire(CamelModel):
+    """Final diet questionnaire result; literals must match option values in the diet `QUESTIONS` (excluding "none")."""
+
+    main_goal: DietGoal
+    diet_type: DietType
+    allergies_and_intolerances: list[Allergy]
+    disliked_foods: list[DislikedFood]
+    meals_per_day: Literal[3, 4, 5]
+    cooking_time_minutes: Literal[15, 30, 60]
+    activity_level: ActivityLevel
+    medical_conditions: list[MedicalCondition]
+    eating_habits: list[EatingHabit]
+    gentle_check: GentleCheck
+
+
+class DietQuestionnaireStatus(CamelModel):
+    step: int
+    total: int
+    completed: bool
+    question: QuestionOut | None = None  # current question, None once completed
+    diet_questionnaire: DietQuestionnaire | None = None  # final result, set once completed
