@@ -9,6 +9,7 @@ from app.api.v1 import (
     router_training,
     router_users,
     vision,
+    router_friends,
 )
 
 api_router = APIRouter()
@@ -22,3 +23,4 @@ api_router.include_router(health.service_router)
 api_router.include_router(router_photo.router)
 api_router.include_router(router_training.router)
 api_router.include_router(router_questionnaire.router)
+api_router.include_router(router_friends.router)
