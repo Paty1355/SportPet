@@ -1,21 +1,21 @@
-from sqlalchemy import ForeignKey, String, Enum, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import JSON
 from datetime import datetime
+
+from sqlalchemy import JSON, ForeignKey, String, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column
+
 from app.db.base import Base
 
 
 class Friendship(Base):
     __tablename__ = "friendships"
-    
+
     id: Mapped[int] = mapped_column(primary_key=True)
     requester_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     addressee_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    status: Mapped[str] = mapped_column(String(20), default="pending") # "pending", "accepted"
-    
-    __table_args__ = (
-        UniqueConstraint("requester_id", "addressee_id", name="uix_friendship"),
-    )
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # "pending", "accepted"
+
+    __table_args__ = (UniqueConstraint("requester_id", "addressee_id", name="uix_friendship"),)
+
 
 class PetProfile(Base):
     __tablename__ = "pet_profiles"

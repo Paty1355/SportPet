@@ -78,4 +78,8 @@ def report(user: CurrentUser, db: DbSession):
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Not enough data to generate the report")
     buffer = BytesIO()
     render_pdf(result, buffer)
-    return Response(buffer.getvalue(), media_type="application/pdf", headers={"Content-Disposition": 'attachment; filename="report.pdf"'})
+    return Response(
+        buffer.getvalue(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="report.pdf"'},
+    )

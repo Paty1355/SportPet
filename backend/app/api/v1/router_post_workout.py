@@ -5,8 +5,10 @@ from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 
+from app.agents.plan.agent import PlanAgent, get_plan_agent
 from app.agents.post_workout.agent import PostWorkoutAgent, get_post_workout_agent
 from app.agents.post_workout.llm import PostWorkoutModelError
+from app.agents.training.agent import TrainingAgent, get_training_agent
 from app.core.deps import CurrentUser, DbSession
 from app.models import Message, PostWorkoutCheckIn, PostWorkoutReport
 from app.schemas.post_workout import (
@@ -24,6 +26,8 @@ from app.statistics.post_workout import utc
 
 router = APIRouter(prefix="/agents/post-workout", tags=["post-workout agent"])
 Agent = Annotated[PostWorkoutAgent, Depends(get_post_workout_agent)]
+Plans = Annotated[PlanAgent, Depends(get_plan_agent)]
+Training = Annotated[TrainingAgent, Depends(get_training_agent)]
 PageLimit = Annotated[int, Query(ge=1, le=100)]
 PageOffset = Annotated[int, Query(ge=0)]
 
@@ -39,11 +43,17 @@ def session(session_id: str, user: CurrentUser, db: DbSession):
 
 
 @router.post("/sessions/{session_id}/chat", response_model=CheckInResponse)
-async def chat(session_id: str, data: ChatTurn, user: CurrentUser, db: DbSession, agent: Agent):
+async def chat(
+    session_id: str, data: ChatTurn, user: CurrentUser, db: DbSession, agent: Agent, plans: Plans, training: Training
+):
     try:
-        return await agent.run(db, user.id, session_id, data)
+        response = await agent.run(db, user.id, session_id, data)
     except PostWorkoutModelError as exc:
         raise HTTPException(502, str(exc)) from exc
+    if data.action == "confirm" and response.status == "completed":
+        # The last check-in of a plan triggers the next plan, built with this feedback.
+        await plans.regenerate_if_finished(db, user, training.get_status(db, user.id).training_questionnaire)
+    return response
 
 
 @router.get("/sessions/{session_id}/history", response_model=list[CheckInMessage])

@@ -111,7 +111,7 @@ from app.statistics import analyze
 from app.statistics.charts import render_pdf, figures, to_png
 
 result = analyze(db, user_id, include_series=True)
-render_pdf(result, "raport_wykresy.pdf")          # or: for name, fig in figures(result): to_png(fig)
+render_pdf(result, "raport_wykresy.pdf")  # or: for name, fig in figures(result): to_png(fig)
 ```
 
 ### Chart data and endpoints
