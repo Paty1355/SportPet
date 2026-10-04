@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 import app.models  # noqa: F401 – rejestruje modele w Base.metadata
+from app.agents.diet_plan.images import IMAGE_DIR, IMAGE_URL_PREFIX
 from app.agents.plan.exercises import GIF_DIR, GIF_URL_PREFIX
 from app.api.v1.router import api_router
 from app.core.config import settings
@@ -24,7 +25,13 @@ def _add_user_profile_columns() -> None:
         return
     with engine.begin() as conn:
         double = "DOUBLE PRECISION"
-        columns = {"sex": "VARCHAR(1)", "birth_date": "DATE", "weight_kg": double, "height_cm": double, "share_pet": "BOOLEAN NOT NULL DEFAULT TRUE"}
+        columns = {
+            "sex": "VARCHAR(1)",
+            "birth_date": "DATE",
+            "weight_kg": double,
+            "height_cm": double,
+            "share_pet": "BOOLEAN NOT NULL DEFAULT TRUE",
+        }
         for col, typ in columns.items():
             conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {typ}"))
 
@@ -49,6 +56,7 @@ app.add_middleware(
 
 app.include_router(api_router, prefix="/api/v1")
 app.mount(GIF_URL_PREFIX, StaticFiles(directory=GIF_DIR), name="exercises")
+app.mount(IMAGE_URL_PREFIX, StaticFiles(directory=IMAGE_DIR), name="meals")
 
 
 @app.exception_handler(openai.APIError)

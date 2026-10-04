@@ -66,7 +66,7 @@ Raw samples are not tested directly: they have a daily rhythm and are autocorrel
 - `detect_overtraining(metrics)`: pure function over `analyze()["metrics"]` (after `p_adj` correction), called by `analyze`. See "Overtraining flag".
 
 ### Overtraining flag (`result["overtraining"]`)
-`analyze(...)` always adds an `overtraining` key (also in `GET /api/v1/health/stats`), so the frontend only needs to check
+`analyze(...)` always adds an `overtraining` key (also in the `stats` field of `GET /api/v1/health/dashboard`), so the frontend only needs to check
 `result.overtraining.flag`:
 
 ```json
@@ -118,7 +118,7 @@ render_pdf(result, "raport_wykresy.pdf")          # or: for name, fig in figures
 - `analyze(..., include_series=True)` adds to each metric `series` (`[{date, value}]`, also for `insufficient_data`) and `trend_line`
   (two points of the Sen line: first and last day). `baseline_vs_recent` always contains `baseline_window` and `recent_window`.
   Without this flag the result is compact (suitable for the AI model's context).
-- `GET /api/v1/health/stats?days=60&end=YYYY-MM-DD` (`router_charts.py`, JWT, data of the logged-in user): the same with `include_series=True`.
+- `GET /api/v1/health/dashboard?days=60&end=YYYY-MM-DD` (`router_charts.py`, JWT): the `stats` field is the same analysis with `include_series=True`.
   `days` 7–365, default 60 (≈40 KB of JSON). The router is registered in `app/api/v1/router.py`; the response includes `overtraining`.
 - `GET /api/v1/health/report` (`health.py`, JWT): a PDF with charts (`render_pdf`) for the logged-in user, default window as in `analyze`.
   Without a token 401; when no metric has status `ok` (too little data) 422 with a message.

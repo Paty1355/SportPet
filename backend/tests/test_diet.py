@@ -130,3 +130,6 @@ def test_diet_plan_needs_questionnaire_and_valid_llm_output(client, auth_headers
     assert [d["day"] for d in plan["days"]][::6] == ["Monday", "Sunday"]
     assert plan["dailyCalories"] == 2400 and all(len(d["meals"]) == 4 for d in plan["days"])
     assert client.get(PLAN_URL, headers=auth_headers).json() == plan
+    urls = [m["imageUrl"] for d in plan["days"] for m in d["meals"]]
+    assert all(urls) and urls[0] != urls[1]
+    assert client.get(urls[0]).headers["content-type"].startswith("image/")  # served from /static/meals

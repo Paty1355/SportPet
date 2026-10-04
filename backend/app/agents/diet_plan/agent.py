@@ -5,6 +5,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.agents.diet_plan import prompts
+from app.agents.diet_plan.images import meal_image_urls
 from app.agents.llm import LLMClient, get_llm
 from app.agents.plan.health import WINDOW_DAYS, health_summary
 from app.core.config import settings
@@ -54,7 +55,14 @@ class DietPlanAgent:
         raw = await self.llm.complete(system, [{"role": "user", "content": user_message}], json_mode=True)
         llm_plan = parse_plan(raw, questionnaire.meals_per_day)
 
-        days = [DietDay(day=day, meals=d.meals) for day, d in zip(PLAN_DAYS, llm_plan.days, strict=True)]
+        images = meal_image_urls()
+        meals = (m for d in llm_plan.days for m in d.meals)
+        # Cycle through the images over the whole week, so neighbouring meals look different.
+        with_images = [
+            m.model_copy(update={"image_url": images[i % len(images)] if images else ""}) for i, m in enumerate(meals)
+        ]
+        per_day = questionnaire.meals_per_day
+        days = [DietDay(day=day, meals=with_images[i * per_day : (i + 1) * per_day]) for i, day in enumerate(PLAN_DAYS)]
         plan = DietPlan(daily_calories=llm_plan.daily_calories, days=days, health_summary=health)
         self.plan_path(user.id).write_text(plan.model_dump_json(by_alias=True, indent=2), encoding="utf-8")
         return plan
