@@ -1,7 +1,23 @@
 from itertools import batched
 
+from pydantic import ValidationError
+
 from app.memory.chroma_client import get_collection
 from app.schemas.vision import MachineCatalogEntry, MachineDocument
+
+
+class MachineCardSchemaError(RuntimeError):
+    """Stored cards must be updated and re-imported before they can be served."""
+
+
+def load_stored_machine(document: str) -> MachineDocument:
+    try:
+        return MachineDocument.model_validate_json(document)
+    except ValidationError as exc:
+        raise MachineCardSchemaError(
+            "Machine cards in Chroma use an outdated or invalid schema. "
+            "Update all cards to canonical muscle region IDs and run python -m app.agents.vision.seed."
+        ) from exc
 
 
 class GymMachineKnowledge:
@@ -25,7 +41,7 @@ class GymMachineKnowledge:
 
     def get_catalog(self) -> list[MachineCatalogEntry]:
         result = self.collection.get(include=["documents"])
-        machines = [MachineDocument.model_validate_json(doc) for doc in result["documents"] or []]
+        machines = [load_stored_machine(doc) for doc in result["documents"] or []]
         return [
             MachineCatalogEntry(
                 machine_id=machine.machine_id,
@@ -47,7 +63,7 @@ class GymMachineKnowledge:
         documents = result["documents"] or [[]]
         if not documents[0]:
             return None
-        machine = MachineDocument.model_validate_json(documents[0][0])
+        machine = load_stored_machine(documents[0][0])
         return machine if machine.machine_id == machine_id else None
 
     def count(self) -> int:

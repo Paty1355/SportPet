@@ -3,7 +3,7 @@ from functools import lru_cache
 from fastapi import HTTPException
 from starlette.concurrency import run_in_threadpool
 
-from app.agents.vision.knowledge import GymMachineKnowledge
+from app.agents.vision.knowledge import GymMachineKnowledge, MachineCardSchemaError
 from app.agents.vision.llm import AzureVisionLLM, VisionLLM
 from app.core.azure import get_async_azure_client
 from app.core.config import settings
@@ -27,14 +27,20 @@ class VisionAgent:
 
     async def run(self, image: bytes) -> VisionResponse:
         # Chroma and Azure embedding calls are synchronous: keep them off the event loop.
-        catalog = await run_in_threadpool(self.knowledge.get_catalog)
+        try:
+            catalog = await run_in_threadpool(self.knowledge.get_catalog)
+        except MachineCardSchemaError as exc:
+            raise VisionKnowledgeUnavailable(str(exc)) from exc
         if not catalog:
             raise VisionKnowledgeUnavailable("Machine knowledge is empty; import machine cards first")
         identification = await self.llm.identify(image, catalog)
         selected = next((entry for entry in catalog if entry.machine_id == identification.machine_id), None)
         if selected is None:
             raise MachineNotRecognized("The image does not match a machine in the supported catalog")
-        machine = await run_in_threadpool(self.knowledge.search, selected.name, selected.machine_id)
+        try:
+            machine = await run_in_threadpool(self.knowledge.search, selected.name, selected.machine_id)
+        except MachineCardSchemaError as exc:
+            raise VisionKnowledgeUnavailable(str(exc)) from exc
         if machine is None:
             raise VisionKnowledgeUnavailable("No knowledge card is available for the identified machine")
         usage = await self.llm.describe(machine)
@@ -43,6 +49,8 @@ class VisionAgent:
             machine_name=machine.name,
             category=machine.category,
             sources=machine.sources,
+            primary_muscles=machine.primary_muscles,
+            secondary_muscles=machine.secondary_muscles,
             **usage.model_dump(),
         )
 
