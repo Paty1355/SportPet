@@ -13,6 +13,7 @@ from app.agents.diet_plan.agent import DietPlanAgent, get_diet_plan_agent
 from app.agents.llm import StubLLM
 from app.agents.photo.agent import PhotoAgent, get_photo_agent
 from app.agents.plan.agent import PlanAgent, get_plan_agent
+from app.agents.plan.health import OVERTRAINING_CACHE
 from app.agents.training.agent import TrainingAgent, get_training_agent
 from app.core.azure import get_azure_client
 from app.core.config import settings
@@ -62,6 +63,7 @@ def client(chroma, tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "training_plan_dir", str(tmp_path / "training_plans"))
     monkeypatch.setattr(settings, "jwt_secret", "test-secret-that-is-at-least-32-bytes-long")
 
+    OVERTRAINING_CACHE.clear()  # every test starts with a fresh database, often with the same user id
     app.dependency_overrides[get_db] = override_db
     app.dependency_overrides[get_photo_agent] = lambda: PhotoAgent(StubLLM())
     app.dependency_overrides[get_training_agent] = lambda: TrainingAgent(StubLLM())

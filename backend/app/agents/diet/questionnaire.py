@@ -66,6 +66,18 @@ QUESTIONS: list[Question] = [
             "high": "High, 5+ workouts or a physical job",
         },
     ),
+    # Custom numbers like "1700" are accepted too, see `custom_calories` in the agent.
+    Question(
+        "calorieTarget",
+        "Do you have a daily calorie target in mind?",
+        {
+            "auto": "No, calculate it for me",
+            "1500": "About 1500 kcal",
+            "1800": "About 1800 kcal",
+            "2000": "About 2000 kcal",
+            "2500": "About 2500 kcal",
+        },
+    ),
     Question(
         "medicalConditions",
         "Do you have any health conditions that affect your diet?",
@@ -100,6 +112,8 @@ QUESTIONS: list[Question] = [
 ]
 
 CAUTION_FLAGS = {"diabetes", "hypertension", "thyroid", "pregnancy_breastfeeding", "emotional_eating"}
+# Free-text notes from these questions are kept, so allergies or conditions outside the options aren't lost.
+NOTE_KEYS = ("allergiesAndIntolerances", "medicalConditions")
 
 
 def question_text(question: Question, answers: dict) -> str:
@@ -108,7 +122,9 @@ def question_text(question: Question, answers: dict) -> str:
         return question.text
 
     recap = "\n".join(
-        f"- {q.text} {', '.join(q.options[v] for v in answers[q.key])}" for q in QUESTIONS if q.key in answers
+        f"- {q.text} {', '.join(q.options.get(v, f'{v} kcal') for v in answers[q.key])}"
+        for q in QUESTIONS
+        if q.key in answers
     )
     text = f"Here's what I know so far:\n{recap}\n\n{question.text}"
     if any(v in CAUTION_FLAGS for values in answers.values() if isinstance(values, list) for v in values):
@@ -130,6 +146,8 @@ def build_result(answers: dict) -> DietQuestionnaire:
     def many(key: str) -> list[str]:
         return [v for v in answers[key] if v != NONE]
 
+    calorie_target = answers.get("calorieTarget", ["auto"])[0]  # missing in questionnaires completed before it
+
     return DietQuestionnaire(
         main_goal=one("mainGoal"),
         diet_type=one("dietType"),
@@ -138,7 +156,9 @@ def build_result(answers: dict) -> DietQuestionnaire:
         meals_per_day=int(one("mealsPerDay")),
         cooking_time_minutes=int(one("cookingTimeMinutes")),
         activity_level=one("activityLevel"),
+        calorie_target=None if calorie_target == "auto" else int(calorie_target),
         medical_conditions=many("medicalConditions"),
         eating_habits=many("eatingHabits"),
         gentle_check=GentleCheck(gradual_start=one("gentleCheck") == "gradual", notes=answers.get("gentleNotes", "")),
+        health_notes="; ".join(n for k in NOTE_KEYS if (n := answers.get(f"{k}Notes"))),
     )

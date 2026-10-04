@@ -1,6 +1,6 @@
 # Diet agent
 
-Dietitian chat agent. Clone of the gym (`training`) agent: a 10-question questionnaire first, then free chat with per-user Chroma memory,
+Dietitian chat agent. Clone of the gym (`training`) agent: an 11-question questionnaire first, then free chat with per-user Chroma memory,
 message history and, unlike the gym agent, **RAG retrieval** from its own document folder. The gym agent is untouched; the two share only
 generic helpers (`Question`, `parse_answer`, `validate`) imported from `app/agents/training/questionnaire.py`.
 
@@ -15,6 +15,8 @@ generic helpers (`Question`, `parse_answer`, `validate`) imported from `app/agen
    (`[source, p. N]` + text).
 5. `POST /api/v1/agents/diet-plan` (`app/agents/diet_plan/`, the counterpart of the gym `plan` agent) builds a 7-day meal plan from the questionnaire,
    the 14-day health summary (`app/agents/plan/health.py`) and the top 6 `diet` RAG chunks. Each day must have `mealsPerDay` meals, otherwise 502.
+   `check_plan` also rejects plans below the healthy calorie minimum (1200 kcal for women, 1500 otherwise), more than 10% off
+   `calorieTarget`, or with meals containing the user's allergens or foods excluded by the diet type; the LLM gets one retry, then 502.
    The plan is saved to `<DIET_PLAN_DIR>/<user_id>.json` (default `./data/diet_plans`). No post-meal feedback yet.
 
 ## Endpoints (JWT required)
@@ -31,7 +33,10 @@ generic helpers (`Question`, `parse_answer`, `validate`) imported from `app/agen
 ## Questionnaire
 
 `mainGoal`, `dietType`, `allergiesAndIntolerances`*, `dislikedFoods`*, `mealsPerDay`, `cookingTimeMinutes`, `activityLevel`,
-`medicalConditions`*, `eatingHabits`*, `gentleCheck` (\* multi-choice, `none` option yields an empty list). The last question recaps the answers and
+`calorieTarget`, `medicalConditions`*, `eatingHabits`*, `gentleCheck` (\* multi-choice, `none` option yields an empty list).
+`calorieTarget` is `null` for "calculate it for me", or a number: an option or one typed by the user (e.g. "1,700 kcal"); a target below
+the healthy minimum is raised to it with a warning. Free-text allergies and conditions outside the options end up in `healthNotes`.
+The last question recaps the answers and
 recommends a gradual start when a medical condition or emotional eating was selected. Options live in `questionnaire.py` (`QUESTIONS`) and must
 match the `Literal`s in `DietQuestionnaire` (`app/schemas/questionnaire.py`); a test checks this.
 

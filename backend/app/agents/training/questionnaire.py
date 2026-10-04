@@ -131,6 +131,8 @@ QUESTIONS: list[Question] = [
 
 DAYS_PER_WEEK = {"mwf": 3, "weekends": 2, "any_weekdays": 3, "flexible": 3}
 CAUTION_FLAGS = {"postpartum", "beginner", "back", "knees", "diastasis"}
+# Free-text notes from these questions are kept, so injuries outside the options aren't lost.
+NOTE_KEYS = ("injuriesAndLimitations",)
 
 
 def parse_answer(question: Question, text: str) -> list[str] | None:
@@ -205,4 +207,5 @@ def build_result(answers: dict) -> TrainingQuestionnaire:
             cautious_start=one("intensityCheck") == "cautious",
             notes=answers.get("intensityNotes", ""),
         ),
+        health_notes="; ".join(n for k in NOTE_KEYS if (n := answers.get(f"{k}Notes"))),
     )

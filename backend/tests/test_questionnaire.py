@@ -41,6 +41,7 @@ def test_full_questionnaire_produces_json(client, auth_headers, complete_questio
         "workoutDurationMinutes": 60,
         "lifestyleAndStress": "active",
         "intensityCheck": {"cautiousStart": True, "notes": ""},
+        "healthNotes": "",
     }
 
 

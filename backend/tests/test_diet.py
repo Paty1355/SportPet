@@ -6,7 +6,7 @@ from pydantic.alias_generators import to_camel
 
 from app.agents.diet.agent import DietAgent
 from app.agents.diet.questionnaire import NONE, QUESTIONS
-from app.agents.diet_plan.agent import DietPlanAgent, get_diet_plan_agent
+from app.agents.diet_plan.agent import PLAN_DAYS, DietPlanAgent, LlmDietPlan, check_plan, get_diet_plan_agent
 from app.agents.diet_plan.images import CONTAINS, allowed_dishes, available_dishes
 from app.db.session import get_db
 from app.main import app
@@ -17,7 +17,10 @@ from app.schemas.rag import Chunk
 URL = "/api/v1/agents/diet/questionnaire"
 CHAT_URL = "/api/v1/agents/diet/chat"
 PLAN_URL = "/api/v1/agents/diet-plan"
-ANSWERS = ["2", "vegan", "gluten, nuts", "1,4", "4", "30", "moderate", "diabetes", "late_night_snacking", "gradual"]
+ANSWERS = [
+    "2", "vegan", "gluten, nuts", "1,4", "4", "30", "moderate", "about 2,400 kcal", "diabetes", "late_night_snacking",
+    "gradual",
+]  # fmt: skip
 
 
 def complete(client, headers):
@@ -40,25 +43,41 @@ def test_full_questionnaire_produces_json(client, auth_headers):
         "mealsPerDay": 4,
         "cookingTimeMinutes": 30,
         "activityLevel": "moderate",
+        "calorieTarget": 2400,
         "medicalConditions": ["diabetes"],
         "eatingHabits": ["late_night_snacking"],
         "gentleCheck": {"gradualStart": True, "notes": ""},
+        "healthNotes": "",
     }
 
 
 def test_none_option_gives_empty_list_and_unclear_answer_repeats(client, auth_headers):
     res = client.post(CHAT_URL, json={"message": "banana"}, headers=auth_headers).json()
     assert res["question"]["key"] == "mainGoal"
-    for answer in ["1", "1", "none", "none", "3", "15", "light", "none", "none", "standard"]:
+    for answer in ["1", "1", "none", "none", "3", "15", "light", "auto", "none", "none", "standard"]:
         client.post(CHAT_URL, json={"message": answer}, headers=auth_headers)
 
     result = client.get(URL, headers=auth_headers).json()["dietQuestionnaire"]
     assert result["allergiesAndIntolerances"] == [] and result["medicalConditions"] == []
+    assert result["calorieTarget"] is None
     assert result["gentleCheck"]["gradualStart"] is False
 
 
+def test_too_low_calorie_target_warns_and_is_raised_to_minimum(client, auth_headers):
+    for answer in ["1", "1", "none", "none", "3", "15", "light"]:
+        client.post(CHAT_URL, json={"message": answer}, headers=auth_headers)
+
+    res = client.post(CHAT_URL, json={"message": "800 kcal"}, headers=auth_headers).json()
+    assert "below a healthy minimum" in res["reply"] and res["question"]["key"] == "medicalConditions"
+
+    for answer in ["none", "none", "standard"]:
+        client.post(CHAT_URL, json={"message": answer}, headers=auth_headers)
+    result = client.get(URL, headers=auth_headers).json()["dietQuestionnaire"]
+    assert result["calorieTarget"] == 1500  # the test user has no sex set, so the higher minimum applies
+
+
 def test_gentle_question_recaps_and_recommends_gradual_start_for_medical_condition(client, auth_headers):
-    for answer in ["1", "1", "none", "none", "3", "15", "light", "hypertension", "none"]:
+    for answer in ["1", "1", "none", "none", "3", "15", "light", "auto", "hypertension", "none"]:
         res = client.post(CHAT_URL, json={"message": answer}, headers=auth_headers).json()
 
     assert res["question"]["key"] == "gentleCheck"
@@ -98,7 +117,7 @@ def test_schema_literals_match_question_options():
     fields = {to_camel(name): field.annotation for name, field in DietQuestionnaire.model_fields.items()}
 
     for question in QUESTIONS:
-        if question.key == "gentleCheck":
+        if question.key in ("gentleCheck", "calorieTarget"):  # an object / a number, not a literal
             continue
         annotation = fields[question.key]
         if get_origin(annotation) is list:
@@ -162,3 +181,29 @@ def test_plan_with_dish_outside_the_catalogue_is_rejected(client, auth_headers):
     complete(client, auth_headers)  # vegan, no gluten/nuts, dislikes fish and vegetables
     app.dependency_overrides[get_diet_plan_agent] = lambda: DietPlanAgent(PlanLLM(meals=4, title="Chicken skewers"))
     assert client.post(PLAN_URL, headers=auth_headers).status_code == 502
+
+
+def make_plan(description: str, calories: int = 2000) -> LlmDietPlan:
+    meal = {"name": "Lunch", "title": "Fruit with chickpeas", "description": description, "calories": calories}
+    meal |= {"proteinGrams": 30, "carbsGrams": 60, "fatGrams": 20, "prepTimeMinutes": 20}
+    return LlmDietPlan.model_validate({"dailyCalories": calories, "days": [{"meals": [meal]}] * 7})
+
+
+def test_check_plan_flags_allergens_diet_type_and_low_calories():
+    vegan = questionnaire(diet_type="vegan", allergies_and_intolerances=["nuts"])
+
+    assert check_plan(make_plan("fruit and chickpeas with almond milk"), vegan, "F") == [
+        f'{day}, "Fruit with chickpeas": contains nuts' for day in PLAN_DAYS
+    ]
+    assert "contains lactose" in check_plan(make_plan("fruit with parmesan"), vegan, "F")[0]
+    assert "contains meat" in check_plan(make_plan("chickpeas with chicken"), vegan, "F")[0]
+    assert check_plan(make_plan("fruit with coconut yogurt and egg-free granola"), vegan, "F") == []
+    assert check_plan(make_plan("fruit", calories=1300), vegan, "M") == ["dailyCalories must be at least 1500"]
+
+    with_target = vegan.model_copy(update={"calorie_target": 1800})
+    assert check_plan(make_plan("fruit", calories=1900), with_target, "F") == []
+    assert check_plan(make_plan("fruit", calories=2400), with_target, "F") == [
+        "dailyCalories must be about 1800, the user's calorie target"
+    ]
+    # Overtraining or a mental health concern: no deficit, so a plan above the target is fine.
+    assert check_plan(make_plan("fruit", calories=2400), with_target, "F", recovery=True) == []

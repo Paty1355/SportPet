@@ -1,3 +1,4 @@
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -16,6 +17,26 @@ from app.schemas.questionnaire import CamelModel, DietQuestionnaire
 
 PLAN_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 RAG_K = 6
+
+# Safety net for clear violations; the prompt handles the rest. Plant-based and "-free" phrases are removed first,
+# so "almond milk" doesn't count as dairy and "gluten-free bread" doesn't count as gluten.
+FORBIDDEN = {
+    "gluten": r"\b(?:wheat|barley|rye|spelt|couscous|bulgur|semolina|seitan)\b",
+    "lactose": r"\b(?:milk|cheese|yogh?urt|butter|cream|whey|kefir|parmesan|mozzarella|feta|ricotta)\b",
+    "nuts": r"\b(?:nuts?|almonds?|walnuts?|peanuts?|cashews?|hazelnuts?|pecans?|pistachios?|macadamias?)\b",
+    "eggs": r"\b(?:eggs?|omelett?e|frittata|mayonnaise|meringue)\b",
+    "meat": r"\b(?:meat|chicken|beef|pork|turkey|ham|bacon|lamb|veal|sausages?|salami)\b",
+    "fish": r"\b(?:fish|salmon|tuna|cod|shrimps?|prawns?|mackerel|sardines?|anchovies)\b",
+}
+FREE_FROM = r"\b[\w-]+-free(?:\s+\w+)?"
+PLANT_BASED = r"\b(?:almond|oat|soy|coconut|rice|cashew|peanut|plant[- ]based|vegan)\s+\w+"
+DIET_FORBIDDEN = {"vegetarian": ["meat", "fish"], "pescatarian": ["meat"], "vegan": ["meat", "fish", "lactose", "eggs"]}
+CALORIE_TOLERANCE = 0.1  # how far dailyCalories may be from the user's own calorie target
+
+
+def min_calories(sex: str | None) -> int:
+    """Lowest healthy daily intake without medical supervision; unknown sex gets the safer, higher limit."""
+    return 1200 if sex == "F" else 1500
 
 
 class DietPlanGenerationError(Exception):
@@ -56,8 +77,19 @@ class DietPlanAgent:
             health=health.model_dump_json(by_alias=True, indent=2),
             guidelines=self.guidelines(questionnaire),
         )
-        raw = await self.llm.complete(system, [{"role": "user", "content": user_message}], json_mode=True)
+        messages = [{"role": "user", "content": user_message}]
+        raw = await self.llm.complete(system, messages, json_mode=True)
         llm_plan = parse_plan(raw, questionnaire.meals_per_day, set(dishes))
+
+        recovery = health.overtraining or health.mental_health_concern
+        if problems := check_plan(llm_plan, questionnaire, health.sex, recovery):
+            # One retry that tells the LLM exactly what to fix; a plan that still breaks the rules is never saved.
+            fix = "Your plan breaks these rules, return a corrected plan:\n" + "\n".join(f"- {p}" for p in problems)
+            messages += [{"role": "assistant", "content": raw}, {"role": "user", "content": fix}]
+            raw = await self.llm.complete(system, messages, json_mode=True)
+            llm_plan = parse_plan(raw, questionnaire.meals_per_day, set(dishes))
+            if check_plan(llm_plan, questionnaire, health.sex, recovery):
+                raise DietPlanGenerationError("LLM returned a diet plan that breaks the user's restrictions")
 
         days = [
             DietDay(day=day, meals=[m.model_copy(update={"image_url": image_url(dishes[m.title])}) for m in d.meals])
@@ -102,6 +134,36 @@ def parse_plan(raw: str, meals_per_day: int, dishes: set[str]) -> LlmDietPlan:
     if any(m.title not in dishes for d in days for m in d.meals):
         raise DietPlanGenerationError("LLM returned a dish that is not in the catalogue")
     return llm_plan.model_copy(update={"days": days})
+
+
+def check_plan(
+    plan: LlmDietPlan, questionnaire: DietQuestionnaire, sex: str | None, recovery: bool = False
+) -> list[str]:
+    """Rule breaks a retry should fix: wrong calories or meals with the user's allergens or excluded foods.
+    `recovery` (overtraining or a mental health concern) drops the calorie target: the prompt asks for no deficit."""
+    problems = []
+    minimum, target = min_calories(sex), questionnaire.calorie_target
+    if recovery or "pregnancy_breastfeeding" in questionnaire.medical_conditions:
+        target = None  # never a deficit there, whatever the target says
+    elif target is not None:
+        target = max(target, minimum)
+
+    if plan.daily_calories < minimum:
+        problems.append(f"dailyCalories must be at least {minimum}")
+    elif target is not None and abs(plan.daily_calories - target) > CALORIE_TOLERANCE * target:
+        problems.append(f"dailyCalories must be about {target}, the user's calorie target")
+
+    # Titles come from `allowed_dishes`, already filtered by tags; the LLM-written ingredients still need checking.
+    excluded = {*questionnaire.allergies_and_intolerances, *DIET_FORBIDDEN.get(questionnaire.diet_type, [])}
+    for day, d in zip(PLAN_DAYS, plan.days, strict=True):
+        for meal in d.meals:
+            text = re.sub(FREE_FROM, "", meal.description.lower())
+            for group in sorted(excluded):
+                # Plant-based phrases only excuse dairy: "almond milk" still counts for a nut allergy.
+                checked = re.sub(PLANT_BASED, "", text) if group == "lactose" else text
+                if re.search(FORBIDDEN[group], checked):
+                    problems.append(f'{day}, "{meal.title}": contains {group}')
+    return problems
 
 
 @lru_cache

@@ -39,6 +39,9 @@ class HealthSummary(CamelModel):
     cycle_phase: str | None = None
     cycle_day: int | None = None
     cycle_length: int | None = None
+    overtraining: bool = False  # statistics.analyze: a rise in resting HR plus another bad trend
+    overtraining_signals: list[str] = []  # metrics behind the flag, e.g. ["rhr", "sleep_minutes"]
+    mental_health_concern: bool = False  # persistent distress or self-harm risk in recent post-workout check-ins
 
 
 class TrainingPlan(CamelModel):
