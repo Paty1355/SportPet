@@ -50,7 +50,6 @@ def test_unclear_answer_repeats_question(client, auth_headers):
     assert "didn't quite get that" in res["reply"]
     assert res["question"]["key"] == "mainGoal"
 
-    # Single-choice question rejects several values
     res = client.post(CHAT_URL, json={"message": "1, 2"}, headers=auth_headers).json()
     assert res["question"]["key"] == "mainGoal"
 

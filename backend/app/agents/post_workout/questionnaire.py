@@ -69,7 +69,6 @@ def next_question(answers: dict) -> Question | None:
 
 
 def parse_direct(question: Question, message: str) -> tuple[bool, object]:
-    """Only explicit scores/option values are deterministic; no guessed numeric ratings."""
     text = message.strip().casefold()
     if question.type == "scale" and re.fullmatch(r"\d{1,2}", text):
         return True, int(text) if 0 <= int(text) <= 10 else None

@@ -7,7 +7,6 @@ from app.db.base import Base
 
 
 class WorkoutFeedback(Base):
-    """Post-workout self-assessment; recent entries adjust the next training plan."""
 
     __tablename__ = "workout_feedbacks"
 

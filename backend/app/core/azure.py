@@ -17,11 +17,9 @@ def _client_kwargs() -> dict:
 
 @lru_cache
 def get_async_azure_client() -> AsyncAzureOpenAI:
-    """Klient asynchroniczny – chat i zdjęcia (wywoływane z endpointów FastAPI)."""
     return AsyncAzureOpenAI(**_client_kwargs())
 
 
 @lru_cache
 def get_azure_client() -> AzureOpenAI:
-    """Klient synchroniczny – embeddingi (Chroma wywołuje funkcję embeddingów synchronicznie)."""
     return AzureOpenAI(**_client_kwargs())

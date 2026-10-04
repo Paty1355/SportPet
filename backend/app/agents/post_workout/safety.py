@@ -37,10 +37,8 @@ def normalized(value: str) -> str:
 
 def negated_or_not_current(clause: str, start: int, end: int) -> bool:
     before, after = clause[:start], clause[end:]
-    # Conservative literal fallback; free-text extraction handles richer language separately.
     negation = r"\b(?:no|not|without|never|deny|denies|don't|do not|didn't|nie|bez|brak)\b"
     if re.search(negation, before[-45:]):
-        # 'not sure' is uncertainty, not a negation of the symptom.
         cleaned = re.sub(r"\bnot sure\b|\bnie wiem\b", "", before[-45:])
         if re.search(negation, cleaned):
             return True
@@ -68,7 +66,6 @@ def verified_observations(message: str, observations: list[SafetyObservation]) -
         evidence = normalized(observation.evidence)
         if evidence not in normalized(message):
             continue
-        # Check the surrounding clause as well: a cropped quote must not hide "no chest pain".
         for clause in re.split(CLAUSE_BOUNDARY, message, flags=re.IGNORECASE):
             clause = normalized(clause)
             start = clause.find(evidence)

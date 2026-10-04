@@ -1,4 +1,3 @@
-# Import wszystkich modeli, żeby Base.metadata.create_all() je widziało.
 from app.models.health import (
     BloodPressureReading,
     CycleDay,

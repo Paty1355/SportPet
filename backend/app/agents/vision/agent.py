@@ -30,7 +30,6 @@ class VisionAgent:
         self.knowledge = knowledge
 
     async def run(self, image: bytes) -> VisionResponse:
-        # Chroma and Azure embedding calls are synchronous: keep them off the event loop.
         try:
             catalog = await run_in_threadpool(self.knowledge.get_catalog)
         except MachineCardSchemaError as exc:
@@ -41,7 +40,6 @@ class VisionAgent:
         if not identification.is_gym_equipment:
             raise NotGymEquipment("This photo doesn't show gym equipment. Take a photo of the machine you want to use.")
         if identification.confidence != "high":
-            # Instructions for the wrong machine are worse than asking for another photo.
             raise MachineNotRecognized("I'm not sure which machine this is. Take a clearer photo of the whole machine.")
         selected = next((entry for entry in catalog if entry.machine_id == identification.machine_id), None)
         if selected is None:

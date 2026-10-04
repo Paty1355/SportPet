@@ -1,4 +1,3 @@
-"""Health summary for the plan prompt: user profile plus medians of recent daily features."""
 
 from datetime import UTC, date, datetime, timedelta
 from statistics import median
@@ -13,7 +12,6 @@ from app.statistics.daily import daily_features
 
 WINDOW_DAYS = 14
 DISTRESS_CODES = {"persistent_distress", "self_harm_risk"}
-# user_id -> (day, overtraining signals): `analyze` covers 60 days, too slow to run on every chat message.
 OVERTRAINING_CACHE: dict[int, tuple[date, list[str]]] = {}
 
 
@@ -61,7 +59,6 @@ def health_summary(db: Session, user: User) -> HealthSummary:
 
 
 def overtraining_signals(db: Session, user_id: int) -> list[str]:
-    """Metrics behind the overtraining flag from `statistics.analyze`; empty when the flag is off."""
     result = analyze(db, user_id)["overtraining"]
     signals = [s["metric"] for s in result["signals"]] if result["flag"] else []
     OVERTRAINING_CACHE[user_id] = (datetime.now(UTC).date(), signals)
@@ -69,7 +66,6 @@ def overtraining_signals(db: Session, user_id: int) -> list[str]:
 
 
 def cached_overtraining_signals(db: Session, user_id: int) -> list[str]:
-    """Same as `overtraining_signals`, computed at most once a day per user (plan generation refreshes it)."""
     cached = OVERTRAINING_CACHE.get(user_id)
     if cached is not None and cached[0] == datetime.now(UTC).date():
         return cached[1]
@@ -77,7 +73,6 @@ def cached_overtraining_signals(db: Session, user_id: int) -> list[str]:
 
 
 def distress_codes(db: Session, user_id: int) -> set[str]:
-    """Distress or self-harm codes reported in post-workout check-ins of the last `WINDOW_DAYS` days."""
     since = datetime.now(UTC) - timedelta(days=WINDOW_DAYS)
     rows = db.scalars(
         select(PostWorkoutCheckIn.safety_observations).where(

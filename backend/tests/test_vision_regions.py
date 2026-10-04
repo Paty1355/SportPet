@@ -35,7 +35,6 @@ class ProseLLM:
 
     async def describe(self, machine_context):
         self.calls.append("describe")
-        # Different muscle names may occur in prose, but cannot change map regions.
         return MachineUsage(
             description="Push with your legs to train the front of your thighs.",
             setup_steps=["Sit down."],

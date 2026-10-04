@@ -23,7 +23,6 @@ class IntensityCheck(CamelModel):
 
 
 class TrainingQuestionnaire(CamelModel):
-    """Final questionnaire result; literals must match option values in `QUESTIONS` (excluding "none")."""
 
     main_goal: MainGoal
     experience_level: ExperienceLevel
@@ -36,7 +35,7 @@ class TrainingQuestionnaire(CamelModel):
     workout_duration_minutes: Literal[40, 60, 90]
     lifestyle_and_stress: Lifestyle
     intensity_check: IntensityCheck
-    health_notes: str = ""  # injuries mentioned in free text that the options don't cover
+    health_notes: str = ""
 
 
 class OptionOut(BaseModel):
@@ -55,8 +54,8 @@ class QuestionnaireStatus(CamelModel):
     step: int
     total: int
     completed: bool
-    question: QuestionOut | None = None  # current question, None once completed
-    training_questionnaire: TrainingQuestionnaire | None = None  # final result, set once completed
+    question: QuestionOut | None = None
+    training_questionnaire: TrainingQuestionnaire | None = None
 
 
 DietGoal = Literal["weight_loss", "muscle_gain", "maintenance", "healthy_habits"]
@@ -74,7 +73,6 @@ class GentleCheck(CamelModel):
 
 
 class DietQuestionnaire(CamelModel):
-    """Final diet questionnaire result; literals must match option values in the diet `QUESTIONS` (excluding "none")."""
 
     main_goal: DietGoal
     diet_type: DietType
@@ -83,16 +81,16 @@ class DietQuestionnaire(CamelModel):
     meals_per_day: Literal[3, 4, 5]
     cooking_time_minutes: Literal[15, 30, 60]
     activity_level: ActivityLevel
-    calorie_target: int | None = None  # None = the plan calculates it
+    calorie_target: int | None = None
     medical_conditions: list[MedicalCondition]
     eating_habits: list[EatingHabit]
     gentle_check: GentleCheck
-    health_notes: str = ""  # allergies and conditions mentioned in free text that the options don't cover
+    health_notes: str = ""
 
 
 class DietQuestionnaireStatus(CamelModel):
     step: int
     total: int
     completed: bool
-    question: QuestionOut | None = None  # current question, None once completed
-    diet_questionnaire: DietQuestionnaire | None = None  # final result, set once completed
+    question: QuestionOut | None = None
+    diet_questionnaire: DietQuestionnaire | None = None

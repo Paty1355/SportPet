@@ -10,7 +10,6 @@ from app.memory.embeddings import embedding_tag, get_embedding_function
 
 @lru_cache
 def get_chroma() -> ClientAPI:
-    # Lazy: Chroma is loaded on first agent use.
     if settings.chroma_host:
         return chromadb.HttpClient(host=settings.chroma_host, port=settings.chroma_port)
     return chromadb.PersistentClient(path=settings.chroma_path)

@@ -12,7 +12,7 @@ class Friendship(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     requester_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     addressee_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    status: Mapped[str] = mapped_column(String(20), default="pending")  # "pending", "accepted"
+    status: Mapped[str] = mapped_column(String(20), default="pending")
 
     __table_args__ = (UniqueConstraint("requester_id", "addressee_id", name="uix_friendship"),)
 

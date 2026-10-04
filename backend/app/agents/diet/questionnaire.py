@@ -66,7 +66,6 @@ QUESTIONS: list[Question] = [
             "high": "High, 5+ workouts or a physical job",
         },
     ),
-    # Custom numbers like "1700" are accepted too, see `custom_calories` in the agent.
     Question(
         "calorieTarget",
         "Do you have a daily calorie target in mind?",
@@ -112,12 +111,10 @@ QUESTIONS: list[Question] = [
 ]
 
 CAUTION_FLAGS = {"diabetes", "hypertension", "thyroid", "pregnancy_breastfeeding", "emotional_eating"}
-# Free-text notes from these questions are kept, so allergies or conditions outside the options aren't lost.
 NOTE_KEYS = ("allergiesAndIntolerances", "medicalConditions")
 
 
 def question_text(question: Question, answers: dict) -> str:
-    """The gentle-start check also recaps the answers and recommends a gradual start when relevant."""
     if question.key != "gentleCheck":
         return question.text
 
@@ -133,7 +130,6 @@ def question_text(question: Question, answers: dict) -> str:
 
 
 def format_question(question: Question, answers: dict) -> str:
-    """Chat-friendly question text with numbered options, so plain-text clients can answer with "2" or "1, 3"."""
     options = "\n".join(f"{i}. {label}" for i, label in enumerate(question.options.values(), start=1))
     hint = "\n(You can pick more than one.)" if question.multi else ""
     return f"{question_text(question, answers)}\n{options}{hint}"
@@ -146,7 +142,7 @@ def build_result(answers: dict) -> DietQuestionnaire:
     def many(key: str) -> list[str]:
         return [v for v in answers[key] if v != NONE]
 
-    calorie_target = answers.get("calorieTarget", ["auto"])[0]  # missing in questionnaires completed before it
+    calorie_target = answers.get("calorieTarget", ["auto"])[0]
 
     return DietQuestionnaire(
         main_goal=one("mainGoal"),

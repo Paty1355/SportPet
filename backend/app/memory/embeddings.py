@@ -26,7 +26,6 @@ class AzureEmbeddingFunction(EmbeddingFunction[Documents]):
         return "cosine"
 
     def get_config(self) -> dict[str, Any]:
-        # Bez klucza API – config jest zapisywany przez Chromę na dysku
         return {"deployment": self.deployment}
 
     @staticmethod
@@ -37,12 +36,10 @@ class AzureEmbeddingFunction(EmbeddingFunction[Documents]):
 
 
 def get_embedding_function() -> EmbeddingFunction:
-    """Azure only; raises RuntimeError when Azure is not configured."""
     from app.core.azure import get_azure_client
 
     return AzureEmbeddingFunction(get_azure_client(), settings.azure_openai_embedding_deployment)
 
 
 def embedding_tag() -> str:
-    """Collection name suffix: different models produce different vector sizes and can't share a collection."""
     return re.sub(r"[^a-zA-Z0-9_-]", "-", settings.azure_openai_embedding_deployment)

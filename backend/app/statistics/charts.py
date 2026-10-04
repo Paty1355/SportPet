@@ -1,7 +1,3 @@
-"""Charts of `analyze(..., include_series=True)` results for the PDF report (static, no pyplot or GUI).
-
-Every function takes the dict from `analyze` and returns a `matplotlib.figure.Figure` (or None if nothing to draw).
-`render_pdf` assembles everything into one PDF, `to_png` turns a single chart into PNG bytes."""
 
 from datetime import date
 from io import BytesIO
@@ -29,7 +25,7 @@ LABELS = {
     "ecg_hr": ("ECG heart rate", "bpm"),
     "ecg_abnormal": ("ECG: non-sinus rhythm", "0/1"),
 }
-REFERENCE = {  # thresholds from the README (clinical thresholds table)
+REFERENCE = {
     "spo2_min": (94, "threshold 94%"),
     "bp_sys": (135, "home threshold 135"),
     "bp_dia": (85, "home threshold 85"),
@@ -50,9 +46,6 @@ def _style():
 
 
 def plot_metric(name: str, r: dict) -> Figure:
-    """Daily series of one metric with marked: baseline window (grey) and recent days (orange) with their
-    medians, Sen trend line (solid red = significant after correction, dashed grey = not significant), change point
-    (purple vertical + medians before/after), outlier days |z|>2 (red dots), clinical threshold."""
     title, unit = LABELS.get(name, (name, ""))
     fig = Figure(figsize=(A4_WIDTH, 3.8), layout="constrained")
     with _style():
@@ -120,13 +113,12 @@ def plot_metric(name: str, r: dict) -> Figure:
     ax.set_ylabel(unit)
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m"))
     if ax.get_legend():
-        ax.get_legend().remove()  # seaborn adds its own in-axes legend; the combined one sits below the chart
+        ax.get_legend().remove()
     fig.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncol=3, fontsize=7, frameon=False)
     return fig
 
 
 def plot_significance(result: dict) -> Figure | None:
-    """Overview: -log10(p_adj) of each metric's trend (significant in red) against the p_adj = 0.05 threshold."""
     rows = sorted(
         ((LABELS.get(m, (m,))[0], r["trend"]["p_adj"]) for m, r in result["metrics"].items() if r["status"] == "ok"),
         key=lambda t: t[1],
@@ -149,7 +141,6 @@ def plot_significance(result: dict) -> Figure | None:
 
 
 def plot_correlations(result: dict) -> Figure | None:
-    """Heatmap of Spearman correlations with a 0-2 day lag (cause D -> effect D+lag); * = p_adj < 0.05."""
     corr = result["lagged_correlations"]
     if not corr:
         return None
@@ -183,7 +174,6 @@ def plot_correlations(result: dict) -> Figure | None:
 
 
 def plot_cycle(result: dict) -> Figure | None:
-    """Metric medians by cycle phase (points, axis not from zero), Kruskal-Wallis p_adj in the panel title."""
     cycle = result["cycle"]
     if not cycle:
         return None
@@ -208,8 +198,6 @@ def plot_cycle(result: dict) -> Figure | None:
 
 
 def figures(result: dict) -> list[tuple[str, Figure]]:
-    """All report charts in order: significance overview, correlations, cycle, each metric, then the weekly
-    check-in pages when `result["checkins"]` is present (see `weekly.py`)."""
     out = [
         ("significance", plot_significance(result)),
         ("correlations", plot_correlations(result)),
@@ -217,14 +205,13 @@ def figures(result: dict) -> list[tuple[str, Figure]]:
     ]
     out += [(m, plot_metric(m, r)) for m, r in result["metrics"].items()]
     if "checkins" in result:
-        from app.statistics import weekly  # weekly imports this module, so not at module level
+        from app.statistics import weekly
 
         out += weekly.figures(result["checkins"])
     return [(n, f) for n, f in out if f is not None]
 
 
 def render_pdf(result: dict, dest: str | Path | BytesIO) -> None:
-    """Writes `figures(result)` as a PDF (one page per chart, A4 width) to a path or buffer."""
     with PdfPages(dest) as pdf:
         for _, fig in figures(result):
             pdf.savefig(fig)

@@ -13,8 +13,8 @@ class ChatRequest(BaseModel):
 class AgentResponse(BaseModel):
     reply: str
     memories_used: list[str] = []
-    question: QuestionOut | None = None  # set while the training questionnaire is in progress
-    safety_notice: SafetyNotice | None = None  # set when the message needs a doctor; its text is in `reply` too
+    question: QuestionOut | None = None
+    safety_notice: SafetyNotice | None = None
 
 
 class MessageOut(BaseModel):

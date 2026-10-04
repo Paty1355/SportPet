@@ -30,7 +30,6 @@ from app.schemas.questionnaire import QuestionnaireStatus
 
 
 class TrainingAgent(BaseAgent):
-    """Runs the questionnaire step by step first; after it's completed, chats as a regular trainer."""
 
     name = "training"
     system_prompt = prompts.SYSTEM_PROMPT
@@ -42,7 +41,6 @@ class TrainingAgent(BaseAgent):
             return await super().run(db, user, message, image)
 
         if state is None:
-            # The client already shows the first question (GET /questionnaire), so this message answers it.
             state = QuestionnaireState(user_id=user.id, step=0, answers={})
             db.add(state)
 
@@ -52,7 +50,6 @@ class TrainingAgent(BaseAgent):
         question = QUESTIONS[state.step]
         notice = medical_notice(message)
         if notice is not None and notice.level == "urgent":
-            # Urgent symptoms come first: nothing is recorded and the same question waits for later.
             reply = f"{notice.message}\n\n{format_question(question, state.answers)}"
             return self.respond(db, user, message, reply, state, notice)
 
@@ -61,7 +58,7 @@ class TrainingAgent(BaseAgent):
             values, notes, warning = await self.extract_answer(question, message)
         prefix = "".join(f"{text}\n\n" for text in (notice and notice.message, warning) if text)
         if values is None and notes and question.key in NOTE_KEYS:
-            values = [NONE]  # e.g. only an injury outside the options: keep it in the notes instead of re-asking
+            values = [NONE]
 
         if values is None:
             reply = f"{prefix}{prompts.NOT_UNDERSTOOD}\n\n{format_question(question, state.answers)}"
@@ -85,7 +82,6 @@ class TrainingAgent(BaseAgent):
         return self.respond(db, user, message, prefix + prompts.COMPLETED, state, notice)
 
     async def extract_answer(self, question: Question, message: str) -> tuple[list[str] | None, str, str]:
-        """LLM fallback for free-text answers; returns (values, notes, warning), values None when nothing valid."""
         system = prompts.EXTRACTION_PROMPT.format(
             question=question.text,
             options="\n".join(f"- {value}: {label}" for value, label in question.options.items()),
@@ -110,7 +106,7 @@ class TrainingAgent(BaseAgent):
         state: QuestionnaireState,
         notice: SafetyNotice | None = None,
     ) -> AgentResponse:
-        self.save_exchange(db, user, message, reply)  # commits the questionnaire state too
+        self.save_exchange(db, user, message, reply)
         if state.completed_at is not None:
             return AgentResponse(reply=reply, safety_notice=notice)
         question = QUESTIONS[state.step]
@@ -135,7 +131,6 @@ class TrainingAgent(BaseAgent):
         )
 
     def reset(self, db: Session, user_id: int) -> None:
-        # The previous result stays in Chroma memory; the system prompt always uses the current questionnaire.
         if state := self.get_state(db, user_id):
             db.delete(state)
             db.commit()

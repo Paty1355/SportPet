@@ -34,7 +34,6 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 def require_service_key(x_service_key: Annotated[str | None, Header()] = None) -> None:
-    """Dla zaufanych procesów (generator danych), nie dla użytkowników końcowych."""
     if not settings.service_key:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Service endpoints disabled (SERVICE_KEY not set)")
     if x_service_key is None or not secrets.compare_digest(x_service_key, settings.service_key):

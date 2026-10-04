@@ -7,7 +7,7 @@ from app.schemas.vision import MachineCatalogEntry, MachineDocument
 
 
 class MachineCardSchemaError(RuntimeError):
-    """Stored cards must be updated and re-imported before they can be served."""
+    pass
 
 
 def load_stored_machine(document: str) -> MachineDocument:
@@ -21,7 +21,6 @@ def load_stored_machine(document: str) -> MachineDocument:
 
 
 class GymMachineKnowledge:
-    """Shared machine cards; separate from training documents and user memory."""
 
     def __init__(self) -> None:
         self.collection = get_collection("gym_machines")
@@ -31,7 +30,6 @@ class GymMachineKnowledge:
         if len(identifiers) != len(set(identifiers)):
             raise ValueError("machine_id values must be unique")
         for batch in batched(machines, 100):
-            # JSON keeps both searchable text and the complete validated source card.
             self.collection.upsert(
                 ids=[machine.machine_id for machine in batch],
                 documents=[machine.model_dump_json(indent=2) for machine in batch],

@@ -4,7 +4,7 @@ import numpy as np
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import app.models  # noqa: F401
+import app.models
 from app.db.base import Base
 from app.models import DailySummary, User, VitalSample
 from app.statistics import analyze
@@ -37,7 +37,7 @@ def test_step_change_date_and_recent_shift():
 def test_white_noise_rarely_significant():
     p = [analyze_series(series(np.random.default_rng(s).normal(60, 5, 56)), END)["trend"]["p"] for s in range(200)]
     hits = sum(x < 0.05 for x in p)
-    assert hits <= 20  # 5% nominal; margin for randomness
+    assert hits <= 20
 
 
 def test_outlier_day_flagged_and_short_series_insufficient():
@@ -63,20 +63,20 @@ def test_analyze_from_db_end_to_end():
                     metric="heart_rate",
                     ts=midnight + timedelta(minutes=5 * m),
                     value=55 + 0.2 * i + rng.normal(0, 2),
-                )  # noqa: E501
+                )
                 for m in range(24 * 12)
             )
         db.commit()
         res = analyze(db, 1, end=END, days=40)
     assert res["metrics"]["steps"]["trend"]["p_adj"] < 0.001
     assert res["metrics"]["rhr"]["trend"]["slope_per_week"] > 0.8
-    assert res["metrics"]["sleep_minutes"]["trend"]["p"] == 1.0  # constant 420
+    assert res["metrics"]["sleep_minutes"]["trend"]["p"] == 1.0
     assert res["metrics"]["bp_sys"]["status"] == "insufficient_data" and res["cycle"] == []
 
 
 def test_weekly_sd_blocks_do_not_overlap_and_trend_fp_is_low():
     start = END - timedelta(days=59)
-    bp = {start + timedelta(days=i): 120.0 + (i % 7) for i in range(60)}  # every week: SD 2.16
+    bp = {start + timedelta(days=i): 120.0 + (i % 7) for i in range(60)}
     w = weekly_sd(bp, start, END)
     assert len(w) == 8 and min(w) == END - timedelta(days=49) and {round(v, 2) for v in w.values()} == {2.16}
     fp = 0
@@ -124,7 +124,7 @@ def test_include_series_and_pdf_render(tmp_path):
 
 def test_overtraining_flag_needs_rhr_plus_another_signal():
     rng = np.random.default_rng(5)
-    noise = lambda: rng.normal(0, 1, 56)  # noqa: E731
+    noise = lambda: rng.normal(0, 1, 56)
     up = np.r_[np.full(42, 55.0), np.full(14, 63.0)] + noise()
     sleep_down = np.r_[np.full(42, 450.0), np.full(14, 380.0)] + 5 * noise()
     flat = 60 + noise()
@@ -137,5 +137,5 @@ def test_overtraining_flag_needs_rhr_plus_another_signal():
         return ms
 
     assert detect_overtraining(m(rhr=up, sleep_minutes=sleep_down))["flag"]
-    assert not detect_overtraining(m(rhr=up, sleep_minutes=450 + 5 * noise()))["flag"]  # RHR alone is not enough
-    assert not detect_overtraining(m(rhr=flat, sleep_minutes=sleep_down))["flag"]  # nor is a signal without RHR
+    assert not detect_overtraining(m(rhr=up, sleep_minutes=450 + 5 * noise()))["flag"]
+    assert not detect_overtraining(m(rhr=flat, sleep_minutes=sleep_down))["flag"]

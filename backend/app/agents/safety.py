@@ -1,14 +1,11 @@
-"""Doctor referral for chat agents and questionnaires; the LLM prompts cover what these literal patterns miss."""
 
 import re
 
 from app.agents.post_workout.safety import CLAUSE_BOUNDARY, literal_observations, normalized, notice_for
 from app.schemas.post_workout import SafetyNotice
 
-# Body parts make "broke my diet" / "złamałam dietę" not count as a fracture.
 BODY = r"(?:arm|leg|wrist|ankle|foot|hand|finger|toe|ribs?|bone|nose|collarbone|hip|knee|shoulder|back|neck)"
 PL_BODY = r"(?:rek\w*|nog\w*|kosc\w*|zebr\w*|nadgarst\w*|palc\w*|palec|obojczyk\w*|nos\w*|kostk\w*|biodr\w*|kolan\w*)"
-# Matched on normalized text: lower case, no diacritics, "ł" -> "l".
 PATTERNS = {
     "serious_injury": (
         rf"\bbroke (?:my |a )?{BODY}|\bbroken {BODY}|\bfractur\w*|\btorn (?:ligament|tendon|acl|meniscus)|"
@@ -48,18 +45,16 @@ FLAG_MESSAGES = {
 
 
 def health_flags_notice(overtraining: bool, distress: set[str]) -> SafetyNotice | None:
-    """A banner for the chat from the health flags (statistics and post-workout check-ins), not from the message."""
     codes = (["overtraining"] if overtraining else []) + sorted(distress)
     if "self_harm_risk" in codes and "persistent_distress" in codes:
-        codes.remove("persistent_distress")  # the self-harm text already covers it
+        codes.remove("persistent_distress")
     if not codes:
         return None
     return SafetyNotice(level="consultation", codes=codes, message=" ".join(FLAG_MESSAGES[c] for c in codes))
 
 
 def medical_notice(message: str) -> SafetyNotice | None:
-    """A notice when the message needs a doctor; for "urgent" ones the agent should give no regular advice."""
-    message = message.replace("ł", "l").replace("Ł", "L")  # NFKD doesn't strip the Polish "ł"
+    message = message.replace("ł", "l").replace("Ł", "L")
     notice = notice_for([o.model_dump() for o in literal_observations(message)])
     if notice is not None and notice.level == "urgent":
         return notice
@@ -76,7 +71,6 @@ def mentions(message: str, pattern: str) -> bool:
     for clause in re.split(CLAUSE_BOUNDARY, message, flags=re.IGNORECASE):
         text = normalized(clause)
         match = re.search(pattern, text)
-        # Unlike post-workout check-ins, past injuries count too: "I broke my leg yesterday" still needs a doctor.
         if match and not re.search(NEGATION, text[: match.start()][-45:]):
             return True
     return False

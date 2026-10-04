@@ -42,7 +42,7 @@ def test_chat_with_urgent_symptoms_returns_only_the_referral(client, auth_header
     res = client.post(TRAINING_CHAT, json={"message": "I have chest pain"}, headers=auth_headers).json()
 
     assert res["safety_notice"]["level"] == "urgent"
-    assert "emergency services" in res["reply"] and "[stub]" not in res["reply"]  # the LLM wasn't asked
+    assert "emergency services" in res["reply"] and "[stub]" not in res["reply"]
 
 
 def test_chat_with_serious_injury_puts_the_referral_before_the_reply(client, auth_headers, complete_questionnaire):

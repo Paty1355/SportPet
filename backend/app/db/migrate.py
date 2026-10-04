@@ -1,12 +1,7 @@
-"""Additive schema upgrade for the existing hackathon database; safe to run repeatedly.
-
-Run manually with: python -m app.db.migrate
-The application lifespan runs the same upgrade before serving requests.
-"""
 
 from sqlalchemy import Connection, Engine, text
 
-import app.models  # noqa: F401
+import app.models
 from app.db.base import Base
 from app.db.session import engine
 
@@ -23,7 +18,6 @@ USER_COLUMNS = {
 
 def upgrade_connection(connection: Connection) -> None:
     if connection.dialect.name == "postgresql":
-        # Serialize concurrent starts across backend workers; PostgreSQL DDL is transactional.
         connection.execute(text("SELECT pg_advisory_xact_lock(20261004)"))
     Base.metadata.create_all(bind=connection)
     if connection.dialect.name != "postgresql":

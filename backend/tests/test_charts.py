@@ -12,7 +12,7 @@ def seed(client, headers):
     body = {
         "samples": [
             hr("2026-10-03T08:00:00Z", 60),
-            hr("2026-10-03T08:04:00Z", 80),  # ten sam kosz 5 min co 08:00
+            hr("2026-10-03T08:04:00Z", 80),
             hr("2026-10-03T08:05:00Z", 100),
             {"metric": "spo2", "ts": "2026-10-03T08:00:00Z", "value": 97},
         ],
@@ -55,8 +55,8 @@ def test_series_bucket_aggregates(client, auth_headers):
 
 def test_series_range_limits(client, auth_headers):
     p = {"metric": "heart_rate", "start": "2026-07-01T00:00:00Z", "end": "2026-10-04T00:00:00Z"}
-    assert client.get(f"{H}/series", params=p, headers=auth_headers).status_code == 422  # raw na > 3 dni
-    assert client.get(f"{H}/series", params={**p, "bucket": "1d"}, headers=auth_headers).status_code == 422  # > 60 dni
+    assert client.get(f"{H}/series", params=p, headers=auth_headers).status_code == 422
+    assert client.get(f"{H}/series", params={**p, "bucket": "1d"}, headers=auth_headers).status_code == 422
     inverted = {"metric": "heart_rate", "start": WINDOW["end"], "end": WINDOW["start"]}
     assert client.get(f"{H}/series", params=inverted, headers=auth_headers).status_code == 422
     assert client.get(f"{H}/series", params={"metric": "bogus"}, headers=auth_headers).status_code == 422

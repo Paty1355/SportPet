@@ -14,7 +14,7 @@ class PostWorkoutFeedback(CamelModel):
     motivation_level: Score
     pain_experienced: Literal["none", "mild", "moderate", "severe"]
     perceived_exertion_rating: Score
-    reporting_frequency: Literal["after_each_workout", "weekly"]  # stored only, not used for the plan
+    reporting_frequency: Literal["after_each_workout", "weekly"]
 
 
 class FeedbackIn(CamelModel):

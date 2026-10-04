@@ -7,7 +7,6 @@ WORKDIR /app
 
 COPY pyproject.toml .
 COPY app ./app
-# Cache pip między buildami – chromadb jest ciężkie, przebudowa po zmianie kodu nie pobiera wszystkiego od nowa
 RUN --mount=type=cache,target=/root/.cache/pip pip install .
 
 COPY docs_RAG/vision ./docs_RAG/vision
