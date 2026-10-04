@@ -114,14 +114,31 @@ result = analyze(db, user_id, include_series=True)
 render_pdf(result, "raport_wykresy.pdf")  # or: for name, fig in figures(result): to_png(fig)
 ```
 
+### `weekly.py` (post-workout check-ins, weekly)
+`analyze_checkins(db, user_id, start, end, timezone)` summarizes **completed** `post_workout_checkins` for local days `start`..`end`
+in Monday–Sunday weeks (user's timezone). DOMS and life stress are not collected: `pain_intensity` (0–10) and the watch's
+`stress_day_mean` stand in for them. Descriptive only.
+
+- Per week: workouts, minutes, `load` (sRPE = RPE × minutes, Foster), `monotony` (mean / SD of the 7 daily loads, rest days = 0),
+  `strain` (load × monotony), `acwr` (7-day load / mean weekly load of 28 days; `null` until 28 days of window), `pain_share`,
+  `feeling_change` counts, and `metrics` (`rpe`, `mood`, `fatigue`, `motivation`, `pain`, `stress`, `sleep`): `n`, median, IQR and
+  `delta` vs the previous week (only when both weeks have ≥ 3 values). `partial` = week cut by the window.
+- `correlations`: Spearman on same-day daily means (RPE↔mood, RPE↔fatigue, pain↔motivation, stress↔RPE/mood, sleep↔RPE/mood),
+  ≥ 10 days, BH `p_adj`. `pain_locations`: top 8 lower-cased locations. `acwr_high_weeks`: weeks with ACWR > 1.5.
+- `status`: `ok` with ≥ 3 check-ins, otherwise `insufficient_data`.
+- Charts (`weekly.figures`): 2×2 weekly medians with IQR (RPE, mood, stress, pain), sRPE load bars + ACWR line (0.8–1.3 band,
+  1.5 threshold), correlation bars, pain share + locations, stacked feeling change. `charts.figures` appends them when
+  `result["checkins"]` is present; the ACWR/monotony thresholds are sports-science heuristics, not clinical.
+
 ### Chart data and endpoints
 - `analyze(..., include_series=True)` adds to each metric `series` (`[{date, value}]`, also for `insufficient_data`) and `trend_line`
   (two points of the Sen line: first and last day). `baseline_vs_recent` always contains `baseline_window` and `recent_window`.
   Without this flag the result is compact (suitable for the AI model's context).
 - `GET /api/v1/health/dashboard?days=60&end=YYYY-MM-DD` (`router_charts.py`, JWT): the `stats` field is the same analysis with `include_series=True`.
   `days` 7–365, default 60 (≈40 KB of JSON). The router is registered in `app/api/v1/router.py`; the response includes `overtraining`.
-- `GET /api/v1/health/report` (`health.py`, JWT): a PDF with charts (`render_pdf`) for the logged-in user, default window as in `analyze`.
-  Without a token 401; when no metric has status `ok` (too little data) 422 with a message.
+- `GET /api/v1/health/report` (`health.py`, JWT): a PDF with charts (`render_pdf`) for the logged-in user, default window as in `analyze`,
+  plus the weekly check-in pages (`weekly.analyze_checkins` over the same window). Without a token 401; when no metric has status `ok`
+  and the check-ins are `insufficient_data` 422 with a message.
   `curl -H "Authorization: Bearer <token>" -o raport.pdf http://localhost:8000/api/v1/health/report`
 
 ### Windows and minimums (constants in `analyze.py`)
