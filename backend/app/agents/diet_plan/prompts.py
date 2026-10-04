@@ -23,6 +23,8 @@ Guidelines:
 - Adjust the plan to the health summary:
   - blood pressure of 140/90 or more: low salt;
   - sleep under 7 hours or stress above 60: regular meals, no heavy late dinners, little caffeine;
+  - overtraining or mentalHealthConcern is true: no calorie deficit this week, even for weight loss or a lower
+    calorieTarget; regular, satisfying meals with enough protein and carbohydrates for recovery;
   - menstrual cycle phase: more iron-rich foods in the menstrual phase.
 - Eating habits: skip_breakfast - a light, quick first meal; late_night_snacking - a filling planned evening meal;
   emotional_eating - satisfying high-fibre snacks.

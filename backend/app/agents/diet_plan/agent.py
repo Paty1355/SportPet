@@ -81,13 +81,14 @@ class DietPlanAgent:
         raw = await self.llm.complete(system, messages, json_mode=True)
         llm_plan = parse_plan(raw, questionnaire.meals_per_day, set(dishes))
 
-        if problems := check_plan(llm_plan, questionnaire, health.sex):
+        recovery = health.overtraining or health.mental_health_concern
+        if problems := check_plan(llm_plan, questionnaire, health.sex, recovery):
             # One retry that tells the LLM exactly what to fix; a plan that still breaks the rules is never saved.
             fix = "Your plan breaks these rules, return a corrected plan:\n" + "\n".join(f"- {p}" for p in problems)
             messages += [{"role": "assistant", "content": raw}, {"role": "user", "content": fix}]
             raw = await self.llm.complete(system, messages, json_mode=True)
             llm_plan = parse_plan(raw, questionnaire.meals_per_day, set(dishes))
-            if check_plan(llm_plan, questionnaire, health.sex):
+            if check_plan(llm_plan, questionnaire, health.sex, recovery):
                 raise DietPlanGenerationError("LLM returned a diet plan that breaks the user's restrictions")
 
         days = [
@@ -135,11 +136,14 @@ def parse_plan(raw: str, meals_per_day: int, dishes: set[str]) -> LlmDietPlan:
     return llm_plan.model_copy(update={"days": days})
 
 
-def check_plan(plan: LlmDietPlan, questionnaire: DietQuestionnaire, sex: str | None) -> list[str]:
-    """Rule breaks a retry should fix: wrong calories or meals with the user's allergens or excluded foods."""
+def check_plan(
+    plan: LlmDietPlan, questionnaire: DietQuestionnaire, sex: str | None, recovery: bool = False
+) -> list[str]:
+    """Rule breaks a retry should fix: wrong calories or meals with the user's allergens or excluded foods.
+    `recovery` (overtraining or a mental health concern) drops the calorie target: the prompt asks for no deficit."""
     problems = []
     minimum, target = min_calories(sex), questionnaire.calorie_target
-    if "pregnancy_breastfeeding" in questionnaire.medical_conditions:
+    if recovery or "pregnancy_breastfeeding" in questionnaire.medical_conditions:
         target = None  # never a deficit there, whatever the target says
     elif target is not None:
         target = max(target, minimum)

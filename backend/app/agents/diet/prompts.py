@@ -24,12 +24,13 @@ Reply with a JSON object only: {{"values": [...], "notes": "...", "warning": "..
 - "notes": a short English summary of extra details or concerns the user mentioned; an empty string otherwise.
 - "warning": if the answer shows an unhealthy intention (starving, extreme deficits, skipping meals, punishing
   themselves for eating), 1-2 kind English sentences saying it isn't healthy, giving the safe limit (a deficit of
-  at most about 500 kcal, at most about 0.5-1 kg a week) and that lasting results take time; an empty string
-  otherwise."""
+  at most about 500 kcal, at most about 0.5-1 kg a week) and that lasting results take time. If the answer mentions
+  feeling very unwell, worrying symptoms or a serious health problem, 1-2 kind English sentences advising them to
+  contact a doctor. An empty string otherwise."""
 
 LOW_CALORIES = (
     "{target} kcal a day is below a healthy minimum, so your plan will have at least {minimum} kcal. "
     "Lasting results take time, and eating enough helps you keep them."
 )
-NOT_UNDERSTOOD ="Sorry, I didn't quite get that. Please pick one of the options."
+NOT_UNDERSTOOD = "Sorry, I didn't quite get that. Please pick one of the options."
 COMPLETED = "Thanks, your diet questionnaire is complete!"

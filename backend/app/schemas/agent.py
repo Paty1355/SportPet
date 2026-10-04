@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.post_workout import SafetyNotice
 from app.schemas.questionnaire import QuestionOut
 
 
@@ -13,6 +14,7 @@ class AgentResponse(BaseModel):
     reply: str
     memories_used: list[str] = []
     question: QuestionOut | None = None  # set while the training questionnaire is in progress
+    safety_notice: SafetyNotice | None = None  # set when the message needs a doctor; its text is in `reply` too
 
 
 class MessageOut(BaseModel):

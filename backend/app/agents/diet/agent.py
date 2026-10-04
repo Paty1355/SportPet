@@ -12,11 +12,13 @@ from app.agents.diet import prompts
 from app.agents.diet.questionnaire import NOTE_KEYS, QUESTIONS, build_result, format_question, question_text
 from app.agents.diet_plan.agent import min_calories
 from app.agents.llm import LLMClient, get_llm
+from app.agents.safety import medical_notice
 from app.agents.training.questionnaire import MAX_NOTES, NONE, Question, parse_answer, validate
 from app.core.config import settings
 from app.models import DietQuestionnaireState, User
 from app.rag.knowledge_base import KnowledgeBase
 from app.schemas.agent import AgentResponse
+from app.schemas.post_workout import SafetyNotice
 from app.schemas.questionnaire import DietQuestionnaireStatus
 
 RAG_TOP_K = 4
@@ -28,6 +30,7 @@ class DietAgent(BaseAgent):
 
     name = "diet"
     system_prompt = prompts.SYSTEM_PROMPT
+    use_health_flags = True
 
     def __init__(self, llm: LLMClient):
         super().__init__(llm)
@@ -51,11 +54,11 @@ class DietAgent(BaseAgent):
         messages = self.build_messages(db, user, memories, message)
 
         system = self.build_system_prompt() + self.format_knowledge(message)
-        reply = await self.llm.complete(system, messages, image=image)
+        reply, notice = await self.safe_reply(system, messages, message, image)
 
         self.save_exchange(db, user, message, reply)
         self.remember(user, message, reply)
-        return AgentResponse(reply=reply, memories_used=memories)
+        return AgentResponse(reply=reply, memories_used=memories, safety_notice=notice or self.flags_notice(db, user))
 
     def format_knowledge(self, query: str) -> str:
         chunks = self.knowledge_base.search(query, k=RAG_TOP_K)
@@ -70,18 +73,24 @@ class DietAgent(BaseAgent):
         self, db: Session, user: User, state: DietQuestionnaireState, message: str
     ) -> AgentResponse:
         question = QUESTIONS[state.step]
+        notice = medical_notice(message)
+        if notice is not None and notice.level == "urgent":
+            # Urgent symptoms come first: nothing is recorded and the same question waits for later.
+            reply = f"{notice.message}\n\n{format_question(question, state.answers)}"
+            return self.respond(db, user, message, reply, state, notice)
+
         values, notes, warning = parse_answer(question, message), "", ""
         if values is None and question.key == "calorieTarget":
             values, warning = custom_calories(message, user.sex)
         if values is None:
             values, notes, warning = await self.extract_answer(question, message)
-        prefix = f"{warning}\n\n" if warning else ""
+        prefix = "".join(f"{text}\n\n" for text in (notice and notice.message, warning) if text)
         if values is None and notes and question.key in NOTE_KEYS:
             values = [NONE]  # e.g. only an allergy outside the options: keep it in the notes instead of re-asking
 
         if values is None:
             reply = f"{prefix}{prompts.NOT_UNDERSTOOD}\n\n{format_question(question, state.answers)}"
-            return self.respond(db, user, message, reply, state)
+            return self.respond(db, user, message, reply, state, notice)
 
         state.answers[question.key] = values
         if question.key == "gentleCheck":
@@ -92,13 +101,13 @@ class DietAgent(BaseAgent):
 
         if state.step < len(QUESTIONS):
             reply = prefix + format_question(QUESTIONS[state.step], state.answers)
-            return self.respond(db, user, message, reply, state)
+            return self.respond(db, user, message, reply, state, notice)
 
         state.completed_at = datetime.now(UTC)
         result = build_result(state.answers).model_dump_json(by_alias=True, indent=2)
         self.result_path(user.id).write_text(result, encoding="utf-8")
         self.memory.add(user.id, f"Diet questionnaire: {result}", source="questionnaire")
-        return self.respond(db, user, message, prefix + prompts.COMPLETED, state)
+        return self.respond(db, user, message, prefix + prompts.COMPLETED, state, notice)
 
     async def extract_answer(self, question: Question, message: str) -> tuple[list[str] | None, str, str]:
         """LLM fallback for free-text answers; returns (values, notes, warning), values None when nothing valid."""
@@ -118,13 +127,21 @@ class DietAgent(BaseAgent):
         return values, notes, warning
 
     def respond(
-        self, db: Session, user: User, message: str, reply: str, state: DietQuestionnaireState
+        self,
+        db: Session,
+        user: User,
+        message: str,
+        reply: str,
+        state: DietQuestionnaireState,
+        notice: SafetyNotice | None = None,
     ) -> AgentResponse:
         self.save_exchange(db, user, message, reply)  # commits the questionnaire state too
         if state.completed_at is not None:
-            return AgentResponse(reply=reply)
+            return AgentResponse(reply=reply, safety_notice=notice)
         question = QUESTIONS[state.step]
-        return AgentResponse(reply=reply, question=question.to_out(question_text(question, state.answers)))
+        return AgentResponse(
+            reply=reply, question=question.to_out(question_text(question, state.answers)), safety_notice=notice
+        )
 
     def get_state(self, db: Session, user_id: int) -> DietQuestionnaireState | None:
         return db.scalar(select(DietQuestionnaireState).where(DietQuestionnaireState.user_id == user_id))

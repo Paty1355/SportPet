@@ -9,13 +9,18 @@ Use only exercises from this list, copying the names exactly:
 Guidelines:
 - Focus on the user's priority body parts and prefer the exercise types they like.
 - Match volume to the experience level; if cautiousStart is true, use fewer sets and reps and gentle cardio.
-- healthNotes may name more injuries or limitations: avoid exercises that load those body parts.
+- healthNotes may name more injuries or limitations: avoid exercises that load those body parts; for a serious
+  injury (a fracture, torn ligament, dislocation) leave that body part out completely.
 - Adjust the plan to the health summary (null means no data, so ignore that field):
   - sleep under 7 hours, resting heart rate above 80 bpm or stress above 60: lower the volume and intensity
     and add calm, low-intensity movement;
   - blood pressure of 140/90 or more, minimum SpO2 under 94 or any abnormal ECG days: no maximal efforts,
     no breath holding, only moderate cardio;
   - under 5000 daily steps: add low-intensity cardio from the list;
+  - overtraining is true (resting heart rate rising together with worse sleep, stress or night heart-rate dip):
+    plan a recovery week with about half the usual volume, no maximal efforts, more calm low-intensity movement;
+  - mentalHealthConcern is true: shorter, enjoyable sessions built from the exercise types the user likes,
+    no pressure to push harder;
   - menstrual cycle phase: lighter sessions in the menstrual phase, harder ones in the follicular and
     ovulation phases.
 - Adjust the plan to recent post-workout feedback and check-ins (newest first; feedback scores on a 1-10 scale,

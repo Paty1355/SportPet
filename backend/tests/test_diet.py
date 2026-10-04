@@ -205,3 +205,5 @@ def test_check_plan_flags_allergens_diet_type_and_low_calories():
     assert check_plan(make_plan("fruit", calories=2400), with_target, "F") == [
         "dailyCalories must be about 1800, the user's calorie target"
     ]
+    # Overtraining or a mental health concern: no deficit, so a plan above the target is fine.
+    assert check_plan(make_plan("fruit", calories=2400), with_target, "F", recovery=True) == []

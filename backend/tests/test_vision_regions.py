@@ -29,7 +29,9 @@ class ProseLLM:
 
     async def identify(self, image, catalog):
         self.calls.append("identify")
-        return MachineIdentification(machine_id=self.machine_id, machine_name="Ignored model name")
+        return MachineIdentification(
+            is_gym_equipment=True, confidence="high", machine_id=self.machine_id, machine_name="Ignored model name"
+        )
 
     async def describe(self, machine_context):
         self.calls.append("describe")
