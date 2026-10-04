@@ -5,6 +5,7 @@ from app.api.v1 import (
     router_auth,
     router_charts,
     router_photo,
+    router_plan,
     router_questionnaire,
     router_training,
     router_users,
@@ -25,3 +26,4 @@ api_router.include_router(router_photo.router)
 api_router.include_router(router_training.router)
 api_router.include_router(router_questionnaire.router)
 api_router.include_router(router_friends.router)
+api_router.include_router(router_plan.router)

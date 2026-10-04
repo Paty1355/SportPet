@@ -65,7 +65,18 @@ def client(chroma, tmp_path, monkeypatch):
     app.dependency_overrides.clear()
 
 
-QUESTIONNAIRE_ANSWERS = ["3", "returning", "glutes, core", "1,2", "burpees; jumping", "back, diastasis", "mwf", "60", "active", "cautious"]
+QUESTIONNAIRE_ANSWERS = [
+    "3",
+    "returning",
+    "glutes, core",
+    "1,2",
+    "burpees; jumping",
+    "back, diastasis",
+    "mwf",
+    "60",
+    "active",
+    "cautious",
+]
 
 
 @pytest.fixture
