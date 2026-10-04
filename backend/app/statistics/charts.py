@@ -208,13 +208,18 @@ def plot_cycle(result: dict) -> Figure | None:
 
 
 def figures(result: dict) -> list[tuple[str, Figure]]:
-    """All report charts in order: significance overview, correlations, cycle, then each metric."""
+    """All report charts in order: significance overview, correlations, cycle, each metric, then the weekly
+    check-in pages when `result["checkins"]` is present (see `weekly.py`)."""
     out = [
         ("significance", plot_significance(result)),
         ("correlations", plot_correlations(result)),
         ("cycle", plot_cycle(result)),
     ]
     out += [(m, plot_metric(m, r)) for m, r in result["metrics"].items()]
+    if "checkins" in result:
+        from app.statistics import weekly  # weekly imports this module, so not at module level
+
+        out += weekly.figures(result["checkins"])
     return [(n, f) for n, f in out if f is not None]
 
 

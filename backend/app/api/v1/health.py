@@ -1,3 +1,4 @@
+from datetime import date
 from io import BytesIO
 
 from fastapi import APIRouter, HTTPException, Response, status
@@ -10,7 +11,7 @@ from app.models import BloodPressureReading, CycleDay, DailySummary, EcgRecordin
 from app.schemas.health import HealthIngest, HealthIngestResult
 from app.schemas.user import HealthProfileFields, UserOut
 from app.services import user_service
-from app.statistics import analyze
+from app.statistics import analyze, weekly
 from app.statistics.charts import render_pdf
 
 router = APIRouter(prefix="/health", tags=["health"])
@@ -74,7 +75,9 @@ def ingest_for_user(user_id: int, data: HealthIngest, db: DbSession):
 @router.get("/report")
 def report(user: CurrentUser, db: DbSession):
     result = analyze(db, user.id, include_series=True)
-    if not any(m["status"] == "ok" for m in result["metrics"].values()):
+    start, end = (date.fromisoformat(result["window"][k]) for k in ("start", "end"))
+    result["checkins"] = weekly.analyze_checkins(db, user.id, start, end, user.timezone)
+    if not any(m["status"] == "ok" for m in result["metrics"].values()) and result["checkins"]["status"] != "ok":
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Not enough data to generate the report")
     buffer = BytesIO()
     render_pdf(result, buffer)
