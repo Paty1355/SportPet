@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
@@ -64,6 +66,9 @@ class MachineDocument(MachineUsage):
 class MachineIdentification(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    # Field order is the order the model decides in: is it equipment at all, how sure, and only then which machine.
+    is_gym_equipment: bool
+    confidence: Literal["high", "medium", "low"]
     machine_id: str | None
     machine_name: str
 

@@ -18,6 +18,10 @@ class MachineNotRecognized(ValueError):
     pass
 
 
+class NotGymEquipment(MachineNotRecognized):
+    pass
+
+
 class VisionAgent:
     name = "vision"
 
@@ -31,6 +35,15 @@ class VisionAgent:
         if not catalog:
             raise VisionKnowledgeUnavailable("Machine knowledge is empty; import machine cards first")
         identification = await self.llm.identify(image, catalog)
+        if not identification.is_gym_equipment:
+            raise NotGymEquipment(
+                "This photo doesn't show gym equipment. Take a photo of the machine you want to use."
+            )
+        if identification.confidence != "high":
+            # Instructions for the wrong machine are worse than asking for another photo.
+            raise MachineNotRecognized(
+                "I'm not sure which machine this is. Take a clearer photo of the whole machine."
+            )
         selected = next((entry for entry in catalog if entry.machine_id == identification.machine_id), None)
         if selected is None:
             raise MachineNotRecognized("The image does not match a machine in the supported catalog")

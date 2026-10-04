@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
@@ -8,9 +9,10 @@ from sqlalchemy.orm import Session
 
 from app.agents.base import BaseAgent, untrusted
 from app.agents.diet import prompts
-from app.agents.diet.questionnaire import QUESTIONS, build_result, format_question, question_text
+from app.agents.diet.questionnaire import NOTE_KEYS, QUESTIONS, build_result, format_question, question_text
+from app.agents.diet_plan.agent import min_calories
 from app.agents.llm import LLMClient, get_llm
-from app.agents.training.questionnaire import MAX_NOTES, Question, parse_answer, validate
+from app.agents.training.questionnaire import MAX_NOTES, NONE, Question, parse_answer, validate
 from app.core.config import settings
 from app.models import DietQuestionnaireState, User
 from app.rag.knowledge_base import KnowledgeBase
@@ -18,6 +20,7 @@ from app.schemas.agent import AgentResponse
 from app.schemas.questionnaire import DietQuestionnaireStatus
 
 RAG_TOP_K = 4
+MAX_CALORIES = 5000  # bigger numbers in a calorie answer are more likely typos than targets
 
 
 class DietAgent(BaseAgent):
@@ -67,30 +70,38 @@ class DietAgent(BaseAgent):
         self, db: Session, user: User, state: DietQuestionnaireState, message: str
     ) -> AgentResponse:
         question = QUESTIONS[state.step]
-        values, notes = parse_answer(question, message), ""
+        values, notes, warning = parse_answer(question, message), "", ""
+        if values is None and question.key == "calorieTarget":
+            values, warning = custom_calories(message, user.sex)
         if values is None:
-            values, notes = await self.extract_answer(question, message)
+            values, notes, warning = await self.extract_answer(question, message)
+        prefix = f"{warning}\n\n" if warning else ""
+        if values is None and notes and question.key in NOTE_KEYS:
+            values = [NONE]  # e.g. only an allergy outside the options: keep it in the notes instead of re-asking
 
         if values is None:
-            reply = f"{prompts.NOT_UNDERSTOOD}\n\n{format_question(question, state.answers)}"
+            reply = f"{prefix}{prompts.NOT_UNDERSTOOD}\n\n{format_question(question, state.answers)}"
             return self.respond(db, user, message, reply, state)
 
         state.answers[question.key] = values
         if question.key == "gentleCheck":
             state.answers["gentleNotes"] = notes
+        elif question.key in NOTE_KEYS:
+            state.answers[f"{question.key}Notes"] = notes
         state.step += 1
 
         if state.step < len(QUESTIONS):
-            return self.respond(db, user, message, format_question(QUESTIONS[state.step], state.answers), state)
+            reply = prefix + format_question(QUESTIONS[state.step], state.answers)
+            return self.respond(db, user, message, reply, state)
 
         state.completed_at = datetime.now(UTC)
         result = build_result(state.answers).model_dump_json(by_alias=True, indent=2)
         self.result_path(user.id).write_text(result, encoding="utf-8")
         self.memory.add(user.id, f"Diet questionnaire: {result}", source="questionnaire")
-        return self.respond(db, user, message, prompts.COMPLETED, state)
+        return self.respond(db, user, message, prefix + prompts.COMPLETED, state)
 
-    async def extract_answer(self, question: Question, message: str) -> tuple[list[str] | None, str]:
-        """LLM fallback for free-text answers; returns (None, "") when nothing valid comes back."""
+    async def extract_answer(self, question: Question, message: str) -> tuple[list[str] | None, str, str]:
+        """LLM fallback for free-text answers; returns (values, notes, warning), values None when nothing valid."""
         system = prompts.EXTRACTION_PROMPT.format(
             question=question.text,
             options="\n".join(f"- {value}: {label}" for value, label in question.options.items()),
@@ -101,9 +112,10 @@ class DietAgent(BaseAgent):
             data = json.loads(raw)
             values = validate(question, list(dict.fromkeys(data.get("values", []))))
             notes = str(data.get("notes", ""))[:MAX_NOTES]
+            warning = str(data.get("warning", ""))[:MAX_NOTES]
         except (json.JSONDecodeError, AttributeError, TypeError):
-            return None, ""
-        return values, notes
+            return None, "", ""
+        return values, notes, warning
 
     def respond(
         self, db: Session, user: User, message: str, reply: str, state: DietQuestionnaireState
@@ -149,6 +161,18 @@ class DietAgent(BaseAgent):
             result = build_result(state.answers).model_dump_json(by_alias=True, indent=2)
             context.append(untrusted("diet questionnaire", result))
         return context
+
+
+def custom_calories(message: str, sex: str | None) -> tuple[list[str] | None, str]:
+    """A calorie target typed as a number, raised to the healthy minimum with a warning; None when there's none."""
+    message = re.sub(r"(?<=\d)[ ,.](?=\d{3}\b)", "", message)  # "1,700" / "1 700" -> "1700"
+    match = re.search(r"\b\d{3,4}\b", message)
+    if match is None or int(match[0]) > MAX_CALORIES:
+        return None, ""
+    target, minimum = int(match[0]), min_calories(sex)
+    if target < minimum:
+        return [str(minimum)], prompts.LOW_CALORIES.format(target=target, minimum=minimum)
+    return [str(target)], ""
 
 
 @lru_cache

@@ -188,18 +188,16 @@ Na czas oczekiwania pokaż stan ładowania i zablokuj ponowne wysłanie tego sam
 
 | Status | Kiedy występuje | Reakcja frontendu |
 |---|---|---|
-| `422` | Brak pola `file`, pusty plik lub maszyna nierozpoznana w obsługiwanym katalogu | Poproś o wybór zdjęcia; przy braku rozpoznania poinformuj, że nie udało się dopasować urządzenia |
+| `422` | Brak pola `file`, pusty plik, zdjęcie bez sprzętu siłownianego, niepewne rozpoznanie (`confidence` inne niż `high`) lub maszyna spoza obsługiwanego katalogu | Poproś o wybór zdjęcia; przy braku rozpoznania pokaż `detail`, który mówi, co poprawić |
 | `502` | Błąd dostawcy modelu albo odpowiedź modelu odrzucona, ucięta lub niezgodna ze schematem | Pokaż błąd analizy i możliwość ponowienia |
 | `503` | Brak konfiguracji Azure, pusty katalog lub brak karty dla rozpoznanej maszyny | Pokaż komunikat o niedostępności analizy; konfigurację poprawia backend |
 | Inny błąd, np. `500` | Nieobsłużony błąd serwera, np. problem połączenia z Chroma | Pokaż ogólny komunikat o błędzie usługi |
 
-Przykład błędu rozpoznania:
+Komunikaty błędów rozpoznania (`detail`):
 
-```json
-{
-  "detail": "The image does not match a machine in the supported catalog"
-}
-```
+- `"This photo doesn't show gym equipment. Take a photo of the machine you want to use."`: na zdjęciu nie ma sprzętu.
+- `"I'm not sure which machine this is. Take a clearer photo of the whole machine."`: model nie jest pewny dopasowania.
+- `"The image does not match a machine in the supported catalog"`: sprzęt spoza katalogu.
 
 Błędy walidacji FastAPI, np. brak pola `file`, zwracają `detail` jako tablicę obiektów zawierających m.in. `loc`, `msg` i `type`. Pozostałe opisane błędy zwykle zwracają `detail` jako tekst. Nie zakładaj jednego typu tego pola ani identycznego komunikatu dla każdego `422`.
 

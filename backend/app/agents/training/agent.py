@@ -11,6 +11,8 @@ from app.agents.llm import get_llm
 from app.agents.training import prompts
 from app.agents.training.questionnaire import (
     MAX_NOTES,
+    NONE,
+    NOTE_KEYS,
     QUESTIONS,
     Question,
     build_result,
@@ -45,30 +47,36 @@ class TrainingAgent(BaseAgent):
 
     async def answer_question(self, db: Session, user: User, state: QuestionnaireState, message: str) -> AgentResponse:
         question = QUESTIONS[state.step]
-        values, notes = parse_answer(question, message), ""
+        values, notes, warning = parse_answer(question, message), "", ""
         if values is None:
-            values, notes = await self.extract_answer(question, message)
+            values, notes, warning = await self.extract_answer(question, message)
+        prefix = f"{warning}\n\n" if warning else ""
+        if values is None and notes and question.key in NOTE_KEYS:
+            values = [NONE]  # e.g. only an injury outside the options: keep it in the notes instead of re-asking
 
         if values is None:
-            reply = f"{prompts.NOT_UNDERSTOOD}\n\n{format_question(question, state.answers)}"
+            reply = f"{prefix}{prompts.NOT_UNDERSTOOD}\n\n{format_question(question, state.answers)}"
             return self.respond(db, user, message, reply, state)
 
         state.answers[question.key] = values
         if question.key == "intensityCheck":
             state.answers["intensityNotes"] = notes
+        elif question.key in NOTE_KEYS:
+            state.answers[f"{question.key}Notes"] = notes
         state.step += 1
 
         if state.step < len(QUESTIONS):
-            return self.respond(db, user, message, format_question(QUESTIONS[state.step], state.answers), state)
+            reply = prefix + format_question(QUESTIONS[state.step], state.answers)
+            return self.respond(db, user, message, reply, state)
 
         state.completed_at = datetime.now(UTC)
         result = build_result(state.answers).model_dump_json(by_alias=True, indent=2)
         self.result_path(user.id).write_text(result, encoding="utf-8")
         self.memory.add(user.id, f"Training questionnaire: {result}", source="questionnaire")
-        return self.respond(db, user, message, prompts.COMPLETED, state)
+        return self.respond(db, user, message, prefix + prompts.COMPLETED, state)
 
-    async def extract_answer(self, question: Question, message: str) -> tuple[list[str] | None, str]:
-        """LLM fallback for free-text answers; returns (None, "") when nothing valid comes back."""
+    async def extract_answer(self, question: Question, message: str) -> tuple[list[str] | None, str, str]:
+        """LLM fallback for free-text answers; returns (values, notes, warning), values None when nothing valid."""
         system = prompts.EXTRACTION_PROMPT.format(
             question=question.text,
             options="\n".join(f"- {value}: {label}" for value, label in question.options.items()),
@@ -79,9 +87,10 @@ class TrainingAgent(BaseAgent):
             data = json.loads(raw)
             values = validate(question, list(dict.fromkeys(data.get("values", []))))
             notes = str(data.get("notes", ""))[:MAX_NOTES]
+            warning = str(data.get("warning", ""))[:MAX_NOTES]
         except (json.JSONDecodeError, AttributeError, TypeError):
-            return None, ""
-        return values, notes
+            return None, "", ""
+        return values, notes, warning
 
     def respond(self, db: Session, user: User, message: str, reply: str, state: QuestionnaireState) -> AgentResponse:
         self.save_exchange(db, user, message, reply)  # commits the questionnaire state too

@@ -36,6 +36,7 @@ class TrainingQuestionnaire(CamelModel):
     workout_duration_minutes: Literal[40, 60, 90]
     lifestyle_and_stress: Lifestyle
     intensity_check: IntensityCheck
+    health_notes: str = ""  # injuries mentioned in free text that the options don't cover
 
 
 class OptionOut(BaseModel):
@@ -82,9 +83,11 @@ class DietQuestionnaire(CamelModel):
     meals_per_day: Literal[3, 4, 5]
     cooking_time_minutes: Literal[15, 30, 60]
     activity_level: ActivityLevel
+    calorie_target: int | None = None  # None = the plan calculates it
     medical_conditions: list[MedicalCondition]
     eating_habits: list[EatingHabit]
     gentle_check: GentleCheck
+    health_notes: str = ""  # allergies and conditions mentioned in free text that the options don't cover
 
 
 class DietQuestionnaireStatus(CamelModel):

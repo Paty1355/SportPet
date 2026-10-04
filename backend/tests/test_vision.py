@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from app.agents.vision.agent import (
     MachineNotRecognized,
+    NotGymEquipment,
     VisionAgent,
     VisionKnowledgeUnavailable,
     get_vision_agent,
@@ -41,13 +42,20 @@ def machine():
 
 
 class ControlledLLM:
-    def __init__(self, machine_id="example_machine"):
+    def __init__(self, machine_id="example_machine", is_gym_equipment=True, confidence="high"):
         self.machine_id = machine_id
+        self.is_gym_equipment = is_gym_equipment
+        self.confidence = confidence
         self.calls = []
 
     async def identify(self, image, catalog):
         self.calls.append(("identify", image, catalog))
-        return MachineIdentification(machine_id=self.machine_id, machine_name="Model-generated name")
+        return MachineIdentification(
+            is_gym_equipment=self.is_gym_equipment,
+            confidence=self.confidence,
+            machine_id=self.machine_id,
+            machine_name="Model-generated name",
+        )
 
     async def describe(self, machine_context):
         self.calls.append(("describe", machine_context))
@@ -120,6 +128,25 @@ def test_unknown_identification_does_not_generate_instructions(chroma, machine, 
     knowledge.seed([machine])
     llm = ControlledLLM(machine_id)
     with pytest.raises(MachineNotRecognized):
+        asyncio.run(VisionAgent(llm, knowledge).run(b"image"))
+    assert len(llm.calls) == 1
+
+
+def test_non_equipment_photo_is_rejected_without_instructions(chroma, machine):
+    knowledge = GymMachineKnowledge()
+    knowledge.seed([machine])
+    llm = ControlledLLM(machine_id=None, is_gym_equipment=False)
+    with pytest.raises(NotGymEquipment, match="doesn't show gym equipment"):
+        asyncio.run(VisionAgent(llm, knowledge).run(b"image"))
+    assert len(llm.calls) == 1
+
+
+@pytest.mark.parametrize("confidence", ["medium", "low"])
+def test_unsure_identification_asks_for_another_photo(chroma, machine, confidence):
+    knowledge = GymMachineKnowledge()
+    knowledge.seed([machine])
+    llm = ControlledLLM(confidence=confidence)  # even with a catalog match
+    with pytest.raises(MachineNotRecognized, match="not sure"):
         asyncio.run(VisionAgent(llm, knowledge).run(b"image"))
     assert len(llm.calls) == 1
 
@@ -200,7 +227,9 @@ def make_azure_llm(replies):
 
 
 def test_azure_routes_image_and_text_to_separate_deployments(machine):
-    identification = MachineIdentification(machine_id=machine.machine_id, machine_name=machine.name)
+    identification = MachineIdentification(
+        is_gym_equipment=True, confidence="high", machine_id=machine.machine_id, machine_name=machine.name
+    )
     usage = MachineUsage.model_validate(machine.model_dump(include=set(MachineUsage.model_fields)))
     llm, completions = make_azure_llm([(identification, None), (usage, None)])
 
