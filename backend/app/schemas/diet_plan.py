@@ -11,6 +11,7 @@ class Meal(CamelModel):
     carbs_grams: int
     fat_grams: int
     prep_time_minutes: int
+    image_url: str = ""  # decorative, set by the backend (not by the LLM)
 
 
 class DietDay(CamelModel):

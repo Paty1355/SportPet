@@ -7,6 +7,7 @@ from pydantic.alias_generators import to_camel
 from app.agents.diet.agent import DietAgent
 from app.agents.diet.questionnaire import NONE, QUESTIONS
 from app.agents.diet_plan.agent import DietPlanAgent, get_diet_plan_agent
+from app.agents.diet_plan.images import CONTAINS, allowed_dishes, available_dishes
 from app.db.session import get_db
 from app.main import app
 from app.models import User
@@ -108,8 +109,8 @@ def test_schema_literals_match_question_options():
 class PlanLLM:
     """Returns a 7-day plan with `meals` meals per day."""
 
-    def __init__(self, meals: int):
-        meal = {"name": "Lunch", "title": "Tofu bowl", "description": "...", "calories": 600}
+    def __init__(self, meals: int, title: str = "Fruit with chickpeas"):
+        meal = {"name": "Lunch", "title": title, "description": "...", "calories": 600}
         meal |= {"proteinGrams": 30, "carbsGrams": 60, "fatGrams": 20, "prepTimeMinutes": 20}
         self.plan = json.dumps({"dailyCalories": 2400, "days": [{"meals": [meal] * meals}] * 7})
 
@@ -131,3 +132,33 @@ def test_diet_plan_needs_questionnaire_and_valid_llm_output(client, auth_headers
     assert [d["day"] for d in plan["days"]][::6] == ["Monday", "Sunday"]
     assert plan["dailyCalories"] == 2400 and all(len(d["meals"]) == 4 for d in plan["days"])
     assert client.get(PLAN_URL, headers=auth_headers).json() == plan
+    assert {m["imageUrl"] for d in plan["days"] for m in d["meals"]} == {"/static/meals/Fruit%20with%20chickpeas.jpg"}
+    assert client.get("/static/meals/Fruit%20with%20chickpeas.jpg").headers["content-type"] == "image/jpeg"
+
+
+def test_every_dish_photo_is_tagged():
+    assert set(available_dishes()) == set(CONTAINS)  # an untagged photo would be hidden from users with restrictions
+
+
+def questionnaire(**changes) -> DietQuestionnaire:
+    base = {"main_goal": "maintenance", "diet_type": "omnivore", "allergies_and_intolerances": [], "disliked_foods": []}
+    base |= {"meals_per_day": 3, "cooking_time_minutes": 30, "activity_level": "light", "medical_conditions": []}
+    base |= {"eating_habits": [], "gentle_check": {"gradual_start": False, "notes": ""}}
+    return DietQuestionnaire(**(base | changes))
+
+
+def test_dish_catalogue_respects_diet_allergies_and_dislikes():
+    assert set(allowed_dishes(questionnaire())) == set(available_dishes())
+    vegan = allowed_dishes(questionnaire(diet_type="vegan", allergies_and_intolerances=["gluten", "nuts"]))
+    assert "Fruit with chickpeas" in vegan and "Exotic smoothie with kale" in vegan
+    assert all(not CONTAINS[d] & {"meat", "fish", "egg", "dairy", "gluten", "nuts"} for d in vegan)
+    pesc = allowed_dishes(
+        questionnaire(diet_type="pescatarian", allergies_and_intolerances=["lactose"], disliked_foods=["fish"])
+    )
+    assert pesc and all(not CONTAINS[d] & {"meat", "fish", "dairy"} for d in pesc)
+
+
+def test_plan_with_dish_outside_the_catalogue_is_rejected(client, auth_headers):
+    complete(client, auth_headers)  # vegan, no gluten/nuts, dislikes fish and vegetables
+    app.dependency_overrides[get_diet_plan_agent] = lambda: DietPlanAgent(PlanLLM(meals=4, title="Chicken skewers"))
+    assert client.post(PLAN_URL, headers=auth_headers).status_code == 502

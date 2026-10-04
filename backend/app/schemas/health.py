@@ -130,17 +130,12 @@ class EcgSummary(BaseModel):
     classification: str
 
 
-class EcgDetail(EcgSummary):
-    samples: list[float]
-    returned_sample_rate_hz: float  # po ewentualnym zmniejszeniu max_points; oś X: i / returned_sample_rate_hz
-
-
 class LatestValue(BaseModel):
     ts: datetime
     value: float
 
 
-class Overview(BaseModel):
+class Dashboard(BaseModel):
     user_id: int
     name: str | None
     sex: str | None
@@ -149,6 +144,8 @@ class Overview(BaseModel):
     height_cm: float | None
     bmi: float | None
     latest: dict[str, LatestValue | None]  # heart_rate | spo2 | stress
-    daily: DailyOut | None  # najnowszy dzień z danymi
-    blood_pressure: BloodPressureOut | None
-    cycle: CycleOut | None
+    daily: list[DailyOut]
+    blood_pressure: list[BloodPressureOut]
+    cycle: list[CycleOut]  # empty for users without cycle data
+    ecg: list[EcgSummary]  # without the waveform
+    stats: dict  # `app.statistics.analyze(..., include_series=True)`
