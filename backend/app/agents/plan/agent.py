@@ -1,8 +1,11 @@
 import json
-from datetime import date, timedelta
+import logging
+from datetime import date, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
+import openai
 from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -13,11 +16,15 @@ from app.agents.plan.descriptions import describe_exercises
 from app.agents.plan.exercises import allowed_exercises, exercise_title, gif_url
 from app.agents.plan.health import WINDOW_DAYS, health_summary
 from app.core.config import settings
-from app.models import User, WorkoutFeedback
+from app.models import PostWorkoutCheckIn, User, WorkoutFeedback
 from app.rag.knowledge_base import KnowledgeBase
 from app.schemas.feedback import FeedbackOut, PostWorkoutFeedback
 from app.schemas.plan import PlanExercise, TrainingPlan, Workout
+from app.schemas.post_workout import PostWorkoutFeedback as CheckInFeedback
 from app.schemas.questionnaire import CamelModel, TrainingQuestionnaire
+from app.services.post_workout import feedback_for
+
+logger = logging.getLogger(__name__)
 
 # Lengths must match DAYS_PER_WEEK in the questionnaire.
 PLAN_DAYS = {
@@ -65,6 +72,7 @@ class PlanAgent:
     ) -> TrainingPlan:
         health = health_summary(db, user)
         feedback = self.get_feedback(db, user.id, limit=FEEDBACK_LIMIT)
+        check_ins = self.get_check_ins(db, user.id, limit=FEEDBACK_LIMIT)
         allowed = allowed_exercises(questionnaire)
         days = PLAN_DAYS[questionnaire.preferred_days]
         system = prompts.SYSTEM_PROMPT.format(
@@ -80,6 +88,7 @@ class PlanAgent:
             feedback=json.dumps(
                 [f.model_dump(mode="json", by_alias=True, exclude={"reporting_frequency"}) for f in feedback], indent=2
             ),
+            check_ins=json.dumps([c.model_dump(mode="json", by_alias=True) for c in check_ins], indent=2),
         )
         raw = await self.llm.complete(system, [{"role": "user", "content": user_message}], json_mode=True)
         selection = parse_selection(raw, len(days), set(allowed))
@@ -108,8 +117,31 @@ class PlanAgent:
             for day, day_date, w in zip(days, dates, selection, strict=True)
         ]
         plan = TrainingPlan(workouts=workouts, health_summary=health, recent_feedback=feedback)
-        self.plan_path(user.id).write_text(plan.model_dump_json(by_alias=True, indent=2), encoding="utf-8")
+        self.save(user.id, plan)
         return plan
+
+    def complete_workout(self, user_id: int, workout_date: date) -> tuple[TrainingPlan, Workout] | None:
+        """Removes the workout from the saved plan; None when there's no workout on that date."""
+        plan = self.get(user_id)
+        workout = next((w for w in plan.workouts if w.date == workout_date), None) if plan else None
+        if workout is None:
+            return None
+        plan.workouts.remove(workout)
+        self.save(user_id, plan)
+        return plan, workout
+
+    async def regenerate_if_finished(
+        self, db: Session, user: User, questionnaire: TrainingQuestionnaire | None
+    ) -> TrainingPlan | None:
+        """Generates the next plan once every workout of the current one is done."""
+        plan = self.get(user.id)
+        if questionnaire is None or plan is None or plan.workouts:
+            return None
+        try:
+            return await self.generate(db, user, questionnaire, datetime.now(ZoneInfo(user.timezone)).date())
+        except (openai.APIError, PlanGenerationError):
+            logger.exception("Plan regeneration failed for user %s", user.id)
+            return None
 
     def save_feedback(self, db: Session, user_id: int, feedback: PostWorkoutFeedback) -> FeedbackOut:
         row = WorkoutFeedback(user_id=user_id, **feedback.model_dump())
@@ -127,6 +159,19 @@ class PlanAgent:
             .limit(limit)
         )
         return [FeedbackOut.model_validate(r) for r in rows]
+
+    def get_check_ins(self, db: Session, user_id: int, limit: int) -> list[CheckInFeedback]:
+        """Completed post-workout check-ins, newest first."""
+        rows = db.scalars(
+            select(PostWorkoutCheckIn)
+            .where(PostWorkoutCheckIn.user_id == user_id, PostWorkoutCheckIn.status == "completed")
+            .order_by(PostWorkoutCheckIn.workout_ended_at.desc())
+            .limit(limit)
+        )
+        return [feedback_for(r, confirmed=True) for r in rows]
+
+    def save(self, user_id: int, plan: TrainingPlan) -> None:
+        self.plan_path(user_id).write_text(plan.model_dump_json(by_alias=True, indent=2), encoding="utf-8")
 
     def get(self, user_id: int) -> TrainingPlan | None:
         path = self.plan_path(user_id)
