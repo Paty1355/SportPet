@@ -4,6 +4,7 @@ from typing import Protocol
 from openai import AsyncAzureOpenAI, ContentFilterFinishReasonError, LengthFinishReasonError
 from pydantic import BaseModel, ValidationError
 
+from app.agents.base import GUARD
 from app.agents.llm import to_data_url
 from app.agents.vision.prompts import USAGE_SYSTEM_PROMPT, VISION_SYSTEM_PROMPT
 from app.schemas.vision import MachineCatalogEntry, MachineDocument, MachineIdentification, MachineUsage
@@ -29,7 +30,7 @@ class AzureVisionLLM:
         return await self._parse(
             self.vision_deployment,
             [
-                {"role": "system", "content": VISION_SYSTEM_PROMPT},
+                {"role": "system", "content": f"{VISION_SYSTEM_PROMPT}\n\n{GUARD}"},
                 {
                     "role": "user",
                     "content": [
@@ -49,7 +50,7 @@ class AzureVisionLLM:
         return await self._parse(
             self.chat_deployment,
             [
-                {"role": "system", "content": USAGE_SYSTEM_PROMPT},
+                {"role": "system", "content": f"{USAGE_SYSTEM_PROMPT}\n\n{GUARD}"},
                 {"role": "user", "content": machine_context.model_dump_json(indent=2)},
             ],
             MachineUsage,

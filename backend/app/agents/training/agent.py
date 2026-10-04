@@ -6,10 +6,11 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent, untrusted
 from app.agents.llm import get_llm
 from app.agents.training import prompts
 from app.agents.training.questionnaire import (
+    MAX_NOTES,
     QUESTIONS,
     Question,
     build_result,
@@ -77,7 +78,7 @@ class TrainingAgent(BaseAgent):
         try:
             data = json.loads(raw)
             values = validate(question, list(dict.fromkeys(data.get("values", []))))
-            notes = str(data.get("notes", ""))
+            notes = str(data.get("notes", ""))[:MAX_NOTES]
         except (json.JSONDecodeError, AttributeError, TypeError):
             return None, ""
         return values, notes
@@ -117,13 +118,13 @@ class TrainingAgent(BaseAgent):
         path.mkdir(parents=True, exist_ok=True)
         return path / f"{user_id}.json"
 
-    def build_system_prompt(self, db: Session, user: User, memories: list[str]) -> str:
-        prompt = super().build_system_prompt(db, user, memories)
+    def build_context(self, db: Session, user: User, memories: list[str]) -> list[str]:
+        context = super().build_context(db, user, memories)
         state = self.get_state(db, user.id)
-        if state is None or state.completed_at is None:
-            return prompt
-        result = build_result(state.answers).model_dump_json(by_alias=True, indent=2)
-        return f"{prompt}\n\nTraining questionnaire:\n{result}"
+        if state is not None and state.completed_at is not None:
+            result = build_result(state.answers).model_dump_json(by_alias=True, indent=2)
+            context.append(untrusted("training questionnaire", result))
+        return context
 
 
 @lru_cache

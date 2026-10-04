@@ -1,4 +1,7 @@
+import datetime as dt
+
 from app.schemas.feedback import FeedbackOut
+from app.schemas.post_workout import CheckInResponse
 from app.schemas.questionnaire import CamelModel
 
 
@@ -13,6 +16,7 @@ class PlanExercise(CamelModel):
 
 class Workout(CamelModel):
     day: str
+    date: dt.date | None = None  # None in plans saved before dates were added
     focus: str
     exercises: list[PlanExercise]
 
@@ -41,3 +45,8 @@ class TrainingPlan(CamelModel):
     workouts: list[Workout]
     health_summary: HealthSummary | None = None  # None in plans saved before health data was used
     recent_feedback: list[FeedbackOut] = []
+
+
+class WorkoutDone(CamelModel):
+    plan: TrainingPlan
+    check_in: CheckInResponse

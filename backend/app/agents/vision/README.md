@@ -36,13 +36,35 @@ Wyślij obiekt `File` przez `FormData`. Endpoint nie przyjmuje zdjęcia jako JSO
 
 **Nie ustawiaj ręcznie nagłówka `Content-Type` przy użyciu `fetch` z `FormData`.** Przeglądarka doda `multipart/form-data` wraz z prawidłowym `boundary`.
 
-Dla obecnego scenariusza można udostępnić wybór zdjęcia JPEG lub PNG:
+Obsługiwane formaty: **JPG/JPEG, PNG, WEBP, HEIC/HEIF, AVIF, BMP, TIFF/TIF i GIF**.
+Frontend wysyła oryginalny plik; nie musi sam konwertować zdjęć z iPhone'a.
 
 ```html
-<input type="file" accept="image/jpeg,image/png" />
+<input
+  type="file"
+  accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.avif,.bmp,.tif,.tiff,.gif,image/jpeg,image/png,image/webp,image/heic,image/heif,image/avif,image/bmp,image/tiff,image/gif"
+/>
 ```
 
-`accept` jest podpowiedzią dla selektora plików. Obecny endpoint sam nie sprawdza rozszerzenia ani MIME i nie narzuca własnego limitu rozmiaru. Ustawienie backendu `MAX_UPLOAD_MB` nie jest używane przez tę ścieżkę. Rzeczywiste możliwości odczytu obrazu zależą również od modelu Azure.
+`accept` jest podpowiedzią dla selektora. Backend rozpoznaje format z zawartości pliku,
+nie z rozszerzenia ani deklarowanego MIME. Nieobsługiwany lub uszkodzony obraz zwraca `422`.
+
+Przed analizą backend przygotowuje jeden JPEG:
+
+- poprawia orientację ze zdjęcia;
+- wybiera pierwszą klatkę GIF, WebP lub AVIF, pierwszą stronę TIFF albo główne zdjęcie HEIF;
+- zamienia przezroczystość na białe tło i kolory na RGB;
+- zmniejsza obraz do maksymalnie **2048 px na dłuższym boku**, zachowując proporcje;
+- nie kopiuje metadanych EXIF i profilu ICC do wyjściowego JPEG.
+
+Limit wejściowego pliku określa `MAX_UPLOAD_MB` w konfiguracji backendu: domyślnie **10 MB**
+(10 × 1024 × 1024 bajtów). Maksymalna rozdzielczość przed konwersją to **60 megapikseli**.
+Przekroczenie limitu pliku lub rozdzielczości zwraca `413` i nie uruchamia analizy obrazu przez model.
+Nie gwarantujemy odczytu uszkodzonych plików ani dowolnych wariantów kodeków w tych kontenerach.
+
+Odczyt i konwersja używają [Pillow](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html)
+oraz [pillow-heif](https://pillow-heif.readthedocs.io/en/stable/pillow-plugin.html).
+Nie wymagają nowego deploymentu Azure, zmiany promptów ani importowania embeddingów.
 
 ## Odpowiedź sukcesu
 
@@ -188,7 +210,8 @@ Na czas oczekiwania pokaż stan ładowania i zablokuj ponowne wysłanie tego sam
 
 | Status | Kiedy występuje | Reakcja frontendu |
 |---|---|---|
-| `422` | Brak pola `file`, pusty plik lub maszyna nierozpoznana w obsługiwanym katalogu | Poproś o wybór zdjęcia; przy braku rozpoznania poinformuj, że nie udało się dopasować urządzenia |
+| `422` | Brak pola `file`, pusty, uszkodzony lub nieobsługiwany obraz albo maszyna nierozpoznana w katalogu | Poproś o wybór zdjęcia; przy braku rozpoznania poinformuj, że nie udało się dopasować urządzenia |
+| `413` | Plik przekracza `MAX_UPLOAD_MB` lub obraz ma ponad 60 megapikseli | Poproś o mniejsze zdjęcie lub niższą rozdzielczość |
 | `502` | Błąd dostawcy modelu albo odpowiedź modelu odrzucona, ucięta lub niezgodna ze schematem | Pokaż błąd analizy i możliwość ponowienia |
 | `503` | Brak konfiguracji Azure, pusty katalog lub brak karty dla rozpoznanej maszyny | Pokaż komunikat o niedostępności analizy; konfigurację poprawia backend |
 | Inny błąd, np. `500` | Nieobsłużony błąd serwera, np. problem połączenia z Chroma | Pokaż ogólny komunikat o błędzie usługi |
@@ -203,7 +226,7 @@ Przykład błędu rozpoznania:
 
 Błędy walidacji FastAPI, np. brak pola `file`, zwracają `detail` jako tablicę obiektów zawierających m.in. `loc`, `msg` i `type`. Pozostałe opisane błędy zwykle zwracają `detail` jako tekst. Nie zakładaj jednego typu tego pola ani identycznego komunikatu dla każdego `422`.
 
-Sprawdzaj `response.ok`: `fetch` nie rzuca wyjątku automatycznie dla statusów `422`, `502` czy `503`. Błąd sieci lub CORS może odrzucić `fetch` bez odpowiedzi HTTP dostępnej dla aplikacji.
+Sprawdzaj `response.ok`: `fetch` nie rzuca wyjątku automatycznie dla statusów `413`, `422`, `502` czy `503`. Błąd sieci lub CORS może odrzucić `fetch` bez odpowiedzi HTTP dostępnej dla aplikacji.
 
 ## CORS i konfiguracja frontendu
 
@@ -233,7 +256,8 @@ Do działania potrzebny jest skonfigurowany Azure oraz katalog maszyn zaimportow
 
 ## Co robi backend i gdzie szukać kodu
 
-1. [Endpoint](../../api/v1/vision.py) odczytuje zdjęcie z pola `file`.
+1. [Endpoint](../../api/v1/vision.py) odczytuje zdjęcie z pola `file` z limitem rozmiaru,
+   a [przygotowanie obrazu](images.py) dekoduje je i konwertuje do JPEG w osobnym wątku.
 2. [Agent](agent.py) pobiera katalog maszyn z osobnej kolekcji Chromy.
 3. [Model vision](llm.py) identyfikuje maszynę z tego katalogu.
 4. [Warstwa wiedzy](knowledge.py) wyszukuje kartę przez embedding tekstowej nazwy z filtrem po rozpoznanym `machine_id`.

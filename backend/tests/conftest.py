@@ -12,6 +12,7 @@ from app.agents.diet.agent import DietAgent, get_diet_agent
 from app.agents.diet_plan.agent import DietPlanAgent, get_diet_plan_agent
 from app.agents.llm import StubLLM
 from app.agents.photo.agent import PhotoAgent, get_photo_agent
+from app.agents.plan.agent import PlanAgent, get_plan_agent
 from app.agents.training.agent import TrainingAgent, get_training_agent
 from app.core.azure import get_azure_client
 from app.core.config import settings
@@ -58,6 +59,7 @@ def client(chroma, tmp_path, monkeypatch):
 
     monkeypatch.setattr(settings, "upload_dir", str(tmp_path / "uploads"))
     monkeypatch.setattr(settings, "diet_plan_dir", str(tmp_path / "diet_plans"))
+    monkeypatch.setattr(settings, "training_plan_dir", str(tmp_path / "training_plans"))
     monkeypatch.setattr(settings, "jwt_secret", "test-secret-that-is-at-least-32-bytes-long")
 
     app.dependency_overrides[get_db] = override_db
@@ -65,6 +67,7 @@ def client(chroma, tmp_path, monkeypatch):
     app.dependency_overrides[get_training_agent] = lambda: TrainingAgent(StubLLM())
     app.dependency_overrides[get_diet_agent] = lambda: DietAgent(StubLLM())
     app.dependency_overrides[get_diet_plan_agent] = lambda: DietPlanAgent(StubLLM())
+    app.dependency_overrides[get_plan_agent] = lambda: PlanAgent(StubLLM())
     # No `with` – lifespan (create_all on Postgres) does not run
     yield TestClient(app)
     app.dependency_overrides.clear()

@@ -115,6 +115,14 @@ All endpoints under `/api/v1`; auth and VisionAgent analyze are public. Other en
 ## VisionAgent: machine photos
 
 `POST /api/v1/agents/vision/analyze` accepts one gym-machine photo as multipart field `file`.
+Supported uploads: JPEG/JPG, PNG, WebP, HEIC/HEIF, AVIF, BMP, TIFF/TIF and GIF.
+Pillow and pillow-heif decode the file content and convert it to one RGB JPEG before Azure analysis.
+Orientation is corrected, transparency becomes white, and the image is resized to at most 2048 px
+on its longest side without changing its aspect ratio. GIF/WebP/AVIF use their first frame,
+TIFF its first page, and HEIF its primary image. Output does not copy EXIF/ICC metadata.
+The file limit is `MAX_UPLOAD_MB` (10 MB by default); the input image limit is 60 megapixels.
+The frontend still sends the original `File` in `FormData`; the response JSON is unchanged.
+Frontend integration details: [`app/agents/vision/README.md`](app/agents/vision/README.md).
 This endpoint is public and does not require a JWT. It keeps the image in memory for the request.
 
 The pipeline is: Azure vision deployment → classification from the imported catalog →
@@ -176,7 +184,7 @@ docker compose up -d --build --force-recreate backend
 With the current Compose configuration, Swagger is available at http://localhost:8000/docs.
 A prompt-only change does not require re-importing machine cards or regenerating embeddings.
 
-Errors: HTTP 422 for an empty upload or an unsupported machine; HTTP 503 for missing credentials
+Errors: HTTP 413 for an oversized file/image; HTTP 422 for an empty, invalid or unsupported image, or an unsupported machine; HTTP 503 for missing credentials
 or missing knowledge; HTTP 502 for provider failures or invalid structured model responses.
 The existing application startup still requires its configured Postgres database.
 

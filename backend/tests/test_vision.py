@@ -1,11 +1,13 @@
 import asyncio
 import json
+from io import BytesIO
 from types import SimpleNamespace
 
 import httpx
 import pytest
 from fastapi import HTTPException
 from openai import AsyncAzureOpenAI
+from PIL import Image
 from pydantic import ValidationError
 
 from app.agents.vision.agent import (
@@ -92,7 +94,9 @@ def test_knowledge_rejects_duplicate_ids_before_writing(chroma, machine):
 
 def test_endpoint_runs_full_pipeline_without_login(vision_client, machine):
     client, llm = vision_client
-    image = b"\x89PNG example image"
+    output = BytesIO()
+    Image.new("RGB", (16, 12), "green").save(output, format="PNG")
+    image = output.getvalue()
     response = client.post("/api/v1/agents/vision/analyze", files={"file": ("machine.png", image, "image/png")})
 
     assert response.status_code == 200
@@ -103,7 +107,9 @@ def test_endpoint_runs_full_pipeline_without_login(vision_client, machine):
     assert body["sources"] == machine.sources
     assert body["exercise_steps"] == machine.exercise_steps
     assert [call[0] for call in llm.calls] == ["identify", "describe"]
-    assert llm.calls[0][1] == image
+    with Image.open(BytesIO(llm.calls[0][1])) as prepared:
+        assert prepared.format == "JPEG"
+        assert prepared.size == (16, 12)
     assert llm.calls[1][1] == machine
 
 
@@ -138,7 +144,11 @@ def test_endpoint_maps_agent_errors(client, error, status):
             raise error
 
     app.dependency_overrides[get_vision_agent] = FailedAgent
-    response = client.post("/api/v1/agents/vision/analyze", files={"file": ("machine.png", b"image", "image/png")})
+    output = BytesIO()
+    Image.new("RGB", (16, 12), "green").save(output, format="PNG")
+    response = client.post(
+        "/api/v1/agents/vision/analyze", files={"file": ("machine.png", output.getvalue(), "image/png")}
+    )
     assert response.status_code == status
     assert response.json()["detail"] == str(error)
 
@@ -220,7 +230,7 @@ def test_azure_routes_image_and_text_to_separate_deployments(machine):
     assert vision_call["messages"][1]["content"][1]["image_url"]["url"].startswith("data:image/png;base64,")
     assert text_call["model"] == "text-model"
     assert text_call["response_format"] is MachineUsage
-    assert text_call["messages"][0] == {"role": "system", "content": USAGE_SYSTEM_PROMPT}
+    assert text_call["messages"][0]["content"].startswith(USAGE_SYSTEM_PROMPT)
     assert text_call["messages"][1]["role"] == "user"
     assert json.loads(text_call["messages"][1]["content"]) == machine.model_dump()
 
@@ -264,7 +274,7 @@ def test_sdk_sends_strict_schema_and_parses_valid_json(machine):
     assert result.model_dump() == payload
     assert len(requests) == 1
     request = requests[0]
-    assert request["messages"][0] == {"role": "system", "content": USAGE_SYSTEM_PROMPT}
+    assert request["messages"][0]["content"].startswith(USAGE_SYSTEM_PROMPT)
     output_format = request["response_format"]
     assert output_format["type"] == "json_schema"
     assert output_format["json_schema"]["strict"] is True
