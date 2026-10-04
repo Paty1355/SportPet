@@ -109,6 +109,7 @@ Figures are created without `pyplot`, so there is no global state or GUI; width 
 ```python
 from app.statistics import analyze
 from app.statistics.charts import render_pdf, figures, to_png
+
 result = analyze(db, user_id, include_series=True)
 render_pdf(result, "raport_wykresy.pdf")          # or: for name, fig in figures(result): to_png(fig)
 ```
