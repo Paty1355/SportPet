@@ -10,6 +10,7 @@ from app.models.social import PetProfile
 from app.schemas.social import PrivacyUpdate, PetUpdate, UserSearchOut
 
 router = APIRouter(prefix="/users", tags=["users"])
+me_router = APIRouter(prefix="/me", tags=["users"])
 
 
 @router.get("/me", response_model=UserOut)
@@ -28,13 +29,13 @@ def search_users(email: str, db: DbSession, user: CurrentUser):
     ).all()
     return [{"id": u.id, "name": u.name or u.email.split("@")[0]} for u in users]
 
-@router.patch("/me/privacy")
+@me_router.patch("/privacy")
 def update_privacy(data: PrivacyUpdate, user: CurrentUser, db: DbSession):
     user.share_pet = data.share_pet
     db.commit()
     return {"share_pet": user.share_pet}
 
-@router.put("/me/pet")
+@me_router.put("/pet")
 def update_pet(data: PetUpdate, user: CurrentUser, db: DbSession):
     pet = db.scalar(select(PetProfile).where(PetProfile.user_id == user.id))
     

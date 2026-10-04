@@ -10,6 +10,8 @@ router = APIRouter(prefix="/friends", tags=["friends"])
 @router.post("/requests", status_code=status.HTTP_201_CREATED)
 def send_friend_request(data: FriendRequestCreate, user: CurrentUser, db: DbSession):
     addressee_id = data.user_id
+    if addressee_id == user.id:
+        raise HTTPException(status_code=400, detail="You cannot befriend yourself.")
     
     addressee = db.get(User, addressee_id)
     if not addressee:
