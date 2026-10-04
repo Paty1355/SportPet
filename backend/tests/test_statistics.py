@@ -8,7 +8,7 @@ import app.models  # noqa: F401
 from app.db.base import Base
 from app.models import DailySummary, User, VitalSample
 from app.statistics import analyze
-from app.statistics.analyze import analyze_series
+from app.statistics.analyze import analyze_series, detect_overtraining
 from app.statistics.charts import figures, render_pdf
 from app.statistics.daily import weekly_sd
 
@@ -120,3 +120,22 @@ def test_include_series_and_pdf_render(tmp_path):
     buf = BytesIO()
     render_pdf(result, buf)
     assert len(PdfReader(BytesIO(buf.getvalue())).pages) == 5
+
+
+def test_overtraining_flag_needs_rhr_plus_another_signal():
+    rng = np.random.default_rng(5)
+    noise = lambda: rng.normal(0, 1, 56)  # noqa: E731
+    up = np.r_[np.full(42, 55.0), np.full(14, 63.0)] + noise()
+    sleep_down = np.r_[np.full(42, 450.0), np.full(14, 380.0)] + 5 * noise()
+    flat = 60 + noise()
+
+    def m(**kw):
+        ms = {k: analyze_series(series(v), END) for k, v in kw.items()}
+        for r in ms.values():
+            for k in ("trend", "baseline_vs_recent"):
+                r[k]["p_adj"] = r[k]["p"]
+        return ms
+
+    assert detect_overtraining(m(rhr=up, sleep_minutes=sleep_down))["flag"]
+    assert not detect_overtraining(m(rhr=up, sleep_minutes=450 + 5 * noise()))["flag"]  # RHR alone is not enough
+    assert not detect_overtraining(m(rhr=flat, sleep_minutes=sleep_down))["flag"]  # nor is a signal without RHR

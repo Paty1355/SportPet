@@ -24,6 +24,16 @@ METRICS = (
 LAG_PAIRS = (("sleep_minutes", "rhr"), ("sleep_minutes", "stress_day_mean"), ("steps", "rhr"))
 LAGS = (0, 1, 2)
 CYCLE_METRICS = ("rhr", "stress_day_mean")
+# Overtraining: (bad direction, min recent-vs-baseline change, min slope per week).
+# ponytail: heuristic thresholds (rhr from the README, the rest hand-picked); HRV unavailable, so not used.
+OVERTRAINING = {
+    "rhr": (1, 5.0, 1.0),
+    "night_dip": (-1, 3.0, 1.0),
+    "stress_day_mean": (1, 5.0, 2.0),
+    "sleep_minutes": (-1, 30.0, 15.0),
+}
+OVERTRAINING_MIN_SIGNALS = 2  # rhr is mandatory
+ALPHA = 0.05
 
 
 def analyze_series(s: Series, end: date, min_n: int = MIN_DAYS, with_series: bool = False) -> dict:
@@ -86,6 +96,28 @@ def analyze_series(s: Series, end: date, min_n: int = MIN_DAYS, with_series: boo
     return out
 
 
+def detect_overtraining(metrics: dict) -> dict:
+    """Overtraining from a finished `analyze()["metrics"]` (after `p_adj` correction): a rise in RHR (required) together
+    with at least one of: loss of the nocturnal heart-rate dip, higher stress, less sleep. A signal = a significant
+    (`p_adj` < 0.05) change beyond the threshold in the bad direction.
+    {"flag": bool, "signals": [{"metric", "delta", "slope_per_week"}]};
+    `delta` = last 7 days minus baseline (or None)."""
+    signals = []
+    for name, (sign, min_delta, min_slope) in OVERTRAINING.items():
+        r = metrics.get(name, {})
+        if r.get("status") != "ok":
+            continue
+        bvr, tr = r["baseline_vs_recent"], r["trend"]
+        by_delta = bvr and bvr["p_adj"] < ALPHA and sign * bvr["delta"] >= min_delta
+        by_slope = tr["p_adj"] < ALPHA and sign * tr["slope_per_week"] >= min_slope
+        if by_delta or by_slope:
+            signals.append(
+                {"metric": name, "delta": bvr["delta"] if bvr else None, "slope_per_week": tr["slope_per_week"]}
+            )
+    hit = {s["metric"] for s in signals}
+    return {"flag": "rhr" in hit and len(hit) >= OVERTRAINING_MIN_SIGNALS, "signals": signals}
+
+
 def _adjust(items: list[dict]) -> None:
     """Benjamini-Hochberg in place: adds "p_adj" to every dict that has "p"."""
     if items:
@@ -98,7 +130,8 @@ def analyze(
 ) -> dict:
     """Full user analysis over `days` days up to and including `end` (default yesterday UTC: today is incomplete).
 
-    {"window": {start, end}, "metrics": {nazwa: analyze_series}, "lagged_correlations": [...], "cycle": [...]}.
+    {"window": {start, end}, "metrics": {nazwa: analyze_series}, "lagged_correlations": [...], "cycle": [...],
+    "overtraining": {flag, signals}}.
     `include_series=True` adds a daily series and a trend line to every metric (for charts, see `charts.py`).
     P-values are corrected separately within each test family
     (trend, change point, baseline-vs-recent, correlations, cycle)."""
@@ -133,4 +166,5 @@ def analyze(
         "metrics": metrics,
         "lagged_correlations": corr,
         "cycle": cycle,
+        "overtraining": detect_overtraining(metrics),
     }

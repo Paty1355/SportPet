@@ -19,4 +19,5 @@ class User(Base):
     birth_date: Mapped[date | None]
     weight_kg: Mapped[float | None] = mapped_column(Float)
     height_cm: Mapped[float | None] = mapped_column(Float)
+    share_pet: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
