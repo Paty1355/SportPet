@@ -1,3 +1,5 @@
+import datetime as dt
+
 from app.schemas.feedback import FeedbackOut
 from app.schemas.questionnaire import CamelModel
 
@@ -13,6 +15,7 @@ class PlanExercise(CamelModel):
 
 class Workout(CamelModel):
     day: str
+    date: dt.date | None = None  # None in plans saved before dates were added
     focus: str
     exercises: list[PlanExercise]
 

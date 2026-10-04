@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -15,12 +16,13 @@ Training = Annotated[TrainingAgent, Depends(get_training_agent)]
 
 
 @router.post("", response_model=TrainingPlan)
-async def generate_plan(user: CurrentUser, db: DbSession, agent: Agent, training: Training):
+async def generate_plan(user: CurrentUser, db: DbSession, agent: Agent, training: Training, today: date | None = None):
+    """`today` is the user's local date (YYYY-MM-DD); the server date is used when it's missing."""
     questionnaire = training.get_status(db, user.id).training_questionnaire
     if questionnaire is None:
         raise HTTPException(status.HTTP_409_CONFLICT, "Complete the training questionnaire first")
     try:
-        return await agent.generate(db, user, questionnaire)
+        return await agent.generate(db, user, questionnaire, today)
     except PlanGenerationError as e:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(e)) from e
 

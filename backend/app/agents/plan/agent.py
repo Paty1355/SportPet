@@ -1,4 +1,5 @@
 import json
+from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -25,6 +26,8 @@ PLAN_DAYS = {
     "any_weekdays": ["Monday", "Wednesday", "Friday"],
     "flexible": ["Day 1", "Day 2", "Day 3"],
 }
+WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+FLEXIBLE_GAP_DAYS = 2
 FEEDBACK_LIMIT = 5
 
 
@@ -57,7 +60,9 @@ class PlanAgent:
         self.llm = llm
         self.knowledge = KnowledgeBase("training")
 
-    async def generate(self, db: Session, user: User, questionnaire: TrainingQuestionnaire) -> TrainingPlan:
+    async def generate(
+        self, db: Session, user: User, questionnaire: TrainingQuestionnaire, today: date | None = None
+    ) -> TrainingPlan:
         health = health_summary(db, user)
         feedback = self.get_feedback(db, user.id, limit=FEEDBACK_LIMIT)
         allowed = allowed_exercises(questionnaire)
@@ -82,9 +87,11 @@ class PlanAgent:
         names = list(dict.fromkeys(e.name for w in selection for e in w.exercises))
         descriptions = await describe_exercises(self.llm, self.knowledge, names)
 
+        dates = plan_dates(days, today or date.today())
         workouts = [
             Workout(
                 day=day,
+                date=day_date,
                 focus=w.focus,
                 exercises=[
                     PlanExercise(
@@ -98,7 +105,7 @@ class PlanAgent:
                     for e in w.exercises
                 ],
             )
-            for day, w in zip(days, selection, strict=True)
+            for day, day_date, w in zip(days, dates, selection, strict=True)
         ]
         plan = TrainingPlan(workouts=workouts, health_summary=health, recent_feedback=feedback)
         self.plan_path(user.id).write_text(plan.model_dump_json(by_alias=True, indent=2), encoding="utf-8")
@@ -134,6 +141,13 @@ class PlanAgent:
         path = Path(settings.training_plan_dir)
         path.mkdir(parents=True, exist_ok=True)
         return path / f"{user_id}.json"
+
+
+def plan_dates(days: list[str], today: date) -> list[date]:
+    """Nearest date (today included) for each weekday; "Day N" labels are spread every other day from today."""
+    if days[0] in WEEKDAYS:
+        return [today + timedelta(days=(WEEKDAYS.index(d) - today.weekday()) % 7) for d in days]
+    return [today + timedelta(days=i * FLEXIBLE_GAP_DAYS) for i in range(len(days))]
 
 
 def parse_selection(raw: str, count: int, allowed: set[str]) -> list[LlmWorkout]:
