@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons'
 import { useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { Screen } from '../../components/Screen'
@@ -13,6 +14,7 @@ export function AuthScreen() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -64,14 +66,25 @@ export function AuthScreen() {
         />
 
         <Text style={[styles.label, { color: colors.muted }]}>Password</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="At least 8 characters"
-          placeholderTextColor={colors.muted}
-          secureTextEntry
-          style={inputStyle}
-        />
+        <View style={styles.passwordWrap}>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="At least 8 characters"
+            placeholderTextColor={colors.muted}
+            secureTextEntry={!showPassword}
+            style={[...inputStyle, styles.passwordInput]}
+          />
+          <Pressable
+            onPress={() => setShowPassword((shown) => !shown)}
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            hitSlop={8}
+            style={styles.eye}
+          >
+            <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.muted} />
+          </Pressable>
+        </View>
 
         {error && <Text style={[styles.error, { color: colors.warn }]}>{error}</Text>}
 
@@ -106,6 +119,9 @@ export function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
+  passwordWrap: { position: 'relative', justifyContent: 'center' },
+  passwordInput: { paddingRight: 44 },
+  eye: { position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center' },
   card: { borderRadius: 24, borderWidth: StyleSheet.hairlineWidth, padding: 20, gap: 8, marginTop: 24 },
   title: { fontSize: 22, fontWeight: '700' },
   subtitle: { fontSize: 14, marginBottom: 8 },

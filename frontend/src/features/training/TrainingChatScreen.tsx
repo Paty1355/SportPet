@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   KeyboardAvoidingView,
   Platform,
@@ -10,32 +10,59 @@ import {
   TextInput,
   View,
 } from 'react-native'
+import { AiNotice } from '../../components/AiNotice'
+import { RichText } from '../../components/RichText'
+import { useAuth } from '../../lib/auth'
 import { useTheme } from '../../lib/theme'
-import { askTrainingAgent } from './agentApi'
-import type { ProposedExercise } from './agentTypes'
+import { askAgent, fetchQuestionnaire, type AgentKind } from './agentApi'
+import type { ProposedExercise, Question, QuestionOption } from './agentTypes'
 import { BunAvatar } from './BunAvatar'
 
 type PlanStatus = 'pending' | 'accepted' | 'rejected'
 
+// Fixed colour, so "Send selection" never looks like the theme-coloured option chips, in light or dark mode.
+const SUBMIT_COLOR = '#d97706'
+
+// Keeps only the text before the question, so the question is not repeated with its options.
+function textBeforeQuestion(reply: string, question: { text: string } | null): string {
+  if (!question) return reply.trim()
+  const index = reply.indexOf(question.text)
+  return (index >= 0 ? reply.slice(0, index) : reply).trim()
+}
+type ActiveQuestion = Question & { answered: boolean }
+
 type ChatMessage =
   | { id: string; from: 'user'; kind: 'text'; text: string }
-  | { id: string; from: 'bot'; kind: 'text'; text: string }
+  | { id: string; from: 'bot'; kind: 'text'; text: string; question?: ActiveQuestion }
   | { id: string; from: 'bot'; kind: 'plan'; exercises: ProposedExercise[]; status: PlanStatus }
 
-const GREETING: ChatMessage = {
-  id: 'greeting',
-  from: 'bot',
-  kind: 'text',
-  text: "Hi! I'm Bun, your training buddy. Tell me about your goals and I'll put together a plan for you.",
-}
-
-export function TrainingChatScreen() {
+export function TrainingChatScreen({ agent = 'training' }: { agent?: AgentKind }) {
   const { colors } = useTheme()
-  const [messages, setMessages] = useState<ChatMessage[]>([GREETING])
+  const { token } = useAuth()
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
+  const [selection, setSelection] = useState<string[]>([])
   const scrollRef = useRef<ScrollView>(null)
   const canSend = draft.trim().length > 0 && !busy
+
+  useEffect(() => {
+    if (!token) return
+    let cancelled = false
+    fetchQuestionnaire(token, agent)
+      .then((status) => {
+        if (cancelled || status.completed || !status.question) return
+        const question = status.question
+        setMessages((prev) => [
+          ...prev,
+          { id: `question-${question.key}`, from: 'bot', kind: 'text', text: question.text, question: { ...question, answered: false } },
+        ])
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [token, agent])
 
   function append(message: ChatMessage) {
     setMessages((prev) => [...prev, message])
@@ -47,18 +74,36 @@ export function TrainingChatScreen() {
     )
   }
 
-  async function send() {
-    const text = draft.trim()
-    if (!text || busy) return
+  async function send(text: string, display?: string) {
+    if (!text.trim() || busy || !token) return
     setDraft('')
+    setSelection([])
     setBusy(true)
-    append({ id: `user-${Date.now()}`, from: 'user', kind: 'text', text })
+    setMessages((prev) =>
+      prev.map((message) =>
+        message.from === 'bot' && message.kind === 'text' && message.question
+          ? { ...message, question: { ...message.question, answered: true } }
+          : message,
+      ),
+    )
+    append({ id: `user-${Date.now()}`, from: 'user', kind: 'text', text: display ?? text })
     try {
-      const reply = await askTrainingAgent(text)
-      if (reply.type === 'plan') {
-        append({ id: `plan-${Date.now()}`, from: 'bot', kind: 'plan', exercises: reply.exercises, status: 'pending' })
+      const reply = await askAgent(token, agent, text)
+      if (reply.plan) {
+        append({ id: `plan-${Date.now()}`, from: 'bot', kind: 'plan', exercises: reply.plan, status: 'pending' })
       } else {
-        append({ id: `bot-${Date.now()}`, from: 'bot', kind: 'text', text: reply.text })
+        // The reply already contains the next question with its numbered options; the question bubble shows them as buttons.
+        const lead = textBeforeQuestion(reply.reply, reply.question)
+        if (lead) append({ id: `bot-${Date.now()}`, from: 'bot', kind: 'text', text: lead })
+        if (reply.question) {
+          append({
+            id: `question-${reply.question.key}-${Date.now()}`,
+            from: 'bot',
+            kind: 'text',
+            text: reply.question.text,
+            question: { ...reply.question, answered: false },
+          })
+        }
       }
     } catch {
       append({ id: `error-${Date.now()}`, from: 'bot', kind: 'text', text: 'Something went wrong. Please try again.' })
@@ -67,27 +112,27 @@ export function TrainingChatScreen() {
     }
   }
 
-  function accept(id: string) {
-    setPlanStatus(id, 'accepted')
-    append({
-      id: `accepted-${Date.now()}`,
-      from: 'bot',
-      kind: 'text',
-      text: 'Great, plan accepted. Adding it to your calendar comes next.',
-    })
+  function pickOption(question: ActiveQuestion, option: QuestionOption) {
+    if (!question.multi) {
+      send(option.value, option.label)
+      return
+    }
+    setSelection((prev) => (prev.includes(option.value) ? prev.filter((v) => v !== option.value) : [...prev, option.value]))
   }
 
-  function reject(id: string) {
-    setPlanStatus(id, 'rejected')
-    append({
-      id: `rejected-${Date.now()}`,
-      from: 'bot',
-      kind: 'text',
-      text: 'No problem. Tell me what you would like to change.',
-    })
+  function submitSelection(question: ActiveQuestion) {
+    const labels = question.options.filter((o) => selection.includes(o.value)).map((o) => o.label)
+    send(selection.join(', '), labels.join(', '))
   }
+
+  const activeQuestion = [...messages]
+    .reverse()
+    .find((m): m is Extract<ChatMessage, { kind: 'text'; from: 'bot' }> & { question: ActiveQuestion } =>
+      m.from === 'bot' && m.kind === 'text' && !!m.question && !m.question.answered,
+    )?.question
 
   return (
+    // On Android the root view in _layout.tsx makes room for the keyboard; this handles iOS.
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView
         ref={scrollRef}
@@ -103,32 +148,66 @@ export function TrainingChatScreen() {
                 key={message.id}
                 exercises={message.exercises}
                 status={message.status}
-                onAccept={() => accept(message.id)}
-                onReject={() => reject(message.id)}
+                onAccept={() => {
+                  setPlanStatus(message.id, 'accepted')
+                  append({ id: `accepted-${Date.now()}`, from: 'bot', kind: 'text', text: 'Great, plan accepted. Adding it to your calendar comes next.' })
+                }}
+                onReject={() => {
+                  setPlanStatus(message.id, 'rejected')
+                  append({ id: `rejected-${Date.now()}`, from: 'bot', kind: 'text', text: 'No problem. Tell me what you would like to change.' })
+                }}
               />
             )
           }
-          return message.from === 'bot' ? (
-            <BotBubble key={message.id} text={message.text} />
-          ) : (
-            <UserBubble key={message.id} text={message.text} />
-          )
+          if (message.from === 'bot') {
+            return (
+              <View key={message.id} style={styles.botBlock}>
+                <BotBubble text={message.text} />
+                {message.question && !message.question.answered && (
+                  <View style={styles.options}>
+                    {message.question.options.map((option) => (
+                      <OptionChip
+                        key={option.value}
+                        label={option.label}
+                        selected={selection.includes(option.value)}
+                        disabled={busy}
+                        onPress={() => pickOption(message.question as ActiveQuestion, option)}
+                      />
+                    ))}
+                    {message.question.multi && selection.length > 0 && (
+                      <Pressable
+                        onPress={() => submitSelection(message.question as ActiveQuestion)}
+                        disabled={busy}
+                        accessibilityRole="button"
+                        style={[styles.submit, { backgroundColor: SUBMIT_COLOR }]}
+                      >
+                        <Text style={styles.submitText}>Send selection</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                )}
+              </View>
+            )
+          }
+          return <UserBubble key={message.id} text={message.text} />
         })}
         {busy && <BotBubble text="..." />}
       </ScrollView>
+
+      <AiNotice />
 
       <View style={[styles.inputBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <TextInput
           value={draft}
           onChangeText={setDraft}
-          onSubmitEditing={send}
-          placeholder="Write to Bun..."
+          onSubmitEditing={() => send(draft.trim())}
+          placeholder={activeQuestion ? 'Or type your answer...' : agent === 'diet' ? 'Ask your dietitian...' : 'Write to Bun...'}
           placeholderTextColor={colors.muted}
           returnKeyType="send"
           style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.bg }]}
         />
         <Pressable
-          onPress={send}
+          onPress={() => send(draft.trim())}
           disabled={!canSend}
           accessibilityRole="button"
           accessibilityLabel="Send"
@@ -176,11 +255,7 @@ function PlanCard({
 
         {pending ? (
           <View style={styles.actions}>
-            <Pressable
-              onPress={onReject}
-              accessibilityRole="button"
-              style={[styles.actionButton, { borderColor: colors.border }]}
-            >
+            <Pressable onPress={onReject} accessibilityRole="button" style={[styles.actionButton, { borderColor: colors.border }]}>
               <Text style={[styles.actionText, { color: colors.muted }]}>Change</Text>
             </Pressable>
             <Pressable
@@ -201,13 +276,50 @@ function PlanCard({
   )
 }
 
+function OptionChip({
+  label,
+  selected,
+  disabled,
+  onPress,
+}: {
+  label: string
+  selected: boolean
+  disabled: boolean
+  onPress: () => void
+}) {
+  const { colors } = useTheme()
+  const [hovered, setHovered] = useState(false)
+  const highlighted = selected || hovered
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      style={[
+        styles.option,
+        {
+          borderColor: colors.primary,
+          backgroundColor: highlighted ? colors.primary : colors.surface,
+          transform: [{ scale: hovered && !disabled ? 1.04 : 1 }],
+        },
+      ]}
+    >
+      <Text style={[styles.optionText, { color: highlighted ? '#ffffff' : colors.primary }]}>{label}</Text>
+    </Pressable>
+  )
+}
+
 function BotBubble({ text }: { text: string }) {
   const { colors } = useTheme()
   return (
     <View style={styles.botRow}>
       <BunAvatar />
       <View style={[styles.botBubble, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Text style={[styles.botText, { color: colors.text }]}>{text}</Text>
+        <RichText text={text} style={styles.botText} color={colors.text} />
       </View>
     </View>
   )
@@ -226,6 +338,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, width: '100%', maxWidth: 800, alignSelf: 'center', paddingHorizontal: 16 },
   list: { flex: 1 },
   listContent: { paddingTop: 16, paddingBottom: 12, gap: 12 },
+  botBlock: { gap: 8 },
   botRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, maxWidth: '92%' },
   botBubble: {
     flexShrink: 1,
@@ -236,6 +349,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   botText: { fontSize: 15, lineHeight: 21 },
+  options: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingLeft: 52 },
+  option: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
+  optionText: { fontSize: 14, fontWeight: '600' },
+  submit: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
+  submitText: { color: '#ffffff', fontSize: 14, fontWeight: '700' },
   planCard: {
     flex: 1,
     borderRadius: 18,
@@ -251,12 +369,7 @@ const styles = StyleSheet.create({
   exerciseMeta: { fontSize: 13, fontWeight: '700' },
   exerciseDescription: { fontSize: 13, lineHeight: 18 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 },
-  actionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
+  actionButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, borderWidth: 1 },
   actionText: { fontSize: 14, fontWeight: '700' },
   statusText: { fontSize: 13, fontWeight: '700', marginTop: 4 },
   userBubble: {
@@ -277,13 +390,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  input: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-  },
+  input: { flex: 1, borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15 },
   send: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
 })

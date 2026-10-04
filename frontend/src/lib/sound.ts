@@ -25,7 +25,8 @@ export function preloadSounds() {
 function play(source: number) {
   if (isSoundMuted()) return
   const player = getPlayer(source)
-  if (player.playing) player.seekTo(0)
+  // Rewind even when the clip already finished; otherwise a short sound (pet.wav) plays only once.
+  player.seekTo(0).catch(() => {})
   player.play()
 }
 

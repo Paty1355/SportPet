@@ -10,6 +10,7 @@ import { NavItemContent } from '../components/NavItemContent'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { AuthScreen } from '../features/auth/AuthScreen'
 import { PetProvider } from '../features/pet/PetProvider'
+import { useKeyboardHeight } from '../lib/keyboard'
 import { WIDE_BREAKPOINT } from '../lib/layout'
 import { AuthProvider, useAuth } from '../lib/auth'
 import { navItems } from '../lib/navItems'
@@ -17,13 +18,16 @@ import { ThemeProvider, useTheme } from '../lib/theme'
 import { TrainingProvider } from '../lib/training'
 
 export default function RootLayout() {
+  const keyboardHeight = useKeyboardHeight()
   return (
     <GestureHandlerRootView style={styles.root}>
-      <ThemeProvider>
-        <AuthProvider>
-          <Gate />
-        </AuthProvider>
-      </ThemeProvider>
+      <View style={[styles.root, { paddingBottom: keyboardHeight }]}>
+        <ThemeProvider>
+          <AuthProvider>
+            <Gate />
+          </AuthProvider>
+        </ThemeProvider>
+      </View>
     </GestureHandlerRootView>
   )
 }
@@ -125,7 +129,7 @@ function Brand() {
       <View style={[styles.brandMark, { backgroundColor: colors.primary }]}>
         <Ionicons name="barbell" size={18} color="#ffffff" />
       </View>
-      <Text style={[styles.brandText, { color: colors.text }]}>FitApp</Text>
+      <Text style={[styles.brandText, { color: colors.text }]}>SportPet</Text>
     </View>
   )
 }
@@ -160,7 +164,7 @@ const styles = StyleSheet.create({
   sidebarList: { marginTop: 32, gap: 4 },
   sidebarFooter: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 16 },
   flexFill: { flex: 1 },
-  link: { flex: 1 },
+  link: { flex: 1, alignItems: 'center' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   brandMark: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   brandText: { fontSize: 18, fontWeight: '700' },

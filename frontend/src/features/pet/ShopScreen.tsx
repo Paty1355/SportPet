@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Link } from 'expo-router'
 import { useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { CoinBadge } from '../../components/CoinBadge'
 import { Screen } from '../../components/Screen'
 import Svg from 'react-native-svg'
 import { useTheme } from '../../lib/theme'
@@ -21,6 +22,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'background', label: 'Backgrounds' },
   { id: 'body', label: 'Colors' },
   { id: 'decor', label: 'Accessories' },
+  { id: 'species', label: 'Pets' },
   { id: 'theme', label: 'Themes' },
 ]
 
@@ -38,10 +40,7 @@ export function ShopScreen() {
             <Text style={[styles.backText, { color: colors.primary }]}>Back to Bun</Text>
           </Pressable>
         </Link>
-        <View style={[styles.coinChip, { backgroundColor: colors.warnSoft }]}>
-          <Ionicons name="barbell" size={16} color={colors.warn} />
-          <Text style={[styles.coinText, { color: colors.warn }]}>{pet?.coins ?? 0}</Text>
-        </View>
+        <CoinBadge coins={pet?.coins ?? 0} />
       </View>
 
       <View style={styles.tabs}>
@@ -124,7 +123,9 @@ function CosmeticRow({
           ? pet.equipped.decor.includes(item.id)
           : item.kind === 'theme'
             ? pet.equipped.theme === item.id
-            : pet.equipped.body === item.id
+            : item.kind === 'species'
+              ? pet.species === item.id.replace('species-', '')
+              : pet.equipped.body === item.id
 
   return (
     <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -185,6 +186,15 @@ function Swatch({ item }: { item: CosmeticItem }) {
         <Svg width={48} height={40} viewBox="40 10 140 110">
           <HatLayer id={item.id} />
         </Svg>
+      </View>
+    )
+  }
+  if (item.kind === 'species') {
+    const icon =
+      item.id === 'species-snake' ? 'git-merge-outline' : item.id === 'species-bear' ? 'happy-outline' : 'paw-outline'
+    return (
+      <View style={[styles.swatch, { backgroundColor: colors.primarySoft }]}>
+        <Ionicons name={icon} size={24} color={colors.primary} />
       </View>
     )
   }
