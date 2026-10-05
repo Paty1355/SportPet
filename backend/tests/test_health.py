@@ -14,6 +14,12 @@ ECG = {
 }
 
 
+def test_app_title_matches_product_brand():
+    from app.main import app
+
+    assert app.title == "SportPet API"
+
+
 def set_sex(client, headers, sex):
     assert client.patch("/api/v1/users/me", json={"sex": sex}, headers=headers).status_code == 200
 
